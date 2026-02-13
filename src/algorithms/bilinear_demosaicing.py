@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np  
 
 def mono_to_rgb(normalized_image: np.ndarray, bayer_pattern: np.ndarray)-> np.ndarray:
     """

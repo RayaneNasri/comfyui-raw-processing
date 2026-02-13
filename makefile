@@ -34,6 +34,7 @@ setup-cuda130: check-comfyui
 	uv pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu130
 	uv pip install -r external/ComfyUI/requirements.txt
 	uv pip install -r external/ComfyUI/manager_requirements.txt
+	uv pip install -r requirements_project.txt
 	uv pip install -e .
 	@echo "Setup complete for CUDA 13.0!"
 
@@ -42,6 +43,7 @@ setup-cpu: check-comfyui
 	uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 	uv pip install -r external/ComfyUI/requirements.txt
 	uv pip install -r external/ComfyUI/manager_requirements.txt
+	uv pip install -r requirements_project.txt
 	uv pip install -e .
 	@echo "Setup complete for CPU!"
 
@@ -50,5 +52,14 @@ setup-xpu: check-comfyui
 	uv pip install torch torchvision torchaudio intel-extension-for-pytorch
 	uv pip install -r external/ComfyUI/requirements.txt
 	uv pip install -r external/ComfyUI/manager_requirements.txt
+	uv pip install -r requirements_project.txt
 	uv pip install -e .
 	@echo "Setup complete for Intel XPU!"
+
+
+
+run-comfyui-cpu: 
+	uv run external/ComfyUI/main.py --cpu --enable-manager --preview-method latent2rgb
+
+run-comfyui-gpu: 
+	uv run external/ComfyUI/main.py --enable-manager --preview-method latent2rgb

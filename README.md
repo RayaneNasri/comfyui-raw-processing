@@ -5,7 +5,7 @@ This document explains installation and configuration steps driven by the reposi
 ## Prerequisites
 
 - **Git** with submodule support
-- **UV** package manager ([installation guide](https://github.com/astral-sh/uv))
+- **uv** package manager ([installation guide](https://github.com/astral-sh/uv))
 - **Python 3.13+**
 - **Hardware-specific requirements:**
   - NVIDIA GPU: CUDA 13.0 compatible drivers
@@ -174,12 +174,9 @@ your-project/
 ```
 
 ## Notes
-
-- **UV vs Manual venv:** The Makefile uses `uv run python -c ...` for environment inspection. If using manual venv activation instead of UV, replace with `python -c ...`
 - **Lock Files:** If you want reproducible installs, consider tracking `uv.lock` in version control; otherwise keep it in `.gitignore`
-- **CUDA 13.0:** This uses PyTorch nightly builds which may be unstable. For production, consider using stable CUDA 12.x builds
+- **CUDA 13.0 Nightly:** This uses PyTorch nightly builds which may be unstable. Consider the normal CUDA 13.0 release if you encounter issues.
 - **First Setup:** Always run `make status` after initial setup to verify installation
-- **Color Output:** The Makefile uses colored output for better readability. If colors don't display properly, check your terminal's ANSI support
 
 ## Common Workflows
 
@@ -215,7 +212,6 @@ make run-cpu         # Run in CPU mode
 ```
 
 ## Getting Help
-
 Display all available commands:
 ```bash
 make help

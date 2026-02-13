@@ -21,6 +21,7 @@ help:
 	@echo "  setup-cuda130  - Setup with CUDA 13.0 (for NVIDIA GPU users)"
 	@echo "  setup-cpu      - Setup with CPU only"
 	@echo "  setup-xpu      - Setup with Intel XPU (for Intel Graphics, check compatibility first: https://docs.pytorch.org/docs/main/notes/get_start_xpu.html)"
+	@echo "  setup-mac      - Setup for macOS (Apple Silicon/MPS)"
 	@echo ""
 	@echo "$(GREEN)$(BOLD)Maintenance:$(NC)"
 	@echo "  update         - Update all dependencies"
@@ -38,7 +39,7 @@ status:
 	@if [ -d ".venv" ]; then \
 		echo "$(GREEN)✓ Exists$(NC)"; \
 	else \
-		echo "$(RED)✗ Not found$(NC) (run 'make setup-cuda130' or 'make setup-cpu')"; \
+		echo "$(RED)✗ Not found$(NC) (run 'make setup-cuda130', 'make setup-mac', or 'make setup-cpu')"; \
 	fi
 	@echo ""
 	@echo -n "ComfyUI Submodule: "
@@ -54,6 +55,7 @@ status:
 			echo "$(GREEN)✓ Installed$(NC)"; \
 			uv run python -c "import torch; print('  Version:', torch.__version__)"; \
 			uv run python -c "import torch; print('  CUDA Available:', torch.cuda.is_available())"; \
+			uv run python -c "import torch; print('  MPS (Mac) Available:', torch.backends.mps.is_available())"; \
 			if uv run python -c "import torch; exit(0 if torch.cuda.is_available() else 1)" 2>/dev/null; then \
 				uv run python -c "import torch; print('  CUDA Version:', torch.version.cuda)"; \
 				uv run python -c "import torch; print('  GPU Count:', torch.cuda.device_count())"; \
@@ -180,6 +182,30 @@ setup-xpu: check-comfyui
 	@echo "$(GREEN)✓ Setup complete for Intel XPU!$(NC)"
 	@echo "Run 'make status' to verify installation"
 
+
+setup-mac: check-comfyui
+	@echo "$(BLUE)$(BOLD)Setting up environment for macOS (Apple Silicon/MPS)...$(NC)"
+	@if [ -d ".venv" ]; then \
+		echo "$(YELLOW)Virtual environment already exists. Remove it first with 'make clean' if you want to recreate it.$(NC)"; \
+		exit 1; \
+	fi
+	uv venv
+	@echo "Installing PyTorch for macOS..."
+	# Standard PyTorch wheels include MPS support for macOS 12.3+
+	uv pip install torch torchvision torchaudio
+	@echo "Installing ComfyUI dependencies..."
+	uv pip install -r external/ComfyUI/requirements.txt
+	@if [ -f "external/ComfyUI/manager_requirements.txt" ]; then \
+		uv pip install -r external/ComfyUI/manager_requirements.txt; \
+	fi
+	@if [ -f "requirements_project.txt" ]; then \
+		echo "Installing project dependencies..."; \
+		uv pip install -r requirements_project.txt; \
+	fi
+	uv pip install -e .
+	@echo "$(GREEN)✓ Setup complete for macOS!$(NC)"
+	@echo "Run 'make status' to verify installation"
+
 update: check-venv
 	@echo "$(BLUE)$(BOLD)Updating all dependencies...$(NC)"
 	@echo "Updating ComfyUI submodule..."
@@ -212,11 +238,11 @@ clean:
 
 run: check-venv check-torch
 	@echo "$(BLUE)$(BOLD)Auto-detecting hardware and launching ComfyUI...$(NC)"
-	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() else 1)" 2>/dev/null; then \
-		echo "$(GREEN)✓ CUDA detected, running with GPU$(NC)"; \
+	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
+		echo "$(GREEN)✓ GPU (CUDA/MPS) detected, running with GPU acceleration$(NC)"; \
 		uv run external/ComfyUI/main.py --enable-manager --preview-method latent2rgb; \
 	else \
-		echo "$(YELLOW)⚠ No CUDA detected, running with CPU$(NC)"; \
+		echo "$(YELLOW)⚠ No GPU detected, running with CPU$(NC)"; \
 		uv run external/ComfyUI/main.py --cpu --enable-manager --preview-method latent2rgb; \
 	fi
 

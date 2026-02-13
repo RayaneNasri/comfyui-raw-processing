@@ -5,34 +5,35 @@ BLUE := \033[0;34m
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 RED := \033[0;31m
+BOLD := \033[1m
 NC := \033[0m # No Color
 
 help:
-	@echo "$(BLUE)ComfyUI Project Manager$(NC)"
+	@echo "$(BLUE)$(BOLD)ComfyUI Project Manager$(NC)"
 	@echo ""
-	@echo "$(GREEN)Status & Checks:$(NC)"
+	@echo "$(GREEN)$(BOLD)Status & Checks:$(NC)"
 	@echo "  status         - Show current environment status"
 	@echo "  check-comfyui  - Check if ComfyUI is correctly cloned"
 	@echo "  check-venv     - Check if virtual environment exists"
 	@echo "  check-torch    - Check if PyTorch is installed and detect device"
 	@echo ""
-	@echo "$(GREEN)Setup:$(NC)"
+	@echo "$(GREEN)$(BOLD)Setup:$(NC)"
 	@echo "  setup-cuda130  - Setup with CUDA 13.0 (for NVIDIA GPU users)"
 	@echo "  setup-cpu      - Setup with CPU only"
-	@echo "  setup-xpu      - Setup with Intel XPU (for Intel Graphics)"
+	@echo "  setup-xpu      - Setup with Intel XPU (for Intel Graphics, check compatibility first: https://docs.pytorch.org/docs/main/notes/get_start_xpu.html)"
 	@echo ""
-	@echo "$(GREEN)Maintenance:$(NC)"
+	@echo "$(GREEN)$(BOLD)Maintenance:$(NC)"
 	@echo "  update         - Update all dependencies"
 	@echo "  update-comfyui - Update ComfyUI submodule only"
 	@echo "  clean          - Remove virtual environment"
 	@echo ""
-	@echo "$(GREEN)Run:$(NC)"
+	@echo "$(GREEN)$(BOLD)Run:$(NC)"
 	@echo "  run            - Auto-detect hardware and run ComfyUI"
 	@echo "  run-cpu        - Force run with CPU"
 	@echo "  run-gpu        - Force run with GPU"
 
 status:
-	@echo "$(BLUE)=== Environment Status ===$(NC)"
+	@echo "$(BLUE)$(BOLD)=== Environment Status ===$(NC)"
 	@echo -n "Virtual Environment: "
 	@if [ -d ".venv" ]; then \
 		echo "$(GREEN)✓ Exists$(NC)"; \
@@ -114,7 +115,7 @@ check-comfyui:
 	@echo "$(GREEN)✓ ComfyUI submodule ready!$(NC)"
 
 setup-cuda130: check-comfyui
-	@echo "$(BLUE)Setting up environment for CUDA 13.0...$(NC)"
+	@echo "$(BLUE)$(BOLD)Setting up environment for CUDA 13.0...$(NC)"
 	@if [ -d ".venv" ]; then \
 		echo "$(YELLOW)Virtual environment already exists. Remove it first with 'make clean' if you want to recreate it.$(NC)"; \
 		exit 1; \
@@ -136,7 +137,7 @@ setup-cuda130: check-comfyui
 	@echo "Run 'make status' to verify installation"
 
 setup-cpu: check-comfyui
-	@echo "$(BLUE)Setting up environment for CPU...$(NC)"
+	@echo "$(BLUE)$(BOLD)Setting up environment for CPU...$(NC)"
 	@if [ -d ".venv" ]; then \
 		echo "$(YELLOW)Virtual environment already exists. Remove it first with 'make clean' if you want to recreate it.$(NC)"; \
 		exit 1; \
@@ -158,7 +159,7 @@ setup-cpu: check-comfyui
 	@echo "Run 'make status' to verify installation"
 
 setup-xpu: check-comfyui
-	@echo "$(BLUE)Setting up environment for Intel XPU...$(NC)"
+	@echo "$(BLUE)$(BOLD)Setting up environment for Intel XPU...$(NC)"
 	@if [ -d ".venv" ]; then \
 		echo "$(YELLOW)Virtual environment already exists. Remove it first with 'make clean' if you want to recreate it.$(NC)"; \
 		exit 1; \
@@ -180,7 +181,7 @@ setup-xpu: check-comfyui
 	@echo "Run 'make status' to verify installation"
 
 update: check-venv
-	@echo "$(BLUE)Updating all dependencies...$(NC)"
+	@echo "$(BLUE)$(BOLD)Updating all dependencies...$(NC)"
 	@echo "Updating ComfyUI submodule..."
 	git submodule update --remote --merge external/ComfyUI
 	@echo "Updating Python packages..."
@@ -195,7 +196,7 @@ update: check-venv
 	@echo "$(GREEN)✓ Update complete!$(NC)"
 
 update-comfyui:
-	@echo "$(BLUE)Updating ComfyUI submodule...$(NC)"
+	@echo "$(BLUE)$(BOLD)Updating ComfyUI submodule...$(NC)"
 	git submodule update --remote --merge external/ComfyUI
 	@echo "$(GREEN)✓ ComfyUI updated!$(NC)"
 	@echo "Run 'make update' to also update Python dependencies"
@@ -210,7 +211,7 @@ clean:
 	fi
 
 run: check-venv check-torch
-	@echo "$(BLUE)Auto-detecting hardware and launching ComfyUI...$(NC)"
+	@echo "$(BLUE)$(BOLD)Auto-detecting hardware and launching ComfyUI...$(NC)"
 	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() else 1)" 2>/dev/null; then \
 		echo "$(GREEN)✓ CUDA detected, running with GPU$(NC)"; \
 		uv run external/ComfyUI/main.py --enable-manager --preview-method latent2rgb; \
@@ -220,11 +221,11 @@ run: check-venv check-torch
 	fi
 
 run-cpu: check-venv check-torch
-	@echo "$(BLUE)Launching ComfyUI (CPU mode)...$(NC)"
+	@echo "$(BLUE)$(BOLD)Launching ComfyUI (CPU mode)...$(NC)"
 	uv run external/ComfyUI/main.py --cpu --enable-manager --preview-method latent2rgb
 
 run-gpu: check-venv check-torch
-	@echo "$(BLUE)Launching ComfyUI (GPU mode)...$(NC)"
+	@echo "$(BLUE)$(BOLD)Launching ComfyUI (GPU mode)...$(NC)"
 	@if ! uv run python -c "import torch; exit(0 if torch.cuda.is_available() else 1)" 2>/dev/null; then \
 		echo "$(RED)✗ CUDA not available!$(NC)"; \
 		echo "Either install CUDA support or use 'make run-cpu'"; \

@@ -12,6 +12,8 @@ This document explains installation and configuration steps driven by the reposi
   - Intel GPU: Compatible Intel Graphics ([check compatibility](https://docs.pytorch.org/docs/main/notes/get_start_xpu.html))
   - macOS: Apple Silicon with macOS 12.3+ for MPS acceleration
 
+> **Note:** It can be run on CPU-only systems, but performance will be significantly slower.
+
 ## Clone Repository (with Submodules)
 
 **Recommended:**
@@ -32,60 +34,35 @@ Displays venv status, ComfyUI submodule status, and PyTorch installation details
 make status
 ```
 
-### Individual Checks
-- **Check virtual environment exists:**
-```bash
-  make check-venv
-```
-
-- **Check ComfyUI submodule and ensure it is initialized:**
-```bash
-  make check-comfyui
-```
-
-- **Check PyTorch installation and device info:**
-```bash
-  make check-torch
-```
-
 ## Setup (Create venv + Install Dependencies)
 
 All setup targets create a virtual environment (`.venv/`) and install ComfyUI dependencies, ComfyUI Manager requirements, and project-specific dependencies.
 
-### NVIDIA GPU (CUDA 13.0)
-Uses PyTorch nightly builds with CUDA 13.0 support:
+### Auto-Detect Setup (Recommended)
+Automatically detects your hardware (NVIDIA GPU, macOS Apple Silicon, or CPU) and installs the appropriate PyTorch version:
 ```bash
-make setup-cuda130
+ make setup
 ```
-
-### CPU Only
-For systems without GPU or testing purposes:
-```bash
-make setup-cpu
-```
+*   **NVIDIA GPU:** Installs PyTorch with CUDA 13.0 support.
+*   **macOS:** Installs PyTorch with MPS support.
+*   **CPU:** Installs standard CPU-only PyTorch if no accelerator is found.
 
 ### Intel XPU (Intel Graphics)
-For Intel integrated graphics and Arc GPUs. 
+For Intel integrated graphics and Arc GPUs.
 
 **Important:** Check [compatibility requirements](https://docs.pytorch.org/docs/main/notes/get_start_xpu.html) first:
 ```bash
 make setup-xpu
 ```
 
-### macOS (Apple Silicon/MPS)
-For Macs with M1/M2/M3 chips, uses Metal Performance Shaders:
-```bash
-make setup-mac
-```
-
 **Notes:**
-- If `.venv` already exists, setup will abort with a warning
+- If `.venv` already exists, setup skip creation.
 - Remove existing environment first with `make clean` if you need to recreate it
 - Setup automatically installs:
   - PyTorch (hardware-specific version)
   - ComfyUI dependencies (`external/ComfyUI/requirements.txt`)
   - ComfyUI Manager dependencies (`external/ComfyUI/manager_requirements.txt`)
-  - Project dependencies (`requirements_project.txt`, if present)
+  - Project dependencies (`project_requirements.txt`, if present)
   - Current project in editable mode
 
 ## Running ComfyUI
@@ -93,24 +70,26 @@ make setup-mac
 ### Auto-Detect Hardware (Recommended)
 Automatically detects CUDA or MPS (Mac) GPU and uses it, falls back to CPU if unavailable:
 ```bash
-make run
+make run [FLAGS="..."]
 ```
 
 ### Force CPU Mode
 Explicitly run with CPU (useful for testing or troubleshooting):
 ```bash
-make run-cpu
+make run-cpu [FLAGS="..."]
 ```
 
 ### Force GPU Mode
 Run with GPU acceleration (CUDA only, will fail if CUDA is not available):
 ```bash
-make run-gpu
+make run-gpu [FLAGS="..."]
 ```
 
 **What Gets Launched:**
 - Script: `external/ComfyUI/main.py`
 - Default flags: `--enable-manager --preview-method latent2rgb`
+- Additional flags can be passed onto ComfyUI via the `FLAGS` variable, e.g.:
+  - Listen on an IP address: `FLAGS="--listen [IP]"`
 - CPU mode adds: `--cpu`
 
 ## Updating
@@ -119,12 +98,6 @@ make run-gpu
 Updates both the ComfyUI submodule and all Python dependencies:
 ```bash
 make update
-```
-
-### Update ComfyUI Submodule Only
-Updates only the ComfyUI repository to the latest commit:
-```bash
-make update-comfyui
 ```
 
 ## Cleanup
@@ -167,33 +140,23 @@ your-project/
 ├── .venv/                          # Virtual environment (created by setup)
 ├── external/
 │   └── ComfyUI/                    # ComfyUI submodule
-├── custom_nodes/                   # Your custom nodes
-├── requirements_project.txt        # Optional: Your project dependencies
+├── custom_nodes/                   # ComfyUI custom nodes
+├── project_requirements.txt        # project dependencies
 ├── Makefile                        # Build automation
 └── pyproject.toml                  # Project configuration
 ```
 
 ## Notes
 - **Lock Files:** If you want reproducible installs, consider tracking `uv.lock` in version control; otherwise keep it in `.gitignore`
-- **CUDA 13.0 Nightly:** This uses PyTorch nightly builds which may be unstable. Consider the normal CUDA 13.0 release if you encounter issues.
 - **First Setup:** Always run `make status` after initial setup to verify installation
 
 ## Common Workflows
 
-### First Time Setup (NVIDIA GPU)
+### First Time Setup
 ```bash
 git clone --recursive <repo-url>
 cd <repo-name>
-make setup-cuda130
-make status  # Verify installation
-make run     # Launch ComfyUI
-```
-
-### First Time Setup (macOS)
-```bash
-git clone --recursive <repo-url>
-cd <repo-name>
-make setup-mac
+make setup   # Auto-detects GPU/CPU and installs
 make status  # Verify installation
 make run     # Launch ComfyUI
 ```
@@ -207,7 +170,8 @@ make run     # Launch with updated version
 ### Switching Hardware Configurations
 ```bash
 make clean           # Remove old environment
-make setup-cpu       # Install CPU-only version
+make setup           # Re-run setup (detects hardware)
+# Or for forced CPU:
 make run-cpu         # Run in CPU mode
 ```
 

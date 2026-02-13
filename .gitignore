@@ -1,6 +1,169 @@
+# ...existing code...
+
+# -------------------------
+# Python / general
+# -------------------------
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
 .venv/
+venv/
+env/
+ENV/
+env.bak/
+
+# Packaging / build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg
+*.whl
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+nosetests.xml
+test_results/
+junit-*.xml
+
+# Installer / wheel
+pip-log.txt
+pip-delete-this-directory.txt
+
+# -------------------------
+# ComfyUI / ML artifacts
+# -------------------------
+# Ignore bundled or runtime ComfyUI folders, caches, logs and outputs
 ComfyUI/
-docs/
-notebooks/
+ComfyUI/cache/
+ComfyUI/logs/
+ComfyUI/*.db
+ComfyUI/*.sqlite
+workspace/
+workspaces/
+outputs/
 samples/
+
+# Large model / checkpoint / weights files
+models/
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+*.pth.tar
+*.bin
+*.msgpack
+*.onnx
+*.tflite
+*.model
+
+# Generated / temporary data
+cache/
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# -------------------------
+# Notebooks
+# -------------------------
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# -------------------------
+# Logs & runtime
+# -------------------------
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# -------------------------
+# Secrets & config
+# -------------------------
+.env
+.env.local
+.env.*.local
+credentials.json
+secret*.*
+*.pem
+*.key
+*.crt
+
+# -------------------------
+# IDEs & editors
+# -------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+*.vscode-test/
+
+# -------------------------
+# OS files
+# -------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+desktop.ini
+.Trash-*
+
+# -------------------------
+# Node / frontend (if present)
+# -------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# -------------------------
+# Docker / CI
+# -------------------------
+docker-compose.override.yml
+.docker/
+.envrc
+
+# -------------------------
+# Compiled / binary files
+# -------------------------
+*.so
+*.dylib
+*.dll
+*.exe
+*.o
+*.a
+*.class
+
+# -------------------------
+# UV
+# -------------------------
+uv.lock
+
+# -------------------------
+# Misc
+# -------------------------
+*.sqlite3
+*.db
+*.sqlite
+*.cache/
+.cache/*
+.coverage
 .DS_Store

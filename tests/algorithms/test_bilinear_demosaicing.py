@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from src.algorithms.bilinear_demosaicing import bilinear_demosaicing
+from algorithms.bilinear_demosaicing import bilinear_demosaicing
 
 
 def test_empty_array():

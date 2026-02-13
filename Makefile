@@ -66,7 +66,7 @@ setup: check-comfyui $(VENV_SENTINEL)
 		uv pip install torch torchvision torchaudio; \
 	elif [ "$(HAS_NVIDIA)" = "True" ]; then \
 		echo "Detected NVIDIA GPU. Installing PyTorch (CUDA 13.0)..."; \
-		uv pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu130; \
+		uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
 	else \
 		echo "$(YELLOW)No GPU detected. Installing PyTorch (CPU version)...$(NC)"; \
 		uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \

@@ -13,7 +13,6 @@ OS := $(shell uname -s)
 ARCH := $(shell uname -m)
 HAS_NVIDIA := $(shell command -v nvidia-smi > /dev/null 2>&1 && echo "True" || echo "False")
 
-# Sentinel files to track installation state (prevents re-running if already done)
 VENV_SENTINEL := .venv/pyvenv.cfg
 
 COMFY_FLAGS := --enable-manager --preview-method latent2rgb
@@ -45,7 +44,6 @@ $(VENV_SENTINEL):
 	@echo "$(BLUE)Creating virtual environment...$(NC)"
 	@uv venv
 
-# Internal target to install common dependencies (deduplicated)
 install-deps: $(VENV_SENTINEL)
 	@echo "$(BLUE)Installing ComfyUI dependencies...$(NC)"
 	@uv pip install -r external/ComfyUI/requirements.txt
@@ -102,10 +100,6 @@ run-gpu: $(VENV_SENTINEL)
 		echo "$(RED)GPU not available!$(NC)"; exit 1; \
 	fi
 	uv run external/ComfyUI/main.py $(COMFY_FLAGS) $(FLAGS)
-
-# =================================================================================================
-# UTILITIES & MAINTENANCE
-# =================================================================================================
 
 status:
 	@echo "$(BLUE)$(BOLD)=== Environment Status ===$(NC)"

@@ -1,5 +1,5 @@
 import numpy as np
-import pytest
+#import pytest
 from src.algorithms.bilinear_demosaicing import bilinear_demosaicing
 
 # Bayer CFA with (dy,dx) the location of the first pixel sampled in red
@@ -141,6 +141,53 @@ def test_corner_edge_cases():
     # Average = (100 + 200) / 2 = 150
     assert res[0, 0, 1] == 150
 
+def test_edge_cases():
+  """
+  Test edge interpolation
+  Grid 4x3:
+    R G R
+    G B G
+    R G R
+    G B G
+  """
+  img = np.zeros((4, 3, 3))
+
+  # Red
+  img[0, 0, 0] = 1
+  img[0, 2, 0] = 1
+  img[2, 0, 0] = 1
+  img[2, 2, 0] = 1
+
+  # Blue
+  img[1, 1, 2] = 1
+  img[3, 1, 2] = 1
+
+  # Green
+  img[0, 1, 1] = 1
+  img[1, 0, 1] = 1
+  img[1, 2, 1] = 1
+  img[2, 1, 1] = 1
+  img[3, 0, 1] = 1
+  img[3, 2, 1] = 1
+
+  res = bilinear_demosaicing(img, 0, 0)
+
+  # Expected 1 everywhere
+  assert res[0, 0, 0] == 1; assert res[0, 0, 1] == 1; assert res[0, 0, 2] == 1
+  assert res[0, 1, 0] == 1; assert res[0, 1, 1] == 1; assert res[0, 1, 2] == 1
+  assert res[0, 2, 0] == 1; assert res[0, 2, 1] == 1; assert res[0, 2, 2] == 1
+
+  assert res[1, 0, 0] == 1; assert res[1, 0, 1] == 1; assert res[1, 0, 2] == 1
+  assert res[1, 1, 0] == 1; assert res[1, 1, 1] == 1; assert res[1, 1, 2] == 1
+  assert res[1, 2, 0] == 1; assert res[1, 2, 1] == 1; assert res[1, 2, 2] == 1
+
+  assert res[2, 0, 0] == 1; assert res[2, 0, 1] == 1; assert res[2, 0, 2] == 1
+  assert res[2, 1, 0] == 1; assert res[2, 1, 1] == 1; assert res[2, 1, 2] == 1
+  assert res[2, 2, 0] == 1; assert res[2, 2, 1] == 1; assert res[2, 2, 2] == 1
+  
+  assert res[3, 0, 0] == 1; assert res[3, 0, 1] == 1; assert res[3, 0, 2] == 1
+  assert res[3, 1, 0] == 1; assert res[3, 1, 1] == 1; assert res[3, 1, 2] == 1
+  assert res[3, 2, 0] == 1; assert res[3, 2, 1] == 1; assert res[3, 2, 2] == 1
 
 def test_data_types():
     """
@@ -166,3 +213,13 @@ def test_full_image_preservation():
     img = np.ones((3, 3, 3))
     res = bilinear_demosaicing(img)
     np.testing.assert_array_equal(img, res)
+
+# test_empty_array()
+# test_single_pixel_no_neighbors()
+# test_green_interpolation_at_red_location()
+# test_blue_interpolation_at_red_location()
+# test_red_interpolation_at_green_location_red_row()
+# test_red_interpolation_at_green_location_blue_row()
+# test_corner_edge_cases()
+# test_edge_cases()
+# test_data_types()

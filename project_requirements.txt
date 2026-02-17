@@ -1,2 +1,3 @@
 rawpy
 pytest
+matplotlib

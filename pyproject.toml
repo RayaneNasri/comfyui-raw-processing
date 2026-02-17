@@ -11,3 +11,9 @@ dev = [
     "black>=26.1.0",
     "pyrefly>=0.52.0",
 ]
+
+[tool.pyrefly]
+# files or directories to exclude from type checking
+project-excludes = [
+    "external/*",
+]

@@ -1,7 +1,8 @@
 import numpy as np
 import rawpy
 
-def mono_to_rgb(normalized_image: np.ndarray, bayer_pattern: np.ndarray)-> np.ndarray:
+
+def mono_to_rgb(normalized_image: np.ndarray, bayer_pattern: np.ndarray) -> np.ndarray:
     """
     the docstring ...
     """
@@ -24,10 +25,11 @@ def mono_to_rgb(normalized_image: np.ndarray, bayer_pattern: np.ndarray)-> np.nd
     rgb_image[rows, cols, channel_indices] = normalized_image
     return rgb_image
 
+
 def read_raw_as_ndarray(image_path: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Reads a RAW file and returns the Bayer mosaic as a normalized NumPy array.
-    
+
     Returns:
         - bayer_img: ndarray [H, W] normalized to [0, 1]
         - pattern: ndarray [2, 2] showing the CFA layout (e.g., RGGB)
@@ -35,11 +37,11 @@ def read_raw_as_ndarray(image_path: str) -> tuple[np.ndarray, np.ndarray, np.nda
     """
     with rawpy.imread(image_path) as raw:
         bayer_img = raw.raw_image.copy().astype(np.float32)
-        black = raw.black_level_per_channel[0] 
+        black = raw.black_level_per_channel[0]
         white = raw.white_level
         bayer_img = (bayer_img - black) / (white - black)
         bayer_img = np.clip(bayer_img, 0, 1)
         pattern = raw.raw_pattern
         wb_gains = np.array(raw.camera_whitebalance[:4], dtype=np.float32)
-        
+
         return bayer_img, pattern, wb_gains

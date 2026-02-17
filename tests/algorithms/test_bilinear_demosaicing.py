@@ -1,15 +1,17 @@
 import numpy as np
-#import pytest
+
+# import pytest
 from src.algorithms.bilinear_demosaicing import bilinear_demosaicing
 
 # Bayer CFA with (dy,dx) the location of the first pixel sampled in red
-        # pixels in rgb_image[dy::2, dx::2] are sampled in red
-        # those in rgb_image[1-dy::2, 1-dx::2] in blue
-        # those in rgb_image[dy::2, 1-dx::2] and in rgb_image[1-dy::2, dx::2] in green.
-        # Example of Bayer CFA with (dy,dx) = (0,0):
-            # R G R G R
-            # G B G B G
-            # R G R G R
+# pixels in rgb_image[dy::2, dx::2] are sampled in red
+# those in rgb_image[1-dy::2, 1-dx::2] in blue
+# those in rgb_image[dy::2, 1-dx::2] and in rgb_image[1-dy::2, dx::2] in green.
+# Example of Bayer CFA with (dy,dx) = (0,0):
+# R G R G R
+# G B G B G
+# R G R G R
+
 
 def test_empty_array():
     assert bilinear_demosaicing(np.empty(shape=(0, 0, 3)), 0, 0).size == 0
@@ -32,7 +34,7 @@ def test_green_interpolation_at_red_location():
     Input Grid (3x3):
       . G .
       G R G
-      . G .    
+      . G .
     """
     img = np.zeros((3, 3, 3))
     # Set center Red
@@ -141,53 +143,79 @@ def test_corner_edge_cases():
     # Average = (100 + 200) / 2 = 150
     assert res[0, 0, 1] == 150
 
+
 def test_edge_cases():
-  """
-  Test edge interpolation
-  Grid 4x3:
-    R G R
-    G B G
-    R G R
-    G B G
-  """
-  img = np.zeros((4, 3, 3))
+    """
+    Test edge interpolation
+    Grid 4x3:
+      R G R
+      G B G
+      R G R
+      G B G
+    """
+    img = np.zeros((4, 3, 3))
 
-  # Red
-  img[0, 0, 0] = 1
-  img[0, 2, 0] = 1
-  img[2, 0, 0] = 1
-  img[2, 2, 0] = 1
+    # Red
+    img[0, 0, 0] = 1
+    img[0, 2, 0] = 1
+    img[2, 0, 0] = 1
+    img[2, 2, 0] = 1
 
-  # Blue
-  img[1, 1, 2] = 1
-  img[3, 1, 2] = 1
+    # Blue
+    img[1, 1, 2] = 1
+    img[3, 1, 2] = 1
 
-  # Green
-  img[0, 1, 1] = 1
-  img[1, 0, 1] = 1
-  img[1, 2, 1] = 1
-  img[2, 1, 1] = 1
-  img[3, 0, 1] = 1
-  img[3, 2, 1] = 1
+    # Green
+    img[0, 1, 1] = 1
+    img[1, 0, 1] = 1
+    img[1, 2, 1] = 1
+    img[2, 1, 1] = 1
+    img[3, 0, 1] = 1
+    img[3, 2, 1] = 1
 
-  res = bilinear_demosaicing(img, 0, 0)
+    res = bilinear_demosaicing(img, 0, 0)
 
-  # Expected 1 everywhere
-  assert res[0, 0, 0] == 1; assert res[0, 0, 1] == 1; assert res[0, 0, 2] == 1
-  assert res[0, 1, 0] == 1; assert res[0, 1, 1] == 1; assert res[0, 1, 2] == 1
-  assert res[0, 2, 0] == 1; assert res[0, 2, 1] == 1; assert res[0, 2, 2] == 1
+    # Expected 1 everywhere
+    assert res[0, 0, 0] == 1
+    assert res[0, 0, 1] == 1
+    assert res[0, 0, 2] == 1
+    assert res[0, 1, 0] == 1
+    assert res[0, 1, 1] == 1
+    assert res[0, 1, 2] == 1
+    assert res[0, 2, 0] == 1
+    assert res[0, 2, 1] == 1
+    assert res[0, 2, 2] == 1
 
-  assert res[1, 0, 0] == 1; assert res[1, 0, 1] == 1; assert res[1, 0, 2] == 1
-  assert res[1, 1, 0] == 1; assert res[1, 1, 1] == 1; assert res[1, 1, 2] == 1
-  assert res[1, 2, 0] == 1; assert res[1, 2, 1] == 1; assert res[1, 2, 2] == 1
+    assert res[1, 0, 0] == 1
+    assert res[1, 0, 1] == 1
+    assert res[1, 0, 2] == 1
+    assert res[1, 1, 0] == 1
+    assert res[1, 1, 1] == 1
+    assert res[1, 1, 2] == 1
+    assert res[1, 2, 0] == 1
+    assert res[1, 2, 1] == 1
+    assert res[1, 2, 2] == 1
 
-  assert res[2, 0, 0] == 1; assert res[2, 0, 1] == 1; assert res[2, 0, 2] == 1
-  assert res[2, 1, 0] == 1; assert res[2, 1, 1] == 1; assert res[2, 1, 2] == 1
-  assert res[2, 2, 0] == 1; assert res[2, 2, 1] == 1; assert res[2, 2, 2] == 1
-  
-  assert res[3, 0, 0] == 1; assert res[3, 0, 1] == 1; assert res[3, 0, 2] == 1
-  assert res[3, 1, 0] == 1; assert res[3, 1, 1] == 1; assert res[3, 1, 2] == 1
-  assert res[3, 2, 0] == 1; assert res[3, 2, 1] == 1; assert res[3, 2, 2] == 1
+    assert res[2, 0, 0] == 1
+    assert res[2, 0, 1] == 1
+    assert res[2, 0, 2] == 1
+    assert res[2, 1, 0] == 1
+    assert res[2, 1, 1] == 1
+    assert res[2, 1, 2] == 1
+    assert res[2, 2, 0] == 1
+    assert res[2, 2, 1] == 1
+    assert res[2, 2, 2] == 1
+
+    assert res[3, 0, 0] == 1
+    assert res[3, 0, 1] == 1
+    assert res[3, 0, 2] == 1
+    assert res[3, 1, 0] == 1
+    assert res[3, 1, 1] == 1
+    assert res[3, 1, 2] == 1
+    assert res[3, 2, 0] == 1
+    assert res[3, 2, 1] == 1
+    assert res[3, 2, 2] == 1
+
 
 def test_data_types():
     """
@@ -213,6 +241,7 @@ def test_full_image_preservation():
     img = np.ones((3, 3, 3))
     res = bilinear_demosaicing(img)
     np.testing.assert_array_equal(img, res)
+
 
 # test_empty_array()
 # test_single_pixel_no_neighbors()

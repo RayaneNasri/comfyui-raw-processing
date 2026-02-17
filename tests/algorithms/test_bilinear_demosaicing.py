@@ -1,4 +1,4 @@
-import numpy as np
+import torch
 
 # import pytest
 from src.algorithms.bilinear_demosaicing import bilinear_demosaicing
@@ -13,14 +13,14 @@ from src.algorithms.bilinear_demosaicing import bilinear_demosaicing
 # R G R G R
 
 
-def test_empty_array():
-    assert bilinear_demosaicing(np.empty(shape=(0, 0, 3)), 0, 0).size == 0
+def test_empty_tensor():
+    assert bilinear_demosaicing(torch.empty(0, 0, 3)).nelement() == 0
 
 
 def test_single_pixel_no_neighbors():
-    img = np.zeros((1, 1, 3))
+    img = torch.zeros((1, 1, 3))
     img[0, 0, 0] = 100  # Red present
-    res = bilinear_demosaicing(img, 0, 0)
+    res = bilinear_demosaicing(img)
     # The existing value should be preserved
     assert res[0, 0, 0] == 100
     # Missing channels with no neighbors remain 0
@@ -36,7 +36,7 @@ def test_green_interpolation_at_red_location():
       G R G
       . G .
     """
-    img = np.zeros((3, 3, 3))
+    img = torch.zeros((3, 3, 3))
     # Set center Red
     img[1, 1, 0] = 50
 
@@ -63,7 +63,7 @@ def test_blue_interpolation_at_red_location():
       . R .
       B . B
     """
-    img = np.zeros((3, 3, 3))
+    img = torch.zeros((3, 3, 3))
     # Set center Red
     img[1, 1, 0] = 50
 
@@ -87,7 +87,7 @@ def test_red_interpolation_at_green_location_red_row():
       R G R
       . B .
     """
-    img = np.zeros((3, 3, 3))
+    img = torch.zeros((3, 3, 3))
     # Center Green
     img[1, 1, 1] = 50
 
@@ -109,7 +109,7 @@ def test_red_interpolation_at_green_location_blue_row():
       B G B  <-- Center is Green, rows above/below have Red
       . R .
     """
-    img = np.zeros((3, 3, 3))
+    img = torch.zeros((3, 3, 3))
     # Center Green
     img[1, 1, 1] = 50
 
@@ -131,7 +131,7 @@ def test_corner_edge_cases():
       G B
     G Neighbors of (0,0) are (0,1) and (1,0).
     """
-    img = np.zeros((2, 2, 3))
+    img = torch.zeros((2, 2, 3))
 
     # Set neighbors for Green
     img[0, 1, 1] = 100  # Right
@@ -148,13 +148,14 @@ import numpy as np
 
 def test_edge_cases():
     """Test edge interpolation avec une grille 4x3."""
-    img = np.zeros((4, 3, 3))
+    img = torch.zeros((4, 3, 3))
     img[::2, ::2, 0] = 1  
     img[1::2, 1, 2]  = 1  
     img[0::2, 1, 1]  = 1   
     img[1::2, ::2, 1] = 1
     res = bilinear_demosaicing(img, 0, 0)
-    np.testing.assert_array_equal(res, 1)
+    expected = torch.ones_like(res)
+    torch.testing.assert_close(res, expected)
 
 
 def test_data_types():
@@ -164,10 +165,10 @@ def test_data_types():
     R . R
     . . .
     """
-    img = np.zeros((3, 3, 3), dtype=np.float64)
+    img = torch.zeros((3, 3, 3), dtype=torch.float32)
     img[1, 0, 0] = 0.5
     img[1, 2, 0] = 1.0
     res = bilinear_demosaicing(img, 1, 0)
     # Center (1,1,0) should be 0.75
     assert res[1, 1, 0] == 0.75
-    assert res.dtype == np.float64
+    assert res.dtype == torch.float32

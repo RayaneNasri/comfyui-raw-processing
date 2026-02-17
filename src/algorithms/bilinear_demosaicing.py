@@ -1,9 +1,8 @@
-import numpy as np
+import torch
 
-
-def bilinear_demosaicing(rgb_image: np.ndarray, dx: int, dy: int) -> np.ndarray:
+def bilinear_demosaicing(rgb_image: torch.tensor, dx=0, dy=0) -> torch.tensor:
     """
-    dy, dx : # offset on the raw, tells you the location of the first pixel sampled in red (dy is equal to 0 or 1, and dx is equal 0 or 1)
+    docstring...
     """
     # Bayer CFA with (dy,dx) the location of the first pixel sampled in red
     # pixels in rgb_image[dy::2, dx::2] are sampled in red
@@ -19,14 +18,9 @@ def bilinear_demosaicing(rgb_image: np.ndarray, dx: int, dy: int) -> np.ndarray:
     # Zero boundary condition :
     # Frame the image with zeros (Add 1 row and 1 column of zeros before and after the height/width dimensions; nothing on the RGB channels.)
     # padded_rgb_image.shape = (height+2, width+2, 3)
-    padded_rgb_image = np.pad(
-        rgb_image,
-        pad_width=((1, 1), (1, 1), (0, 0)),
-        mode="constant",
-        constant_values=0,
-    )
+    padded_rgb_image: torch.Tensor = torch.nn.modules.ZeroPad3d((0, 0, 1, 1, 1, 1))(rgb_image)
 
-    demosaicing_image = padded_rgb_image.copy()
+    demosaicing_image = padded_rgb_image.clone()
 
     # nbpix_C1_C2 : if a pixel has a colour C1, it has "nbpix_C1_C2" pixels of colour C2 as direct neighbours
     # This number depends on the location of the pixel (corner, edge, center) and of (dy,dx)

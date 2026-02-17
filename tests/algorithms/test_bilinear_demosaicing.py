@@ -1,7 +1,7 @@
 import numpy as np
 
 # import pytest
-from src.algorithms.bilinear_demosaicing import bilinear_demosaicing
+from algorithms.bilinear_demosaicing import bilinear_demosaicing
 
 # Bayer CFA with (dy,dx) the location of the first pixel sampled in red
 # pixels in rgb_image[dy::2, dx::2] are sampled in red

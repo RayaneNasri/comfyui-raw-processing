@@ -20,6 +20,10 @@ FLAGS ?=
 
 FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
 
+SOURCE_DIR = src/custom_nodes
+COMFY_TARGET = external/ComfyUI/custom_nodes
+PY_FILES = $(wildcard $(SOURCE_DIR)/*.py)
+
 help:
 	@echo "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
 	@echo ""
@@ -85,8 +89,15 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete for XPU!$(NC)"
 
+link-nodes: 
+	@echo "$(BLUE)$(BOLD)Linking all nodes files to $(TARGET_DIR)...$(NC)"
+	@for file in $(PY_FILES); do \
+		FILENAME=$$(basename $$file); \
+		ln -sf $(shell pwd)/$$file $(COMFY_TARGET)/$$FILENAME; \
+	done
+	@echo "$(GREEN)Linking completed$(NC)"
 
-run: $(VENV_SENTINEL)
+run: $(VENV_SENTINEL) link-nodes
 	@echo "$(BLUE)$(BOLD)Launching ComfyUI...$(NC)"
 	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		echo "$(GREEN)GPU acceleration detected$(NC)"; \
@@ -96,11 +107,11 @@ run: $(VENV_SENTINEL)
 		uv run external/ComfyUI/main.py --cpu $(COMFY_FLAGS) $(FLAGS); \
 	fi
 
-run-cpu: $(VENV_SENTINEL)
+run-cpu: $(VENV_SENTINEL) link-nodes
 	@echo "$(BLUE)Launching ComfyUI (CPU Forced)...$(NC)"
 	uv run external/ComfyUI/main.py --cpu $(COMFY_FLAGS) $(FLAGS)
 
-run-gpu: $(VENV_SENTINEL)
+run-gpu: $(VENV_SENTINEL) link-nodes
 	@echo "$(BLUE)Launching ComfyUI (GPU Forced)...$(NC)"
 	@if ! uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		echo "$(RED)GPU not available!$(NC)"; exit 1; \

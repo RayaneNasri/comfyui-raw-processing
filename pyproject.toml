@@ -1,6 +1,6 @@
 [project]
 name = "image-processing"
-version = "0.1.0"
+version = "0.0.1"
 description = "A modular pipeline for image processing to be used in ComfyUI"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -16,4 +16,9 @@ dev = [
 # files or directories to exclude from type checking
 project-excludes = [
     "external/*",
+]
+
+[pytest]
+testpaths = [
+    "tests",
 ]

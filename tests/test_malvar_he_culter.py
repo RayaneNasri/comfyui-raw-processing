@@ -1,6 +1,6 @@
 import torch
 
-from src.algorithms.malvar_he_culter import malvar_he_cutler_demosaicing
+from algorithms.malvar_he_culter import malvar_he_cutler_demosaicing
 
 
 def _cfa_masks(height: int, width: int, dx: int, dy: int):

@@ -1,5 +1,6 @@
 import numpy as np
 import pytest 
+import torch
 
 from algorithms.bilinear_demosaicing import bilinear_demosaicing
 

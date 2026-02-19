@@ -1,6 +1,5 @@
 from algorithms.malvar_he_culter import malvar_he_cutler_demosaicing
 
-
 class MalvarHeCutlerDemosaicNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -11,10 +10,21 @@ class MalvarHeCutlerDemosaicNode:
             }
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("RGB_image",)
+    SEARCH_ALIASES = [
+        "malvar demosaicing", 
+        "debayer image", 
+        "bayer filter interpolation", 
+        "raw to rgb", 
+        "demosaic bayer", 
+        "reconstruct image colors",
+        "malvar debayer"
+    ]
+
     FUNCTION = "execute"
     CATEGORY = "image/processing"
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("RGB_image",)
 
     def execute(self, bayer_img, cfa_pattern):
         bayer_2d = bayer_img.squeeze()

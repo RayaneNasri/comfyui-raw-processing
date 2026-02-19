@@ -1,8 +1,3 @@
-import torch
-import numpy as np
-import rawpy
-import os
-
 from algorithms.raw_processing import read_raw
 
 class RawBayerNode: 
@@ -13,11 +8,13 @@ class RawBayerNode:
                 "image_path": ("STRING", {"default": "input/image.ARW"}),
             }
         }
-    
-    RETURN_TYPES = ("IMAGE", "PATTERN", "VEC4") 
+
+    CATEGORY = "image"
+    SEARCH_ALIASES = ["load image", "open image", "import image", "image input", "upload image", "read image", "image loader"]
+
+    RETURN_TYPES = ("IMAGE", "RAW_PATTERN", "WB_GAIN") 
     RETURN_NAMES = ("bayer_img", "cfa_pattern", "wb_gains")
     FUNCTION = "execute"
-    CATEGORY = "image/raw"
     
     def execute(self, image_path):
         bayer_img, cfa_pattern, wb_gains = read_raw(image_path)

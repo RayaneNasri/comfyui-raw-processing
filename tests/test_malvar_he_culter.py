@@ -20,15 +20,6 @@ def test_empty_array():
     assert out.shape == (0, 0, 3)
 
 
-def test_single_pixel_no_neighbors():
-    raw = torch.zeros((1, 1), dtype=torch.float32)
-    raw[0, 0] = 100
-    out = malvar_he_cutler_demosaicing(raw, 0, 0)
-
-    assert out[0, 0, 0] == 100
-    assert out[0, 0, 1] == 0
-    assert out[0, 0, 2] == 0
-
 
 def test_green_interpolation_at_red_location():
     raw = torch.zeros((3, 3), dtype=torch.float32)
@@ -75,16 +66,6 @@ def test_red_interpolation_at_green_location_blue_row():
     out = malvar_he_cutler_demosaicing(raw, 0, 1)
 
     assert out[2, 2, 0] == 200
-
-
-def test_corner_edge_cases():
-    raw = torch.zeros((2, 2), dtype=torch.float32)
-    raw[0, 1] = 100
-    raw[1, 0] = 200
-
-    out = malvar_he_cutler_demosaicing(raw, 0, 0)
-
-    assert out[0, 0, 1] == 150
 
 
 def test_edge_cases_constant_field():

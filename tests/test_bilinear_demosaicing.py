@@ -1,5 +1,5 @@
 import numpy as np
-import pytest 
+import pytest
 import torch
 
 from algorithms.bilinear_demosaicing import bilinear_demosaicing
@@ -147,12 +147,13 @@ def test_corner_edge_cases():
 
 import numpy as np
 
+
 def test_edge_cases():
     """Test edge interpolation avec une grille 4x3."""
     img = torch.zeros((4, 3, 3))
-    img[::2, ::2, 0] = 1  
-    img[1::2, 1, 2]  = 1  
-    img[0::2, 1, 1]  = 1   
+    img[::2, ::2, 0] = 1
+    img[1::2, 1, 2] = 1
+    img[0::2, 1, 1] = 1
     img[1::2, ::2, 1] = 1
     res = bilinear_demosaicing(img, 0, 0)
     expected = torch.ones_like(res)
@@ -172,12 +173,13 @@ def test_data_types():
     res = bilinear_demosaicing(img, 1, 0)
     # Center (1,1,0) should be 0.75
     assert res[1, 1, 0] == 0.75
-    assert res.dtype == np.float64
+    assert res.dtype == torch.float32
+
 
 @pytest.mark.skip
 def test_full_image_preservation():
     """If an image is already full, values shouldn't change (assuming they are not treated as 'missing')."""
     # Note: This depends on implementation. If checking '== 0', non-zeros are kept.
-    img = np.ones((3, 3, 3))
+    img = torch.ones((3, 3, 3))
     res = bilinear_demosaicing(img, 0, 0)
     np.testing.assert_array_equal(img, res)

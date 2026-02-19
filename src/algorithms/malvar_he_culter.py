@@ -1,10 +1,5 @@
 import torch
-
-
-def _safe_div(num: torch.Tensor, den: torch.Tensor) -> torch.Tensor:
-    if den.item() == 0:
-        return torch.zeros((), dtype=num.dtype, device=num.device)
-    return num / den
+import torch.nn.functional as F
 
 
 def malvar_he_cutler_demosaicing(
@@ -12,258 +7,100 @@ def malvar_he_cutler_demosaicing(
     dx: int = 0,
     dy: int = 0,
 ) -> torch.Tensor:
+    """
+    Vectorized implementation of Malvar-He-Cutler demosaicing using PyTorch convolutions.
+    """
     if raw_image.ndim != 2:
         raise ValueError("raw_image must be a 2D tensor of shape (H, W)")
     if dx not in (0, 1) or dy not in (0, 1):
         raise ValueError("dx and dy must be 0 or 1")
 
+    # Handle Empty/Zero-Size Input
     height, width = raw_image.shape
+    if height == 0 or width == 0:
+        return torch.zeros((height, width, 3), dtype=raw_image.dtype, device=raw_image.device)
 
-    red_x, red_y = dx, dy
-    blue_x, blue_y = 1 - red_x, 1 - red_y
+    # Ensure input is float and has proper shape for conv2d (1, 1, H, W)
+    img = raw_image.float()
+    img_batch = img.unsqueeze(0).unsqueeze(0)
 
-    output = torch.empty((height, width, 3), dtype=raw_image.dtype, device=raw_image.device)
+    # Kernel for estimating Green at Red/Blue locations
+    k_g = (
+        torch.tensor(
+            [[0, 0, -1, 0, 0], [0, 0, 2, 0, 0], [-1, 2, 4, 2, -1], [0, 0, 2, 0, 0], [0, 0, -1, 0, 0]],
+            dtype=img.dtype,
+            device=img.device,
+        )
+        / 8.0
+    )
 
-    for y in range(height):
-        for x in range(width):
-            neighbors = torch.zeros((5, 5), dtype=raw_image.dtype, device=raw_image.device)
-            neighbor_presence = torch.zeros((5, 5), dtype=raw_image.dtype, device=raw_image.device)
+    # Kernel for estimating Red at Blue locations (or Blue at Red)
+    k_rb = (
+        torch.tensor(
+            [[0, 0, -1.5, 0, 0], [0, 2, 0, 2, 0], [-1.5, 0, 6, 0, -1.5], [0, 2, 0, 2, 0], [0, 0, -1.5, 0, 0]],
+            dtype=img.dtype,
+            device=img.device,
+        )
+        / 8.0
+    )
 
-            for ny in range(-2, 3):
-                for nx in range(-2, 3):
-                    sx = x + nx
-                    sy = y + ny
-                    if 0 <= sx < width and 0 <= sy < height:
-                        neighbors[nx + 2, ny + 2] = raw_image[sy, sx]
-                        neighbor_presence[nx + 2, ny + 2] = 1
+    # Kernel for estimating Red at Green locations (in Red rows)
+    k_rg_h = (
+        torch.tensor(
+            [[0, 0, 0.5, 0, 0], [0, -1, 0, -1, 0], [-1, 4, 5, 4, -1], [0, -1, 0, -1, 0], [0, 0, 0.5, 0, 0]],
+            dtype=img.dtype,
+            device=img.device,
+        )
+        / 8.0
+    )
 
-            center = neighbors[2, 2]
+    # Kernel for estimating Red at Green locations (in Blue rows)
+    k_rg_v = k_rg_h.t()
 
-            is_red = (x & 1) == red_x and (y & 1) == red_y
-            is_blue = (x & 1) == blue_x and (y & 1) == blue_y
+    # Reshape kernels for F.conv2d
+    k_g = k_g.view(1, 1, 5, 5)
+    k_rb = k_rb.view(1, 1, 5, 5)
+    k_rg_h = k_rg_h.view(1, 1, 5, 5)
+    k_rg_v = k_rg_v.view(1, 1, 5, 5)
 
-            if is_red:
-                out_r = raw_image[y, x]
+    # Reflect padding crashes if dim < pad (2). Use 'replicate' for tiny images.
+    if height < 3 or width < 3:
+        pad_mode = "replicate"
+    else:
+        pad_mode = "reflect"
 
-                green_num = (
-                    2 * (neighbors[2, 1] + neighbors[1, 2] + neighbors[3, 2] + neighbors[2, 3])
-                    + (
-                        neighbor_presence[0, 2]
-                        + neighbor_presence[4, 2]
-                        + neighbor_presence[2, 0]
-                        + neighbor_presence[2, 4]
-                    )
-                    * center
-                    - neighbors[0, 2]
-                    - neighbors[4, 2]
-                    - neighbors[2, 0]
-                    - neighbors[2, 4]
-                )
-                green_den = 2 * (
-                    neighbor_presence[2, 1]
-                    + neighbor_presence[1, 2]
-                    + neighbor_presence[3, 2]
-                    + neighbor_presence[2, 3]
-                )
-                out_g = _safe_div(green_num, green_den)
+    padded_img = F.pad(img_batch, (2, 2, 2, 2), mode=pad_mode)
 
-                blue_num = 4 * (neighbors[1, 1] + neighbors[3, 1] + neighbors[1, 3] + neighbors[3, 3]) + 3 * (
-                    (
-                        neighbor_presence[0, 2]
-                        + neighbor_presence[4, 2]
-                        + neighbor_presence[2, 0]
-                        + neighbor_presence[2, 4]
-                    )
-                    * center
-                    - neighbors[0, 2]
-                    - neighbors[4, 2]
-                    - neighbors[2, 0]
-                    - neighbors[2, 4]
-                )
-                blue_den = 4 * (
-                    neighbor_presence[1, 1]
-                    + neighbor_presence[3, 1]
-                    + neighbor_presence[1, 3]
-                    + neighbor_presence[3, 3]
-                )
-                out_b = _safe_div(blue_num, blue_den)
+    G_est = F.conv2d(padded_img, k_g)
+    RB_est = F.conv2d(padded_img, k_rb)
+    RG_h_est = F.conv2d(padded_img, k_rg_h)
+    RG_v_est = F.conv2d(padded_img, k_rg_v)
 
-            elif is_blue:
-                out_b = raw_image[y, x]
+    # Create Bayer Masks 
+    y_indices = torch.arange(height, device=img.device).view(-1, 1)
+    x_indices = torch.arange(width, device=img.device).view(1, -1)
 
-                green_num = (
-                    2 * (neighbors[2, 1] + neighbors[1, 2] + neighbors[3, 2] + neighbors[2, 3])
-                    + (
-                        neighbor_presence[0, 2]
-                        + neighbor_presence[4, 2]
-                        + neighbor_presence[2, 0]
-                        + neighbor_presence[2, 4]
-                    )
-                    * center
-                    - neighbors[0, 2]
-                    - neighbors[4, 2]
-                    - neighbors[2, 0]
-                    - neighbors[2, 4]
-                )
-                green_den = 2 * (
-                    neighbor_presence[2, 1]
-                    + neighbor_presence[1, 2]
-                    + neighbor_presence[3, 2]
-                    + neighbor_presence[2, 3]
-                )
-                out_g = _safe_div(green_num, green_den)
+    mask_r = ((y_indices % 2) == dy) & ((x_indices % 2) == dx)
+    mask_b = ((y_indices % 2) == (1 - dy)) & ((x_indices % 2) == (1 - dx))
+    mask_g_r = ((y_indices % 2) == dy) & ((x_indices % 2) == (1 - dx))
+    mask_g_b = ((y_indices % 2) == (1 - dy)) & ((x_indices % 2) == dx)
 
-                red_num = 4 * (neighbors[1, 1] + neighbors[3, 1] + neighbors[1, 3] + neighbors[3, 3]) + 3 * (
-                    (
-                        neighbor_presence[0, 2]
-                        + neighbor_presence[4, 2]
-                        + neighbor_presence[2, 0]
-                        + neighbor_presence[2, 4]
-                    )
-                    * center
-                    - neighbors[0, 2]
-                    - neighbors[4, 2]
-                    - neighbors[2, 0]
-                    - neighbors[2, 4]
-                )
-                red_den = 4 * (
-                    neighbor_presence[1, 1]
-                    + neighbor_presence[3, 1]
-                    + neighbor_presence[1, 3]
-                    + neighbor_presence[3, 3]
-                )
-                out_r = _safe_div(red_num, red_den)
+    mask_r = mask_r.float()
+    mask_b = mask_b.float()
+    mask_g_r = mask_g_r.float()
+    mask_g_b = mask_g_b.float()
+    mask_g = mask_g_r + mask_g_b
 
-            else:
-                out_g = raw_image[y, x]
 
-                if (y & 1) == red_y:
-                    red_num = (
-                        8 * (neighbors[1, 2] + neighbors[3, 2])
-                        + (
-                            2
-                            * (
-                                neighbor_presence[1, 1]
-                                + neighbor_presence[3, 1]
-                                + neighbor_presence[0, 2]
-                                + neighbor_presence[4, 2]
-                                + neighbor_presence[1, 3]
-                                + neighbor_presence[3, 3]
-                            )
-                            - neighbor_presence[2, 0]
-                            - neighbor_presence[2, 4]
-                        )
-                        * center
-                        - 2
-                        * (
-                            neighbors[1, 1]
-                            + neighbors[3, 1]
-                            + neighbors[0, 2]
-                            + neighbors[4, 2]
-                            + neighbors[1, 3]
-                            + neighbors[3, 3]
-                        )
-                        + neighbors[2, 0]
-                        + neighbors[2, 4]
-                    )
-                    red_den = 8 * (neighbor_presence[1, 2] + neighbor_presence[3, 2])
-                    out_r = _safe_div(red_num, red_den)
+    # Green Channel
+    G_final = img * mask_g + G_est.squeeze() * (mask_r + mask_b)
 
-                    blue_num = (
-                        8 * (neighbors[2, 1] + neighbors[2, 3])
-                        + (
-                            2
-                            * (
-                                neighbor_presence[1, 1]
-                                + neighbor_presence[3, 1]
-                                + neighbor_presence[2, 0]
-                                + neighbor_presence[2, 4]
-                                + neighbor_presence[1, 3]
-                                + neighbor_presence[3, 3]
-                            )
-                            - neighbor_presence[0, 2]
-                            - neighbor_presence[4, 2]
-                        )
-                        * center
-                        - 2
-                        * (
-                            neighbors[1, 1]
-                            + neighbors[3, 1]
-                            + neighbors[2, 0]
-                            + neighbors[2, 4]
-                            + neighbors[1, 3]
-                            + neighbors[3, 3]
-                        )
-                        + neighbors[0, 2]
-                        + neighbors[4, 2]
-                    )
-                    blue_den = 8 * (neighbor_presence[2, 1] + neighbor_presence[2, 3])
-                    out_b = _safe_div(blue_num, blue_den)
-                else:
-                    red_num = (
-                        8 * (neighbors[2, 1] + neighbors[2, 3])
-                        + (
-                            2
-                            * (
-                                neighbor_presence[1, 1]
-                                + neighbor_presence[3, 1]
-                                + neighbor_presence[2, 0]
-                                + neighbor_presence[2, 4]
-                                + neighbor_presence[1, 3]
-                                + neighbor_presence[3, 3]
-                            )
-                            - neighbor_presence[0, 2]
-                            - neighbor_presence[4, 2]
-                        )
-                        * center
-                        - 2
-                        * (
-                            neighbors[1, 1]
-                            + neighbors[3, 1]
-                            + neighbors[2, 0]
-                            + neighbors[2, 4]
-                            + neighbors[1, 3]
-                            + neighbors[3, 3]
-                        )
-                        + neighbors[0, 2]
-                        + neighbors[4, 2]
-                    )
-                    red_den = 8 * (neighbor_presence[2, 1] + neighbor_presence[2, 3])
-                    out_r = _safe_div(red_num, red_den)
+    # Red Channel
+    R_final = img * mask_r + RB_est.squeeze() * mask_b + RG_h_est.squeeze() * mask_g_r + RG_v_est.squeeze() * mask_g_b
 
-                    blue_num = (
-                        8 * (neighbors[1, 2] + neighbors[3, 2])
-                        + (
-                            2
-                            * (
-                                neighbor_presence[1, 1]
-                                + neighbor_presence[3, 1]
-                                + neighbor_presence[0, 2]
-                                + neighbor_presence[4, 2]
-                                + neighbor_presence[1, 3]
-                                + neighbor_presence[3, 3]
-                            )
-                            - neighbor_presence[2, 0]
-                            - neighbor_presence[2, 4]
-                        )
-                        * center
-                        - 2
-                        * (
-                            neighbors[1, 1]
-                            + neighbors[3, 1]
-                            + neighbors[0, 2]
-                            + neighbors[4, 2]
-                            + neighbors[1, 3]
-                            + neighbors[3, 3]
-                        )
-                        + neighbors[2, 0]
-                        + neighbors[2, 4]
-                    )
-                    blue_den = 8 * (neighbor_presence[1, 2] + neighbor_presence[3, 2])
-                    out_b = _safe_div(blue_num, blue_den)
+    # Blue Channel
+    B_final = img * mask_b + RB_est.squeeze() * mask_r + RG_h_est.squeeze() * mask_g_b + RG_v_est.squeeze() * mask_g_r
 
-            output[y, x, 0] = out_r
-            output[y, x, 1] = out_g
-            output[y, x, 2] = out_b
+    output = torch.stack([R_final, G_final, B_final], dim=2)
 
-    return output
+    return output.to(raw_image.dtype)

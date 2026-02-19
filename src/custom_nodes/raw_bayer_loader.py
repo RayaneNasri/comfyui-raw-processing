@@ -12,7 +12,7 @@ class RawBayerNode:
     CATEGORY = "image"
     SEARCH_ALIASES = ["load image", "open image", "import image", "image input", "upload image", "read image", "image loader"]
 
-    RETURN_TYPES = ("IMAGE", "RAW_PATTERN", "WB_GAIN") 
+    RETURN_TYPES = ("IMAGE", "PATTERN", "WB_GAIN") 
     RETURN_NAMES = ("bayer_img", "cfa_pattern", "wb_gains")
     FUNCTION = "execute"
     

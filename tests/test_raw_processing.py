@@ -1,5 +1,5 @@
 import torch
-from src.algorithms.raw_processing import mono_to_rgb
+from algorithms.raw_processing import mono_to_rgb
 
 def test_mono_to_rgb_basic_rggb():
     """

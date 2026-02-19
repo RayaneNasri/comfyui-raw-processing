@@ -22,7 +22,8 @@ FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
 
 SOURCE_DIR = src/custom_nodes
 COMFY_TARGET = external/ComfyUI/custom_nodes
-PY_FILES = $(wildcard $(SOURCE_DIR)/*.py)
+ALL_PY_FILES = $(wildcard $(SOURCE_DIR)/*.py)
+PY_FILES = $(filter-out $(SOURCE_DIR)/__init__.py, $(ALL_PY_FILES))
 
 help:
 	@echo "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
@@ -89,13 +90,22 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete for XPU!$(NC)"
 
-link-nodes: 
-	@echo "$(BLUE)$(BOLD)Linking all nodes files to $(TARGET_DIR)...$(NC)"
+link-nodes: remove-link-nodes
+	@echo "$(BLUE)$(BOLD)Linking all nodes files to $(COMFY_TARGET)...$(NC)"
 	@for file in $(PY_FILES); do \
 		FILENAME=$$(basename $$file); \
 		ln -sf $(shell pwd)/$$file $(COMFY_TARGET)/$$FILENAME; \
 	done
 	@echo "$(GREEN)Linking completed$(NC)"
+
+remove-link-nodes: 
+	@echo "$(BLUE)$(BOLD)Cleaning nodes from $(COMFY_TARGET)...$(NC)"
+	@find $(COMFY_TARGET) -maxdepth 1 \( -type l -o -type f \) \
+		-name "*.py" \
+		! -name "__init__.py" \
+		! -name "websocket_image_save.py" \
+		-delete
+	@echo "$(GREEN)Nodes cleanup complete.$(NC)"
 
 run: $(VENV_SENTINEL) link-nodes
 	@echo "$(BLUE)$(BOLD)Launching ComfyUI...$(NC)"
@@ -161,7 +171,7 @@ update: $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@echo "$(GREEN)$(BOLD)Update complete!$(NC)"
 
-clean:
+clean: remove-link-nodes
 	@echo "$(YELLOW)Cleaning environment...$(NC)"
 	@rm -rf .venv
 	@find . -type d -name "__pycache__" -exec rm -rf {} +

@@ -7,7 +7,7 @@ class MalvarHeCutlerDemosaicNode:
         return {
             "required": {
                 "bayer_img": ("IMAGE",),
-                "cfa_pattern": ("MASK",),
+                "cfa_pattern": ("PATTERN",),
             }
         }
 

@@ -44,7 +44,7 @@ def malvar_he_cutler_demosaicing(
         / 8.0
     )
 
-    # Kernel for estimating Red at Green locations (in Red rows)
+    # Kernel for estimating Red at Green locations in red rows (or Blue at Green locations in Red rows)
     k_rg_h = (
         torch.tensor(
             [[0, 0, 0.5, 0, 0], [0, -1, 0, -1, 0], [-1, 4, 5, 4, -1], [0, -1, 0, -1, 0], [0, 0, 0.5, 0, 0]],
@@ -54,7 +54,7 @@ def malvar_he_cutler_demosaicing(
         / 8.0
     )
 
-    # Kernel for estimating Red at Green locations (in Blue rows)
+    # Kernel for estimating Red at Green locations in blue rows (or Blue at Green locations in Blue rows)
     k_rg_v = k_rg_h.t()
 
     # Reshape kernels for F.conv2d

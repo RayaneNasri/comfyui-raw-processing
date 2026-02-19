@@ -7,14 +7,14 @@ from algorithms.raw_processing import read_raw
 
 class RawBayerNode: 
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {
                 "image_path": ("STRING", {"default": "input/image.ARW"}),
             }
         }
     
-    RETURN_TYPES = ("IMAGE", "MASK", "VEC4") 
+    RETURN_TYPES = ("IMAGE", "PATTERN", "VEC4") 
     RETURN_NAMES = ("bayer_img", "cfa_pattern", "wb_gains")
     FUNCTION = "execute"
     CATEGORY = "image/raw"
@@ -31,5 +31,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "RawBayerNode": "Read RAW (Bayer Mosaic)"
+    "RawBayerNode": "Read RAW"
 }

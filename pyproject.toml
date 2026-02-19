@@ -12,6 +12,13 @@ dev = [
     "pyrefly>=0.52.0",
 ]
 
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pyrefly]
 # files or directories to exclude from type checking
 project-excludes = [

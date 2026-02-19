@@ -5,11 +5,11 @@ import torch
 
 class BilinearDemosaicNode:
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {
                 "bayer_img": ("IMAGE",),
-                "cfa_pattern": ("MASK",),
+                "cfa_pattern": ("PATTERN",),
             }
         }
 

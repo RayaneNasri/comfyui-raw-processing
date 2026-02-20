@@ -1,0 +1,34 @@
+# Use a lightweight python env
+image: python:3.13-slim
+
+# The order of execution
+stages:
+  - lint
+  - test
+
+before_script:
+  - pip install uv
+
+# Job 1 : Checking formatting with black
+format-check:
+  stage: lint
+  script:
+    - uv run black --check .
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+
+# Job 2 : Type checking with Pyrefly
+type-check:
+  stage: lint
+  script:
+    - uv run pyrefly .
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+
+# Job 3 : Run Tests
+unit-tests:
+  stage: test
+  script:
+    - uv run pytest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"

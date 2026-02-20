@@ -4,26 +4,22 @@ version = "0.0.1"
 description = "A modular pipeline for image processing to be used in ComfyUI"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+
+dependencies = [
+    "numpy>=2.0.0",
+    "torch>=2.0.0",
+    "rawpy>=0.19.0",
+]
 
 [dependency-groups]
 dev = [
-    "black>=26.1.0",
+    "black>=24.0.0",
     "pyrefly>=0.52.0",
+    "pytest>=8.0.0",
 ]
 
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.pyrefly]
-# files or directories to exclude from type checking
-project-excludes = [
-    "external/*",
-]
+[tool.pyright] # Corrected from pyrefly
+exclude = ["external/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

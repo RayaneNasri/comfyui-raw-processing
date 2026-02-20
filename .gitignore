@@ -27,6 +27,7 @@ share/python-wheels/
 
 # Python tooling caches
 .pytest_cache/
+.ruff_cache/
 .mypy_cache/
 .pyre/
 .pytype/

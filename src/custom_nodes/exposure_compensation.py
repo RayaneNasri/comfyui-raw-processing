@@ -1,5 +1,8 @@
 import torch
 
+from torch import Tensor
+from algorithms.exposure_compensation import exposure_compensation
+
 class ExposureCompensationNode: 
     @classmethod
     def INPUT_TYPES(s):
@@ -20,12 +23,10 @@ class ExposureCompensationNode:
     FUNCTION = "process"
     CATEGORY = "image/processing"
     
-    def process(self, image, ev_compensation):
+    def process(self, image: Tensor, ev_compensation: float):
         
-        gain = 2.0 ** ev_compensation
-        result = torch.clamp(image * gain, 0.0, 1.0)
-        
-        return (result,)
+        res = exposure_compensation(image, ev_compensation)
+        return (res,)
 
 NODE_CLASS_MAPPINGS = {
     "ExposureCompensationNode": ExposureCompensationNode,

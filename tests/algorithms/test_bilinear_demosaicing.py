@@ -1,6 +1,7 @@
-import torch
+import numpy as np
 
-from algorithms.demosaicing import bilinear_demosaicing
+# import pytest
+from algorithms.bilinear_demosaicing import bilinear_demosaicing
 
 # Bayer CFA with (dy,dx) the location of the first pixel sampled in red
 # pixels in rgb_image[dy::2, dx::2] are sampled in red
@@ -12,14 +13,14 @@ from algorithms.demosaicing import bilinear_demosaicing
 # R G R G R
 
 
-def test_empty_tensor():
-    assert bilinear_demosaicing(torch.empty(0, 0, 3)).nelement() == 0
+def test_empty_array():
+    assert bilinear_demosaicing(np.empty(shape=(0, 0, 3)), 0, 0).size == 0
 
 
 def test_single_pixel_no_neighbors():
-    img = torch.zeros((1, 1, 3))
+    img = np.zeros((1, 1, 3))
     img[0, 0, 0] = 100  # Red present
-    res = bilinear_demosaicing(img)
+    res = bilinear_demosaicing(img, 0, 0)
     # The existing value should be preserved
     assert res[0, 0, 0] == 100
     # Missing channels with no neighbors remain 0
@@ -35,7 +36,7 @@ def test_green_interpolation_at_red_location():
       G R G
       . G .
     """
-    img = torch.zeros((3, 3, 3))
+    img = np.zeros((3, 3, 3))
     # Set center Red
     img[1, 1, 0] = 50
 
@@ -62,7 +63,7 @@ def test_blue_interpolation_at_red_location():
       . R .
       B . B
     """
-    img = torch.zeros((3, 3, 3))
+    img = np.zeros((3, 3, 3))
     # Set center Red
     img[1, 1, 0] = 50
 
@@ -86,7 +87,7 @@ def test_red_interpolation_at_green_location_red_row():
       R G R
       . B .
     """
-    img = torch.zeros((3, 3, 3))
+    img = np.zeros((3, 3, 3))
     # Center Green
     img[1, 1, 1] = 50
 
@@ -108,7 +109,7 @@ def test_red_interpolation_at_green_location_blue_row():
       B G B  <-- Center is Green, rows above/below have Red
       . R .
     """
-    img = torch.zeros((3, 3, 3))
+    img = np.zeros((3, 3, 3))
     # Center Green
     img[1, 1, 1] = 50
 
@@ -130,7 +131,7 @@ def test_corner_edge_cases():
       G B
     G Neighbors of (0,0) are (0,1) and (1,0).
     """
-    img = torch.zeros((2, 2, 3))
+    img = np.zeros((2, 2, 3))
 
     # Set neighbors for Green
     img[0, 1, 1] = 100  # Right
@@ -144,15 +145,76 @@ def test_corner_edge_cases():
 
 
 def test_edge_cases():
-    """Test edge interpolation avec une grille 4x3."""
-    img = torch.zeros((4, 3, 3))
-    img[::2, ::2, 0] = 1
-    img[1::2, 1, 2] = 1
-    img[0::2, 1, 1] = 1
-    img[1::2, ::2, 1] = 1
+    """
+    Test edge interpolation
+    Grid 4x3:
+      R G R
+      G B G
+      R G R
+      G B G
+    """
+    img = np.zeros((4, 3, 3))
+
+    # Red
+    img[0, 0, 0] = 1
+    img[0, 2, 0] = 1
+    img[2, 0, 0] = 1
+    img[2, 2, 0] = 1
+
+    # Blue
+    img[1, 1, 2] = 1
+    img[3, 1, 2] = 1
+
+    # Green
+    img[0, 1, 1] = 1
+    img[1, 0, 1] = 1
+    img[1, 2, 1] = 1
+    img[2, 1, 1] = 1
+    img[3, 0, 1] = 1
+    img[3, 2, 1] = 1
+
     res = bilinear_demosaicing(img, 0, 0)
-    expected = torch.ones_like(res)
-    torch.testing.assert_close(res, expected)
+
+    # Expected 1 everywhere
+    assert res[0, 0, 0] == 1
+    assert res[0, 0, 1] == 1
+    assert res[0, 0, 2] == 1
+    assert res[0, 1, 0] == 1
+    assert res[0, 1, 1] == 1
+    assert res[0, 1, 2] == 1
+    assert res[0, 2, 0] == 1
+    assert res[0, 2, 1] == 1
+    assert res[0, 2, 2] == 1
+
+    assert res[1, 0, 0] == 1
+    assert res[1, 0, 1] == 1
+    assert res[1, 0, 2] == 1
+    assert res[1, 1, 0] == 1
+    assert res[1, 1, 1] == 1
+    assert res[1, 1, 2] == 1
+    assert res[1, 2, 0] == 1
+    assert res[1, 2, 1] == 1
+    assert res[1, 2, 2] == 1
+
+    assert res[2, 0, 0] == 1
+    assert res[2, 0, 1] == 1
+    assert res[2, 0, 2] == 1
+    assert res[2, 1, 0] == 1
+    assert res[2, 1, 1] == 1
+    assert res[2, 1, 2] == 1
+    assert res[2, 2, 0] == 1
+    assert res[2, 2, 1] == 1
+    assert res[2, 2, 2] == 1
+
+    assert res[3, 0, 0] == 1
+    assert res[3, 0, 1] == 1
+    assert res[3, 0, 2] == 1
+    assert res[3, 1, 0] == 1
+    assert res[3, 1, 1] == 1
+    assert res[3, 1, 2] == 1
+    assert res[3, 2, 0] == 1
+    assert res[3, 2, 1] == 1
+    assert res[3, 2, 2] == 1
 
 
 def test_data_types():
@@ -162,10 +224,31 @@ def test_data_types():
     R . R
     . . .
     """
-    img = torch.zeros((3, 3, 3), dtype=torch.float32)
+    img = np.zeros((3, 3, 3), dtype=np.float64)
     img[1, 0, 0] = 0.5
     img[1, 2, 0] = 1.0
+
     res = bilinear_demosaicing(img, 1, 0)
+
     # Center (1,1,0) should be 0.75
     assert res[1, 1, 0] == 0.75
-    assert res.dtype == torch.float32
+    assert res.dtype == np.float64
+
+
+def test_full_image_preservation():
+    """If an image is already full, values shouldn't change (assuming they are not treated as 'missing')."""
+    # Note: This depends on implementation. If checking '== 0', non-zeros are kept.
+    img = np.ones((3, 3, 3))
+    res = bilinear_demosaicing(img)
+    np.testing.assert_array_equal(img, res)
+
+
+# test_empty_array()
+# test_single_pixel_no_neighbors()
+# test_green_interpolation_at_red_location()
+# test_blue_interpolation_at_red_location()
+# test_red_interpolation_at_green_location_red_row()
+# test_red_interpolation_at_green_location_blue_row()
+# test_corner_edge_cases()
+# test_edge_cases()
+# test_data_types()

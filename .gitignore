@@ -27,7 +27,6 @@ share/python-wheels/
 
 # Python tooling caches
 .pytest_cache/
-.ruff_cache/
 .mypy_cache/
 .pyre/
 .pytype/
@@ -168,6 +167,3 @@ uv.lock
 .cache/*
 .coverage
 .DS_Store
-docs/
-samples/
-notebooks/

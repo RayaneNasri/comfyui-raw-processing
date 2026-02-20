@@ -8,6 +8,11 @@
     - Meeting with Quentim Bammey (19/02/2026)
     - Planning
   - Amayas :
+    - Setting up with Ghiles a Makefile to easily configure and install the project.
+      - Linking the GitHub repository of ComfyUI to our GitLab repository.
+      - Writing a first version of Makefile that clones + compiles + starts the project.
+    - Implementing V0 for black light substraction and reading raw images in ComfyUI.
+    - Doing research about Malvar-He-Culter demosaicing algorithm and implementation.
   - Charlotte :
     - implementation of bilinear_demosaicing algorithm
     - familiarisation with ComfyUI, especially creation of nodes
@@ -25,7 +30,9 @@
   - Amayas :
     - Configuration to connect remotely to another computer, more powerful than mine, so that ComfyUI runs faster, and installation of the necessary packages on that other computer.
     - First researches to understand "color manipulation" and the different features needed for this node (docs/color_manipulation.md)
+    - Setting up issues managing on GitLab.
   - Ghiles :
+
   - Rayane :
 
 ## Between 20/02/2026 and 23/02/2026

@@ -1,5 +1,4 @@
-from algorithms.raw_processing import mono_to_rgb
-from algorithms.bilinear_demosaicing import bilinear_demosaicing
+from algorithms.demosaicing.bilinear import bilinear_demosaicing, mono_to_rgb
 
 
 class BilinearDemosaicNode:
@@ -28,12 +27,9 @@ class BilinearDemosaicNode:
     FUNCTION = "execute"
 
     def execute(self, bayer_img, cfa_pattern):
-        # Remove batch dim and channel dim to get [H, W]
         img_2d = bayer_img.squeeze()
         pattern_2d = cfa_pattern.squeeze()
-        H, W = img_2d.shape
 
-        # We look for the first Red pixel (value 0 in rawpy) in the top-left 2x2
         top_left_2x2 = pattern_2d[:2, :2]
         coords = (top_left_2x2 == 0).nonzero(as_tuple=True)
 
@@ -43,9 +39,6 @@ class BilinearDemosaicNode:
         else:
             raise ValueError("No red pixel found on the top left square 2x2")
 
-        # Convert 1-channel Bayer to 3-channel sparse RGB
-        # the function expects a (H, W, 3) tensor where only the sampled
-        # color for each pixel is non-zero.
         sparse_rgb = mono_to_rgb(img_2d, pattern_2d)
         result = bilinear_demosaicing(sparse_rgb, dx=detected_dx, dy=detected_dy)
         return (result.unsqueeze(0),)

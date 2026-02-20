@@ -90,7 +90,7 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete for XPU!$(NC)"
 
-setup-CI:
+setup-CI: $(VENV_SENTINEL)
 	@echo "$(BLUE)Setting up environment for CI/CD...$(NC)"
 	@$(MAKE) install-torch
 	@uv pip install -r ci-requirements.txt

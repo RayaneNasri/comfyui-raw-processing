@@ -90,6 +90,12 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete for XPU!$(NC)"
 
+setup-CI:
+	@echo "$(BLUE)Setting up environment for CI/CD...$(NC)"
+	@$(MAKE) install-torch
+	@uv pip install -r ci-requirements.txt
+	@echo "$(GREEN)CI/CD setup complete!$(NC)"
+
 link-nodes: remove-link-nodes
 	@echo "$(BLUE)$(BOLD)Linking all nodes files to $(COMFY_TARGET)...$(NC)"
 	@for file in $(PY_FILES); do \

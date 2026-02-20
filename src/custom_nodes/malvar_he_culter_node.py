@@ -1,5 +1,6 @@
 from algorithms.malvar_he_culter import malvar_he_cutler_demosaicing
 
+
 class MalvarHeCutlerDemosaicNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -11,13 +12,13 @@ class MalvarHeCutlerDemosaicNode:
         }
 
     SEARCH_ALIASES = [
-        "malvar demosaicing", 
-        "debayer image", 
-        "bayer filter interpolation", 
-        "raw to rgb", 
-        "demosaic bayer", 
+        "malvar demosaicing",
+        "debayer image",
+        "bayer filter interpolation",
+        "raw to rgb",
+        "demosaic bayer",
         "reconstruct image colors",
-        "malvar debayer"
+        "malvar debayer",
     ]
 
     FUNCTION = "execute"

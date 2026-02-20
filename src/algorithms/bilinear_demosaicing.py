@@ -7,7 +7,9 @@ def _safe_div(num: torch.Tensor, den: torch.Tensor) -> torch.Tensor:
     return torch.where(den == 0, torch.zeros_like(num), num / den)
 
 
-def bilinear_demosaicing(rgb_image: torch.Tensor, dx: int = 0, dy: int = 0) -> torch.Tensor:
+def bilinear_demosaicing(
+    rgb_image: torch.Tensor, dx: int = 0, dy: int = 0
+) -> torch.Tensor:
     """
     Vectorized Bilinear Demosaicing using Normalized Convolution.
     """
@@ -30,9 +32,13 @@ def bilinear_demosaicing(rgb_image: torch.Tensor, dx: int = 0, dy: int = 0) -> t
 
     # 2. Define Kernels
     # k_cross: Sums 4 neighbors (Up, Down, Left, Right)
-    k_cross = torch.tensor([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=dtype, device=device).view(1, 1, 3, 3)
+    k_cross = torch.tensor(
+        [[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=dtype, device=device
+    ).view(1, 1, 3, 3)
     # k_diag: Sums 4 diagonal neighbors
-    k_diag = torch.tensor([[1, 0, 1], [0, 0, 0], [1, 0, 1]], dtype=dtype, device=device).view(1, 1, 3, 3)
+    k_diag = torch.tensor(
+        [[1, 0, 1], [0, 0, 0], [1, 0, 1]], dtype=dtype, device=device
+    ).view(1, 1, 3, 3)
 
     # 3. Create Masks for Pixel Locations
     y = torch.arange(height, device=device).view(-1, 1)

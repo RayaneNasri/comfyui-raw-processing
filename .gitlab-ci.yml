@@ -23,7 +23,7 @@ default:
   before_script:
     - apt-get update
     - apt-get install -y gcc make git
-    - make  setup-CI
+    - make setup-CI
 
   cache:
     key:

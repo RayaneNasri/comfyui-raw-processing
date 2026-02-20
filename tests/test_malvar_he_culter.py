@@ -20,7 +20,6 @@ def test_empty_array():
     assert out.shape == (0, 0, 3)
 
 
-
 def test_green_interpolation_at_red_location():
     raw = torch.zeros((3, 3), dtype=torch.float32)
     raw[1, 1] = 50

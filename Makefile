@@ -1,4 +1,4 @@
-.PHONY: help status update  clean run run-cpu run-gpu install-deps setup setup-xpu
+.PHONY: help status update clean run run-cpu run-gpu install-deps install-torch setup setup-xpu
 
 BLUE := \033[0;34m
 CYAN := \033[0;36m
@@ -17,6 +17,12 @@ VENV_SENTINEL := .venv/pyvenv.cfg
 
 COMFY_FLAGS := --enable-manager --preview-method latent2rgb
 FLAGS ?=
+
+FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
+
+SOURCE_DIR = src/custom_nodes
+COMFY_TARGET = external/ComfyUI/custom_nodes
+PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
 
 help:
 	@echo "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
@@ -46,7 +52,8 @@ $(VENV_SENTINEL):
 
 install-deps: $(VENV_SENTINEL)
 	@echo "$(BLUE)Installing ComfyUI dependencies...$(NC)"
-	@uv pip install -r external/ComfyUI/requirements.txt
+	@grep -Ev '^(torch|torchvision|torchaudio)([<>=~!].*)?$$' external/ComfyUI/requirements.txt > $(FILTERED_COMFY_REQ)
+	@uv pip install -r $(FILTERED_COMFY_REQ)
 	@if [ -f "external/ComfyUI/manager_requirements.txt" ]; then \
 		uv pip install -r external/ComfyUI/manager_requirements.txt; \
 	fi
@@ -56,9 +63,7 @@ install-deps: $(VENV_SENTINEL)
 	fi
 	@uv pip install -e .
 
-
-setup: check-comfyui $(VENV_SENTINEL)
-	@echo "$(BLUE)$(BOLD)Setting up environment for detected hardware...$(NC)"
+install-torch: $(VENV_SENTINEL)
 	@if [ "$(OS)" = "Darwin" ]; then \
 		echo "Detected macOS. Installing PyTorch (MPS supported)..."; \
 		uv pip install torch torchvision torchaudio; \
@@ -66,9 +71,14 @@ setup: check-comfyui $(VENV_SENTINEL)
 		echo "Detected NVIDIA GPU. Installing PyTorch (CUDA 13.0)..."; \
 		uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
 	else \
-		echo "$(YELLOW)No GPU detected. Installing PyTorch (CPU version)...$(NC)"; \
+		echo "$(YELLOW)No NVIDIA GPU detected. Installing PyTorch (CPU version)...$(NC)"; \
 		uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \
 	fi
+
+
+setup: check-comfyui $(VENV_SENTINEL)
+	@echo "$(BLUE)$(BOLD)Setting up environment for detected hardware...$(NC)"
+	@$(MAKE) install-torch
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete! Run 'make status' to verify.$(NC)"
 
@@ -79,8 +89,30 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete for XPU!$(NC)"
 
+setup-CI: $(VENV_SENTINEL)
+	@echo "$(BLUE)Setting up environment for CI/CD...$(NC)"
+	@$(MAKE) install-torch
+	@uv pip install -r ci-requirements.txt
+	@echo "$(GREEN)CI/CD setup complete!$(NC)"
 
-run: $(VENV_SENTINEL)
+link-nodes: remove-link-nodes
+	@echo "$(BLUE)$(BOLD)Linking all nodes files to $(COMFY_TARGET)...$(NC)"
+	@for file in $(PY_FILES); do \
+		FILENAME=$$(basename $$file); \
+		ln -sf $(shell pwd)/$$file $(COMFY_TARGET)/$$FILENAME; \
+	done
+	@echo "$(GREEN)Linking completed$(NC)"
+
+remove-link-nodes: 
+	@echo "$(BLUE)$(BOLD)Cleaning nodes from $(COMFY_TARGET)...$(NC)"
+	@find $(COMFY_TARGET) -maxdepth 1 \( -type l -o -type f \) \
+		-name "*.py" \
+		! -name "__init__.py" \
+		! -name "websocket_image_save.py" \
+		-delete
+	@echo "$(GREEN)Nodes cleanup complete.$(NC)"
+
+run: $(VENV_SENTINEL) link-nodes
 	@echo "$(BLUE)$(BOLD)Launching ComfyUI...$(NC)"
 	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		echo "$(GREEN)GPU acceleration detected$(NC)"; \
@@ -90,11 +122,11 @@ run: $(VENV_SENTINEL)
 		uv run external/ComfyUI/main.py --cpu $(COMFY_FLAGS) $(FLAGS); \
 	fi
 
-run-cpu: $(VENV_SENTINEL)
+run-cpu: $(VENV_SENTINEL) link-nodes
 	@echo "$(BLUE)Launching ComfyUI (CPU Forced)...$(NC)"
 	uv run external/ComfyUI/main.py --cpu $(COMFY_FLAGS) $(FLAGS)
 
-run-gpu: $(VENV_SENTINEL)
+run-gpu: $(VENV_SENTINEL) link-nodes
 	@echo "$(BLUE)Launching ComfyUI (GPU Forced)...$(NC)"
 	@if ! uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		echo "$(RED)GPU not available!$(NC)"; exit 1; \
@@ -138,12 +170,13 @@ check-comfyui:
 update: $(VENV_SENTINEL)
 	@echo "$(BLUE)Updating ComfyUI...$(NC)"
 	git submodule update --init --recursive
+	@echo "$(BLUE)Updating PyTorch for current hardware...$(NC)"
+	@$(MAKE) install-torch
 	@echo "$(BLUE)Updating Python packages...$(NC)"
-	@uv pip install --upgrade -r external/ComfyUI/requirements.txt
 	@$(MAKE) install-deps
 	@echo "$(GREEN)$(BOLD)Update complete!$(NC)"
 
-clean:
+clean: remove-link-nodes
 	@echo "$(YELLOW)Cleaning environment...$(NC)"
 	@rm -rf .venv
 	@find . -type d -name "__pycache__" -exec rm -rf {} +

@@ -1,3 +1,2 @@
-rawpy
-pytest
-matplotlib
+rawpy>=0.26
+matplotlib>=3.10

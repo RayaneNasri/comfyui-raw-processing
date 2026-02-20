@@ -64,7 +64,8 @@ install-deps: $(VENV_SENTINEL)
 	fi
 	@uv pip install -e .
 
-install-torch: $(VENV_SENTINEL)
+install-cuda:
+	@echo "$(BLUE)Checking for CUDA support...$(NC)"
 	@if [ "$(OS)" = "Darwin" ]; then \
 		echo "Detected macOS. Installing PyTorch (MPS supported)..."; \
 		uv pip install torch torchvision torchaudio; \
@@ -76,10 +77,9 @@ install-torch: $(VENV_SENTINEL)
 		uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \
 	fi
 
-
 setup: check-comfyui $(VENV_SENTINEL)
 	@echo "$(BLUE)$(BOLD)Setting up environment for detected hardware...$(NC)"
-	@$(MAKE) install-torch
+	@$(MAKE) install-cuda
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete! Run 'make status' to verify.$(NC)"
 
@@ -90,24 +90,13 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete for XPU!$(NC)"
 
-link-nodes: remove-link-nodes
-	@echo "$(BLUE)$(BOLD)Linking all nodes files to $(COMFY_TARGET)...$(NC)"
-	@for file in $(PY_FILES); do \
-		FILENAME=$$(basename $$file); \
-		ln -sf $(shell pwd)/$$file $(COMFY_TARGET)/$$FILENAME; \
-	done
-	@echo "$(GREEN)Linking completed$(NC)"
+setup-CI:
+	@echo "$(BLUE)Setting up environment for CI/CD...$(NC)"
+	@$(MAKE) install-cuda
+	@uv pip install -r ci-requirements.txt
+	@echo "$(GREEN)CI/CD setup complete!$(NC)"
 
-remove-link-nodes: 
-	@echo "$(BLUE)$(BOLD)Cleaning nodes from $(COMFY_TARGET)...$(NC)"
-	@find $(COMFY_TARGET) -maxdepth 1 \( -type l -o -type f \) \
-		-name "*.py" \
-		! -name "__init__.py" \
-		! -name "websocket_image_save.py" \
-		-delete
-	@echo "$(GREEN)Nodes cleanup complete.$(NC)"
-
-run: $(VENV_SENTINEL) link-nodes
+run: $(VENV_SENTINEL)
 	@echo "$(BLUE)$(BOLD)Launching ComfyUI...$(NC)"
 	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		echo "$(GREEN)GPU acceleration detected$(NC)"; \

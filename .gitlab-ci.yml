@@ -1,34 +1,58 @@
-# Use a lightweight python env
-image: python:3.13-slim
-
-# The order of execution
 stages:
+  - format
   - lint
+  - typecheck
   - test
 
-before_script:
-  - pip install uv
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"'
+    - when: never
 
-# Job 1 : Checking formatting with black
-format-check:
+variables:
+  UV_VERSION: "0.9"
+  PYTHON_VERSION: "3.13"
+  BASE_LAYER: bookworm-slim
+  UV_LINK_MODE: copy
+  UV_CACHE_DIR: .uv-cache
+  UV_SYSTEM_PYTHON: 1
+
+default:
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
+  before_script:
+    - apt-get update
+    - apt-get install -y gcc make git
+    - make  setup-CI
+
+  cache:
+    key:
+      files:
+        - uv.lock
+    paths:
+      - $UV_CACHE_DIR
+    policy: pull-push
+
+format:
+  stage: format
+  script:
+    - uv run ruff format --check
+
+lint:
   stage: lint
   script:
-    - uv run black --check .
-  rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - uv run ruff check --output-format=gitlab > code-quality-report.json || true
+    - uv run ruff check
+  artifacts:
+    reports:
+      codequality: $CI_PROJECT_DIR/code-quality-report.json
 
-# Job 2 : Type checking with Pyrefly
-type-check:
-  stage: lint
+typecheck:
+  stage: typecheck
   script:
-    - uv run pyrefly .
-  rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - uv run pyrefly check
 
-# Job 3 : Run Tests
-unit-tests:
+test:
   stage: test
   script:
-    - uv run pytest
-  rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - uv run pytest -q

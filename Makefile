@@ -56,9 +56,8 @@ install-deps: $(VENV_SENTINEL)
 	fi
 	@uv pip install -e .
 
-
-setup: check-comfyui $(VENV_SENTINEL)
-	@echo "$(BLUE)$(BOLD)Setting up environment for detected hardware...$(NC)"
+install-cuda:
+	@echo "$(BLUE)Checking for CUDA support...$(NC)"
 	@if [ "$(OS)" = "Darwin" ]; then \
 		echo "Detected macOS. Installing PyTorch (MPS supported)..."; \
 		uv pip install torch torchvision torchaudio; \
@@ -69,6 +68,10 @@ setup: check-comfyui $(VENV_SENTINEL)
 		echo "$(YELLOW)No GPU detected. Installing PyTorch (CPU version)...$(NC)"; \
 		uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \
 	fi
+
+setup: check-comfyui $(VENV_SENTINEL)
+	@echo "$(BLUE)$(BOLD)Setting up environment for detected hardware...$(NC)"
+	@$(MAKE) install-cuda
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete! Run 'make status' to verify.$(NC)"
 
@@ -79,6 +82,11 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete for XPU!$(NC)"
 
+setup-CI:
+	@echo "$(BLUE)Setting up environment for CI/CD...$(NC)"
+	@$(MAKE) install-cuda
+	@uv pip install -r ci-requirements.txt
+	@echo "$(GREEN)CI/CD setup complete!$(NC)"
 
 run: $(VENV_SENTINEL)
 	@echo "$(BLUE)$(BOLD)Launching ComfyUI...$(NC)"

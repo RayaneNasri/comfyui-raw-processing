@@ -1,25 +1,19 @@
 [project]
 name = "image-processing"
-version = "0.1.0"
+version = "0.0.1"
 description = "A modular pipeline for image processing to be used in ComfyUI"
 readme = "README.md"
 requires-python = ">=3.13"
 
-dependencies = [
-    "numpy>=2.0.0",
-    "torch>=2.0.0",
-    "rawpy>=0.19.0",
-]
-
 [dependency-groups]
 dev = [
-    "black>=24.0.0",
     "pyrefly>=0.52.0",
     "pytest>=8.0.0",
+    "ruff>=0.15.2",
 ]
 
 [tool.pyright] # Corrected from pyrefly
-exclude = ["external/*"]
+exclude = ["external/*", "**/node_modules", "**/__pycache__", "**/.*", ".venv"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

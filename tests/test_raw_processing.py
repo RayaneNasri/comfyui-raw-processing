@@ -1,6 +1,6 @@
 import torch
 
-from algorithms.demosaicing.bilinear import mono_to_rgb
+from algorithms.demosaicing import mono_to_rgb
 
 
 def test_mono_to_rgb_basic_rggb():

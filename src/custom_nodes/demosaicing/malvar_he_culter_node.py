@@ -1,4 +1,4 @@
-from algorithms.malvar_he_culter import malvar_he_cutler_demosaicing
+from algorithms.demosaicing import malvar_he_cutler_demosaicing
 
 
 class MalvarHeCutlerDemosaicNode:

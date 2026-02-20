@@ -1,4 +1,4 @@
-from algorithms.demosaicing.bilinear import bilinear_demosaicing, mono_to_rgb
+from algorithms.demosaicing import bilinear_demosaicing, mono_to_rgb
 
 
 class BilinearDemosaicNode:

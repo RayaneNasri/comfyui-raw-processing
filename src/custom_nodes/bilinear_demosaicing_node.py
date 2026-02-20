@@ -1,6 +1,7 @@
 from algorithms.raw_processing import mono_to_rgb
 from algorithms.bilinear_demosaicing import bilinear_demosaicing
 
+
 class BilinearDemosaicNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -13,13 +14,13 @@ class BilinearDemosaicNode:
 
     CATEGORY = "image"
     SEARCH_ALIASES = [
-        "bilinear demosaicing", 
-        "debayer image", 
-        "bayer filter interpolation", 
-        "raw to rgb", 
-        "demosaic bayer", 
+        "bilinear demosaicing",
+        "debayer image",
+        "bayer filter interpolation",
+        "raw to rgb",
+        "demosaic bayer",
         "reconstruct image colors",
-        "bilinear debayer"
+        "bilinear debayer",
     ]
 
     RETURN_TYPES = ("IMAGE",)

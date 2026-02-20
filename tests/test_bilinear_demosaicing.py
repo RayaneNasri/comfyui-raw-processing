@@ -145,9 +145,6 @@ def test_corner_edge_cases():
     assert res[0, 0, 1] == 150
 
 
-import numpy as np
-
-
 def test_edge_cases():
     """Test edge interpolation avec une grille 4x3."""
     img = torch.zeros((4, 3, 3))

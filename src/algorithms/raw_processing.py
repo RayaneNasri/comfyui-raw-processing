@@ -1,7 +1,11 @@
 import torch
 import rawpy
+import numpy as np
 
-def mono_to_rgb(normalized_image: torch.Tensor, bayer_pattern: torch.Tensor) -> torch.Tensor:
+
+def mono_to_rgb(
+    normalized_image: torch.Tensor, bayer_pattern: torch.Tensor
+) -> torch.Tensor:
     """
     the docstring ...
     """
@@ -25,10 +29,6 @@ def mono_to_rgb(normalized_image: torch.Tensor, bayer_pattern: torch.Tensor) -> 
     return rgb_image
 
 
-import rawpy
-import numpy as np
-import torch
-
 def read_raw(path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Reads a RAW file and returns the Bayer mosaic as a normalized PyTorch tensor.
@@ -44,16 +44,18 @@ def read_raw(path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     with rawpy.imread(path) as raw:
         img = raw.raw_image.copy().astype(np.float32)
         bayer = raw.raw_colors.copy()
-        
+
         black_levels = raw.black_level_per_channel
         white_level = raw.white_level
-        
+
         # Normalization Step --
-        for i in range( len(black_levels) ):
-            mask = (bayer == i)
+        for i in range(len(black_levels)):
+            mask = bayer == i
             bl = black_levels[i]
             img[mask] = (img[mask] - bl) / (white_level - bl)
         img = np.clip(img, 0.0, 1.0)
-        return (torch.from_numpy(img),                
-                torch.from_numpy(bayer).int(),        
-                torch.tensor(raw.camera_whitebalance, dtype=torch.float32))
+        return (
+            torch.from_numpy(img),
+            torch.from_numpy(bayer).int(),
+            torch.tensor(raw.camera_whitebalance, dtype=torch.float32),
+        )

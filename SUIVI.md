@@ -26,13 +26,16 @@
 
 ## Session 20/02/2026
 
- - Charlotte :
   - Amayas :
+  - Charlotte :
     - Configuration to connect remotely to another computer, more powerful than mine, so that ComfyUI runs faster, and installation of the necessary packages on that other computer.
     - First researches to understand "color manipulation" and the different features needed for this node (docs/color_manipulation.md)
     - Setting up issues managing on GitLab.
   - Ghiles :
-
+    - Separated the black light substraction from the raw image reading and created two differents nodes for them.
+    - Completed the CI/CD that Rayane started, with a prebuilt docker image to speed up the tests.
+    - Refactored the architecture of the project to put put each algorithm in its apoprpiate folder that defines which phase of the ISP it belongs to.
+    - Started researching the tone curve application algorithm. 
   - Rayane :
 
 ## Between 20/02/2026 and 23/02/2026

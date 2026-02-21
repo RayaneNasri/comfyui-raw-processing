@@ -20,11 +20,11 @@ default:
   cache:
     key:
       files:
-        - uv.lock
+        - pyproject.toml
     paths:
       - $UV_CACHE_DIR
       - .venv
-    policy: pull-push
+    policy: pull
 
 format:
   stage: format
@@ -42,8 +42,11 @@ lint:
 
 typecheck:
   stage: typecheck
+  cache:
+    policy: pull-push
   script:
-    - uvx pyrefly check
+    - make setup-CI
+    - uv run pyrefly check
 
 test:
   stage: test

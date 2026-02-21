@@ -1,5 +1,6 @@
 import torch
 
+# TODO: Improve the code using a dictionary
 def white_patch_ref(img: torch.Tensor) -> torch.Tensor :
     """
     White balance image using White patch algorithm

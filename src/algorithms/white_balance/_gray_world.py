@@ -1,5 +1,6 @@
 import torch
 
+# TODO: Improve the code using a dictionary
 def gw(img: torch.Tensor) -> torch.Tensor :
     """
     White balance image using Gray-world algorithm
@@ -14,7 +15,7 @@ def gw(img: torch.Tensor) -> torch.Tensor :
     img_wb : torch.Tensor
         White balanced image
     """
-    
+     
     mu, r_mu, g_mu, b_mu = torch.mean(img), torch.mean(img[..., 0]), torch.mean(img[..., 1]), torch.mean(img[..., 2])
 
     img_wb = img.clone()

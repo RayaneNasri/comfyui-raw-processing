@@ -44,7 +44,7 @@ make setup
 
 ### Intel XPU setup
 
-Use this only for Intel graphics/XPU environments - check compatibility first https://docs.pytorch.org/docs/main/notes/get_start_xpu.html
+Use this only for Intel graphics/XPU environments - check [compatibility requirements](https://docs.pytorch.org/docs/main/notes/get_start_xpu.html) first.
 
 ```bash
 make setup-xpu

@@ -1,48 +1,57 @@
-# Color manipulation
+# Color Manipulation
 
 ## Description
 
-To have a signature, to personalize the colours of the image :
-    - Give a warmer/cooler look
-    - Change the saturation
-    - Accentuate certain colours
-    - Vivid (higher saturation, punchier colors)
-    - Portrait (soften red/orange skin tones)
-    - Landscape (enhanced blues/greens for the sky, river, trees...)
-    - Standard
-    - Neutral...
+Color manipulation is used to create a signature look and personalize image colors. It can be used to:
 
-Difference with Hue/Sat map :
-    - Hue/Sat map : color accuracy
-    - Color manipulation : artistic or stylistic rendering
+- Give a warmer or cooler look
+- Change saturation
+- Accentuate specific colors
+- Create a vivid style (higher saturation, punchier colors)
+- Create a portrait style (softer red/orange skin tones)
+- Create a landscape style (enhanced blues/greens for sky, river, trees)
+- Keep a standard style
+- Keep a neutral style
 
-Therefore, the color manipulation node in ComfyUI should allow user adjustments, enabling them to customize the image’s colors according to their preferences.
+## Difference from Hue/Sat Map
 
+- Hue/Sat map focuses on color accuracy
+- Color manipulation focuses on artistic or stylistic rendering
 
-Features to implement :
-    - temperature (blue/yellow)
-    - Tint (green/pink)
-    - saturation
-    - contrast
+Therefore, the color manipulation node in ComfyUI should expose user adjustments so each user can customize color rendering based on their preferences.
 
-HSV Python libraries :
-    - kornia.color
-    - colorsys
+## Features to Implement
 
+- Temperature (blue/yellow)
+- Tint (green/pink)
+- Saturation
+- Contrast
 
-Temperature :
-    - simple algorithm :
-        r = r + adjustment
-        g = g
-        b = b - adjustment
-        recommended adjustment in [-20,20]
-        adjustment in [-100, 100]
-    - Tanner Helland Algorithm, converting Temperature in Kelvin to RGB
+## Useful Python Libraries (HSV)
 
-Tint :
-    - simple algorithm :
-        r = r 
-        g = g + adjustment
-        b = b
-        recommended adjustment in [-20,20]
-        adjustement in [-100, 100]
+- kornia.color
+- colorsys
+
+## Temperature
+
+### Simple Algorithm
+
+- r = r + adjustment
+- g = g
+- b = b - adjustment
+- Recommended adjustment range: [-20, 20]
+- Full adjustment range: [-100, 100]
+
+### Alternative Algorithm
+
+- Tanner Helland algorithm (convert temperature in Kelvin to RGB)
+
+## Tint
+
+### Simple Algorithm
+
+- r = r
+- g = g + adjustment
+- b = b
+- Recommended adjustment range: [-20, 20]
+- Full adjustment range: [-100, 100]

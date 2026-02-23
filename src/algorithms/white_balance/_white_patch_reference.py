@@ -1,5 +1,6 @@
 import torch
 
+# FIXME: Tensor size too large with pyTorch
 def white_patch_ref(img: torch.Tensor,
                     percentil: float,    
                 ) -> torch.Tensor :

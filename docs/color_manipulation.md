@@ -17,3 +17,32 @@ Difference with Hue/Sat map :
     - Color manipulation : artistic or stylistic rendering
 
 Therefore, the color manipulation node in ComfyUI should allow user adjustments, enabling them to customize the image’s colors according to their preferences.
+
+
+Features to implement :
+    - temperature (blue/yellow)
+    - Tint (green/pink)
+    - saturation
+    - contrast
+
+HSV Python libraries :
+    - kornia.color
+    - colorsys
+
+
+Temperature :
+    - simple algorithm :
+        r = r + adjustment
+        g = g
+        b = b - adjustment
+        recommended adjustment in [-20,20]
+        adjustment in [-100, 100]
+    - Tanner Helland Algorithm, converting Temperature in Kelvin to RGB
+
+Tint :
+    - simple algorithm :
+        r = r 
+        g = g + adjustment
+        b = b
+        recommended adjustment in [-20,20]
+        adjustement in [-100, 100]

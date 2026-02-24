@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 # FIXME: Tensor size too large with pyTorch
 def white_patch_ref(img: torch.Tensor,
@@ -24,10 +25,18 @@ def white_patch_ref(img: torch.Tensor,
     if (percentil < 0.) or (percentil > 1.) :
         raise ValueError(f"The percentil must be between 0 and, 1 but found {percentil}")
     
-    if abs(percentil - 1.) < 10**(-5) :
-        parameters = torch.max(img.reshape(-1, 3), dim=0)[0]
-    else :
-        parameters = torch.quantile(img.reshape(-1, 3), percentil, dim=0)
+    reshaped_image = img.reshape(-1, 3)
+
+    if abs(percentil - 1.) < 10**(-5):
+        parameters = torch.tensor(reshaped_image.max(axis=0))
+    else: 
+        try: 
+            parameters = torch.quantile(reshaped_image, percentil, dim = 0)
+            
+        except RuntimeError: 
+            np_reshaped_image = img.reshape(-1, 3).cpu().numpy()
+            parameters = torch.tensor(np.percentile(np_reshaped_image, percentil * 100, axis=0))
+
 
     img_wb = img.clone()
 

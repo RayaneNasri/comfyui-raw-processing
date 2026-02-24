@@ -23,7 +23,7 @@ class WhitePatchReferenceNode:
         "color temperature correction", 
         "white patch reference",        
         "chromatic adaptation",         
-        "manual white balance",                  
+        "automatic white balance",                  
         "neutral point calibration",    
         "raw color balancing",         
         "illuminant estimation",         

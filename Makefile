@@ -23,6 +23,7 @@ FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
 SOURCE_DIR = src/custom_nodes
 COMFY_TARGET = external/ComfyUI/custom_nodes
 PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
+PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
 
 help:
 	@echo "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"

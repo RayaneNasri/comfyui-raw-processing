@@ -1,11 +1,11 @@
 import torch
 
 from torch import Tensor
-from algorithms.exposure_compensation import exposure_compensation
+from algorithms.exposure_compensation._exposure_compensation import exposure_compensation
 
 class ExposureCompensationNode: 
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {
                 "image": ("IMAGE",),

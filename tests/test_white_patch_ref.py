@@ -132,3 +132,46 @@ def test_percentil_out_of_bounds():
         
     with pytest.raises(ValueError, match="between"):
         white_patch_ref(img, percentil=1.1)
+
+@pytest.mark.slow 
+def test_white_patch_massive_image_no_crash():
+    """
+    Checks that the algorithm can process a very high-resolution image 
+    (e.g., 10000x10000) without throwing a 'Size too large' or Out Of Memory error.
+    """
+    H, W = 10000, 10000
+    
+    # We use ones() instead of rand() to save RAM and CPU during the test.
+    # The input image alone already takes ~1.2 GB in memory!
+    img = torch.ones(H, W, 3)
+    
+    # Simulate a color imbalance
+    img[..., 0] *= 0.8  # Red
+    img[..., 1] *= 0.5  # Green
+    img[..., 2] *= 0.2  # Blue
+    
+    # Add a very bright patch (representing less than 1% of the image)
+    # to ensure the percentile calculation still works correctly on large tensors.
+    img[0:100, 0:100, :] = 1.0
+
+    try:
+        # Run the algorithm with the 99th percentile
+        out = white_patch_ref(img, percentil=0.99)
+    except RuntimeError as e:
+        pytest.fail(f"The function crashed on a massive image. PyTorch error: {e}")
+
+    # 1. Shape verification
+    assert out.shape == (H, W, 3), "The output image dimension is incorrect."
+    
+    # 2. Logic verification (did the scaling work properly?)
+    # Since the white patch (1.0) is less than 1% (100x100 = 10,000 pixels out of 100,000,000), 
+    # the 99th percentile MUST ignore this patch and rely on the background.
+    # The reference value for the red channel (0.8) should become 1.0.
+    
+    # Check a normal background pixel
+    expected_red = torch.tensor(1.0)
+    # The original image was multiplied by (1.0 / 0.8) = 1.25. 
+    # So a green pixel at 0.5 becomes 0.625.
+    
+    assert_close(out[5000, 5000, 0], expected_red, atol=1e-4, rtol=1e-4, 
+                 msg="The percentile calculation failed on the massive image.")

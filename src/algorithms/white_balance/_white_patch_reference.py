@@ -25,9 +25,9 @@ def white_patch_ref(img: torch.Tensor,
         raise ValueError(f"The percentil must be between 0 and, 1 but found {percentil}")
     
     if abs(percentil - 1.) < 10**(-5) :
-        parameters = torch.max(img.view(-1, 3), dim=0)[0]
+        parameters = torch.max(img.reshape(-1, 3), dim=0)[0]
     else :
-        parameters = torch.quantile(img.view(-1, 3), percentil, dim=0)
+        parameters = torch.quantile(img.reshape(-1, 3), percentil, dim=0)
 
     img_wb = img.clone()
 

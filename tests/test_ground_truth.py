@@ -65,7 +65,7 @@ def test_mode_max_correction():
     
     patch = img[5:15, 5:15, :]
     
-    out = ground_truth(img, patch, method='max')
+    out = ground_truth(img, patch, method='max', percentil=1.)
     
     out_patch = out[5:15, 5:15, :]
     assert torch.allclose(out_patch[..., 0].max(), torch.tensor(1.0)), "Max Red is not 1.0"
@@ -99,7 +99,7 @@ def test_zero_value_patch_no_nan():
     assert not torch.isinf(out_mean).any(), "Mean mode produced Infs."
     
     # Test pour le mode MAX
-    out_max = ground_truth(img, patch, method='max')
+    out_max = ground_truth(img, patch, method='max', percentil=1.)
     assert not torch.isnan(out_max).any(), "Max mode produced NaNs."
     assert not torch.isinf(out_max).any(), "Max mode produced Infs."
 
@@ -110,3 +110,76 @@ def test_invalid_mode_raises_error():
     
     with pytest.raises(ValueError):
          ground_truth(img, patch, method='median') # 'median' n'existe pas !
+
+def test_invalid_percentil_raises_errors():
+    """Checks that the function raises errors for invalid percentil."""
+    img = torch.rand(10, 10, 3)
+    patch = img[0:5, 0:5, :]
+
+    with pytest.raises(ValueError, match="percentil"):
+        ground_truth(img, patch, method='max', percentil=-0.1)
+    with pytest.raises(ValueError, match="percentil"):
+        ground_truth(img, patch, method='max', percentil=1.1)
+
+def test_mean_method_ignores_percentil():
+    """
+    Checks that if method='mean', the percentil parameter is completely ignored.
+    The result should be identical regardless of the provided percentile.
+    """
+    img = torch.ones(10, 10, 3) * 0.5
+    img[..., 0] *= 0.8
+    patch = img[2:8, 2:8, :]
+    
+    # Pass an extreme percentile (0.1) which would skew everything in 'max' mode
+    out_with_percentil = ground_truth(img, patch, method='mean', percentil=0.1)
+    out_default = ground_truth(img, patch, method='mean') 
+    
+    assert_close(out_with_percentil, out_default, msg="The 'mean' mode should not be affected by the percentile.")
+
+def test_max_method_percentil_1_0_is_absolute_max():
+    """
+    Checks that the 'max' mode with percentil=1.0 acts exactly like 
+    calculating the absolute maximum on the patch.
+    """
+    img = torch.rand(5, 5, 3)
+    patch = img[1:4, 1:4, :]
+    
+    # Expected result: normalization by the absolute max of the patch
+    expected_out = img.clone()
+    eps = 1e-6
+    expected_out[..., 0] *= 1.0 / (patch[..., 0].max() + eps)
+    expected_out[..., 1] *= 1.0 / (patch[..., 1].max() + eps)
+    expected_out[..., 2] *= 1.0 / (patch[..., 2].max() + eps)
+    expected_out = torch.clip(expected_out, min=0., max=1.)
+    
+    out = ground_truth(img, patch, method='max', percentil=1.0)
+    assert_close(out,
+                 expected_out,
+                 msg="percentil=1.0 must correspond to the absolute maximum of the patch.")
+
+def test_max_method_ignores_outliers_in_patch():
+    """
+    Checks that in 'max' mode, a lower percentile (e.g., 0.90) ignores 
+    an extreme pixel (outlier) present WITHIN the patch.
+    """
+    # Global image and patch are solid gray at 0.5
+    img = torch.ones(10, 10, 3) * 0.5
+    
+    # Define our patch (e.g., 4x4, which is 16 pixels)
+    patch_start, patch_end = 2, 6
+    
+    # Place a SINGLE very bright pixel (1.0) in the middle of our patch
+    # 1 pixel out of 16 represents about 6.25% of the patch.
+    img[3, 3, :] = 1.0 
+    
+    patch = img[patch_start:patch_end, patch_start:patch_end, :]
+    
+    # By taking the 90th percentile (0.90), we ignore the brightest 10%.
+    # Our 6.25% outlier will therefore be ignored, and the "true" max considered will be 0.5.
+    out = ground_truth(img, patch, method='max', percentil=0.90)
+    
+    # If the patch is considered to have a max of 0.5, the multiplier is 2.0.
+    # A normal pixel outside the patch (0.5) must therefore become 1.0.
+    expected_normal_pixel = torch.tensor([1.0, 1.0, 1.0])
+    
+    assert_close(out[0, 0, :], expected_normal_pixel, msg="The percentile did not filter the outlier in the patch.")

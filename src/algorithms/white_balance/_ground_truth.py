@@ -2,7 +2,8 @@ import torch
 
 def ground_truth(img: torch.Tensor,
                  patch: torch.Tensor,
-                 method: str = 'max'
+                 method: str = 'max',
+                 percentil: float = 0.95
             ) -> torch.Tensor :
     """
     White balance image using Ground truth algorithm
@@ -15,7 +16,11 @@ def ground_truth(img: torch.Tensor,
         Patch of "true" white if method = 'max' else Patch of "true" gray
     method : str
         The method used 'max' or 'mean'
-    
+    percentil : float
+        Between [0., 1.]
+        Percentil value to consider as channel maximum
+        This argument is ignored if the method argument is set to mean
+
     Returns
     -------
     img_wb : torch.Tensor
@@ -29,32 +34,30 @@ def ground_truth(img: torch.Tensor,
     if patch_c != 3 :
         raise ValueError(f"The patch shape must be (H, W, 3), but found (H, W, {patch_c})")
     
-    parameters: dict[str, float] = {"target": 1.,
-                                    "red": 1.,
-                                    "green": 1.,
-                                    "blue": 1.
-                                }
+    target = 1.
+
     if method == "max" :
-        func = torch.max
+        if (percentil < 0.) or (percentil > 1.) :
+            raise ValueError(f"The percentil must be between 0 and, 1 but found {percentil}")
+        if abs(percentil - 1.) < 10**(-5) :
+            parameters = torch.max(patch.reshape(-1, 3), dim=0)[0]
+        else :
+            parameters = torch.quantile(patch.reshape(-1, 3), q=percentil, dim=0)
+
     elif method == "mean" :
-        func = torch.mean
-        parameters["target"] = torch.mean(patch)
+        target = torch.mean(patch)
+        parameters = torch.mean(patch.reshape(-1, 3), dim=0)
     else :
         raise ValueError(f"The method must be either `max` or `mean`, but found {method}")
-    
-    parameters["red"] = func(patch[..., 0])
-    parameters["green"] = func(patch[..., 1])
-    parameters["blue"] = func(patch[..., 2])
 
     img_wb = img.clone()
 
-    if parameters["red"] > 0 :
-        img_wb[..., 0] *= parameters["target"] / parameters["red"]
-
-    if parameters["green"] > 0 :
-        img_wb[..., 1] *= parameters["target"] / parameters["green"]
-
-    if parameters["blue"] > 0 :
-        img_wb[..., 2] *= parameters["target"] / parameters["blue"]
+    eps = 1e-6
+    img_wb[..., 0] *= target / (parameters[0] + eps)
+    print(f"Function {target / (parameters[0] + eps)}")
+    img_wb[..., 1] *= target / (parameters[1] + eps)
+    print(f"Function {target / (parameters[1] + eps)}")
+    img_wb[..., 2] *= target / (parameters[2] + eps)
+    print(f"Function {target / (parameters[2] + eps)}")
     
-    return img_wb
+    return torch.clip(img_wb, min=0., max=1.)

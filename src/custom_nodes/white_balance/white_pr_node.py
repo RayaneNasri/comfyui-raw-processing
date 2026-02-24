@@ -42,4 +42,4 @@ class WhitePatchReferenceNode:
 
 NODE_CLASS_MAPPINGS = {"WhitePatchReferenceNode": WhitePatchReferenceNode}
 
-NODE_DISPLAY_NAME_MAPPINGS = {"WhitePatchReferenceNode": "White Balance"}
+NODE_DISPLAY_NAME_MAPPINGS = {"WhitePatchReferenceNode": "White Patch Reference"}

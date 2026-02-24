@@ -41,4 +41,8 @@ class GroundTruthNode :
         input_3d = image.squeeze()
         patch = input_3d[torch.where(mask > 0.)]
         out = ground_truth(input_3d, patch, method, percentil)
-        return (out.unsqueeze(0),)
+        return (out.unsqueeze(0),)  
+
+NODE_CLASS_MAPPINGS = {"GroundTruthNode": GroundTruthNode}
+
+NODE_DISPLAY_NAME_MAPPINGS = {"GroundTruthNode": "Ground Truth White Balance"}

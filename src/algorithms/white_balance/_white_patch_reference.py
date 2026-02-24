@@ -28,13 +28,13 @@ def white_patch_ref(img: torch.Tensor,
     reshaped_image = img.reshape(-1, 3)
 
     if abs(percentil - 1.) < 10**(-5):
-        parameters = torch.tensor(reshaped_image.max(axis=0))
+        parameters = torch.max(reshaped_image, dim = 0)[0]
     else: 
         try: 
             parameters = torch.quantile(reshaped_image, percentil, dim = 0)
             
         except RuntimeError: 
-            np_reshaped_image = img.reshape(-1, 3).cpu().numpy()
+            np_reshaped_image = img.reshape(-1, 3).numpy()
             parameters = torch.tensor(np.percentile(np_reshaped_image, percentil * 100, axis=0))
 
 

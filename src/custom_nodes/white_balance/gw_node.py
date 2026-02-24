@@ -3,7 +3,7 @@ from algorithms.white_balance import gw
 
 class GrayWorldNode:
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {
                 "image": ("IMAGE",),
@@ -35,4 +35,4 @@ class GrayWorldNode:
 
 NODE_CLASS_MAPPINGS = {"GrayWorldNode": GrayWorldNode}
 
-NODE_DISPLAY_NAME_MAPPINGS = {"GrayWorldNode": "White Balance"}
+NODE_DISPLAY_NAME_MAPPINGS = {"GrayWorldNode": "Gray World White Balance"}

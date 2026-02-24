@@ -23,7 +23,6 @@ FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
 SOURCE_DIR = src/custom_nodes
 COMFY_TARGET = external/ComfyUI/custom_nodes
 PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
-PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
 
 help:
 	@echo "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
@@ -64,8 +63,7 @@ install-deps: $(VENV_SENTINEL)
 	fi
 	@uv pip install -e .
 
-install-cuda:
-	@echo "$(BLUE)Checking for CUDA support...$(NC)"
+install-torch: $(VENV_SENTINEL)
 	@if [ "$(OS)" = "Darwin" ]; then \
 		echo "Detected macOS. Installing PyTorch (MPS supported)..."; \
 		uv pip install torch torchvision torchaudio; \
@@ -77,9 +75,10 @@ install-cuda:
 		uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \
 	fi
 
+
 setup: check-comfyui $(VENV_SENTINEL)
 	@echo "$(BLUE)$(BOLD)Setting up environment for detected hardware...$(NC)"
-	@$(MAKE) install-cuda
+	@$(MAKE) install-torch
 	@$(MAKE) install-deps
 	@echo "$(GREEN)Setup complete! Run 'make status' to verify.$(NC)"
 
@@ -92,11 +91,28 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 
 setup-CI: $(VENV_SENTINEL)
 	@echo "$(BLUE)Setting up environment for CI/CD...$(NC)"
-	@$(MAKE) install-cuda
+	@$(MAKE) install-torch
 	@uv pip install -r ci-requirements.txt
 	@echo "$(GREEN)CI/CD setup complete!$(NC)"
 
-run: $(VENV_SENTINEL)
+link-nodes: remove-link-nodes
+	@echo "$(BLUE)$(BOLD)Linking all nodes files to $(COMFY_TARGET)...$(NC)"
+	@for file in $(PY_FILES); do \
+		FILENAME=$$(basename $$file); \
+		ln -sf $(shell pwd)/$$file $(COMFY_TARGET)/$$FILENAME; \
+	done
+	@echo "$(GREEN)Linking completed$(NC)"
+
+remove-link-nodes: 
+	@echo "$(BLUE)$(BOLD)Cleaning nodes from $(COMFY_TARGET)...$(NC)"
+	@find $(COMFY_TARGET) -maxdepth 1 \( -type l -o -type f \) \
+		-name "*.py" \
+		! -name "__init__.py" \
+		! -name "websocket_image_save.py" \
+		-delete
+	@echo "$(GREEN)Nodes cleanup complete.$(NC)"
+
+run: $(VENV_SENTINEL) link-nodes
 	@echo "$(BLUE)$(BOLD)Launching ComfyUI...$(NC)"
 	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		echo "$(GREEN)GPU acceleration detected$(NC)"; \

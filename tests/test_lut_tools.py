@@ -24,8 +24,8 @@ def test_rgb_hsv_single_channel():
     print(green, green_hsv)
 
     assert torch.allclose(red_hsv, torch.tensor([0.0, 1., 1.]), atol = 1e-6)
-    assert torch.allclose(green_hsv, torch.tensor([1/3 * 2 * math.pi, 1., 1.]), atol = 1e-6)
-    assert torch.allclose(blue_hsv, torch.tensor([2/3 * 2 * math.pi, 1., 1.]), atol = 1e-6)
+    assert torch.allclose(green_hsv, torch.tensor([1/3, 1., 1.]), atol = 1e-6)
+    assert torch.allclose(blue_hsv, torch.tensor([2/3, 1., 1.]), atol = 1e-6)
     assert torch.allclose(black_hsv, torch.tensor([0.0, 0., 0.]), atol = 1e-6)
     assert torch.allclose(white_hsv, torch.tensor([0.0, 0., 1.]), atol = 1e-6)
 

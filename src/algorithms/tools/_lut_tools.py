@@ -36,10 +36,9 @@ def rgb_to_hsv(rgb_image: Tensor) -> Tensor:
     Requires a `[H, W, 3]` RGB image.
     Returns a `[H, W, 3]` HSV image.  
     """
-    height, width, _ = rgb_image.shape
-    reshaped_rgb_image = rgb_image.reshape(3, height, width)
+    reshaped_rgb_image = rgb_image.permute(2, 0, 1)
     reshaped_hsv_image = kc.rgb_to_hsv(reshaped_rgb_image)
-    hsv_image = reshaped_hsv_image.reshape(height, width, 3)
+    hsv_image = reshaped_hsv_image.permute(1, 2, 0)
     
     return hsv_image
 
@@ -50,10 +49,9 @@ def hsv_to_rgb(hsv_image: Tensor) -> Tensor:
     Requires a `[H, W, 3]` HSV image.
     Returns a `[H, W, 3]` RGB image.  
     """
-    height, width, _ = hsv_image.shape
-    reshaped_hsv_image = hsv_image.reshape(3, height, width)
+    reshaped_hsv_image = hsv_image.permute(2, 0, 1)
     reshaped_rgb_image = kc.hsv_to_rgb(reshaped_hsv_image)
-    hsv_image = reshaped_rgb_image.reshape(height, width, 3)
+    hsv_image = reshaped_rgb_image.permute(1, 2, 0)
     
     return hsv_image
     

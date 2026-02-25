@@ -43,6 +43,8 @@
 ## Session 23/02/2026
 
   * Amayas :
+    - Researching on color space transformation.
+    - Researching on ways to extract `HueSatMap` LUT from camera metadata to perform tint correction on image. 
   * Charlotte :
     - Continue researches on color manipulation, especially adjusting Temperature
     - Tanner Helland Algorithm, converting Temperature in Kelvin to RGB
@@ -50,7 +52,11 @@
   * Rayane :
 
 ## Between 23/02/2026 and 13/03/2026
-
- * Meeting with Quentim Bammey (25/02/2026)
+  * All
+    - Meeting with Quentim Bammey (25/02/2026)
+  * Amayas :
+    - Worked with Rayane on solving PyTorch bugs related to image sizes when using quantile function on 12 Mpx or higher images and implementing nodes for white balance Rayane's algorithms.
+    - Implemented $\text{HSV} \to \text{RGB}$ and $\text{RGB} \to \text{HSV}$ space transformations + their unitary tests.
+    - Implemented reading `HueSatMap` LUT from `.dcp` files (necessary for hue/saturation fidelity stage). 
 
 ## Session 13/03/2026

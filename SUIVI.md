@@ -27,6 +27,9 @@
 ## Session 20/02/2026
 
   * Amayas :
+    - Implemented a node for exposure compensation.
+    - Added unitary tests for exposure compensation.
+    - Created an issues board on GitLab and sorted issues with labels for better issues managing (To Do, V0, V1, V2, Bug, Done) and assigned issues for all group members.
   * Charlotte :
     - Configuration to connect remotely to another computer, more powerful than mine, so that ComfyUI runs faster, and installation of the necessary packages on that other computer.
     - First researches to understand "color manipulation" and the different features needed for this node (docs/color_manipulation.md)

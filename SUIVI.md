@@ -52,6 +52,7 @@
     - Continue researches on color manipulation, especially adjusting Temperature
     - Tanner Helland Algorithm, converting Temperature in Kelvin to RGB
   * Ghiles :
+    - Continued researching the tone curve application phase and way to easily edit the tone curve with a simple UI.
   * Rayane :
 
 ## Between 23/02/2026 and 13/03/2026

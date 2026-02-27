@@ -11,16 +11,22 @@ HUE_SAT_MAP_DATA_1_TAG = 50938
 HUE_SAT_MAP_DATA_2_TAG = 50939
 CALIBRATION_ILLUMINANT_1_TAG = 50778
 CALIBRATION_ILLUMINANT_2_TAG = 50779
+INDOOR_COLOR_MATRIX_TAG = 50721
+DAYLIGHT_COLOR_MATRIX_TAG = 50722
 
 NORMALIZATION_HSV_SCALE = torch.tensor([2 * math.pi, 1., 1.]).view(3, 1, 1)
 
-def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor, int, int] | None:
+def _flatten_num_denum_color_matrix(color_matrix: Tensor) -> Tensor: 
     """
-    Load hue/saturation 3D LUTs from a DCP TIFF file.
+    Flattens a 18 sized numerator/denumerator color matrix tensor into a 3x3 tensor 
+    """
+    num = color_matrix[0::2]
+    denum = color_matrix[1::2]
+    flattened = num / denum
+    
+    return flattened.reshape(3, 3)
 
-    Returns `(lut1, lut2)` tensors of shape `(h, s, v, 3)` or `None`
-    if the file cannot be read or lacks the expected tags.
-    """ 
+def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor, Tensor, Tensor, int, int] | None:
     try:
         with tifffile.TiffFile(dcp_path) as dcp_file: 
             page = dcp_file.pages[0]
@@ -28,13 +34,23 @@ def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor, int, int] 
                 tags = page.tags
                 dims = tags[HUE_SAT_MAP_DIMS_TAG].value
                 h, s, v = dims
-                low_temp_lut = torch.Tensor(tags[HUE_SAT_MAP_DATA_1_TAG].value).reshape(h, s, v, 3)
-                high_temp_lut = torch.Tensor(tags[HUE_SAT_MAP_DATA_2_TAG].value).reshape(h, s, v, 3) 
+                low_temp_lut = Tensor(tags[HUE_SAT_MAP_DATA_1_TAG].value).reshape(h, s, v, 3)
+                high_temp_lut = Tensor(tags[HUE_SAT_MAP_DATA_2_TAG].value).reshape(h, s, v, 3)
+                indoor_color_matrix = Tensor(tags[INDOOR_COLOR_MATRIX_TAG].value)
+                daylight_color_matrix = Tensor(tags[DAYLIGHT_COLOR_MATRIX_TAG].value)
                 calib_illum_1 = int(tags[CALIBRATION_ILLUMINANT_1_TAG].value)
                 calib_illum_2 = int(tags[CALIBRATION_ILLUMINANT_2_TAG].value)
                 
-                return low_temp_lut, high_temp_lut, calib_illum_1, calib_illum_2
+                return (
+                    low_temp_lut, 
+                    high_temp_lut, 
+                    _flatten_num_denum_color_matrix(indoor_color_matrix), 
+                    _flatten_num_denum_color_matrix(daylight_color_matrix), 
+                    calib_illum_1, 
+                    calib_illum_2
+                )
     except Exception as e: 
+        print(e) # TODO : implement proper exceptions handling
         return None
     
 def rgb_to_hsv(rgb_image: Tensor) -> Tensor: 

@@ -9,10 +9,12 @@ from torch import Tensor
 HUE_SAT_MAP_DIMS_TAG = 50937
 HUE_SAT_MAP_DATA_1_TAG = 50938
 HUE_SAT_MAP_DATA_2_TAG = 50939
+CALIBRATION_ILLUMINANT_1_TAG = 50778
+CALIBRATION_ILLUMINANT_2_TAG = 50779
 
 NORMALIZATION_HSV_SCALE = torch.tensor([2 * math.pi, 1., 1.]).view(3, 1, 1)
 
-def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor] | None:
+def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor, int, int] | None:
     """
     Load hue/saturation 3D LUTs from a DCP TIFF file.
 
@@ -26,10 +28,13 @@ def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor] | None:
                 tags = page.tags
                 dims = tags[HUE_SAT_MAP_DIMS_TAG].value
                 h, s, v = dims
-                lut1 = torch.Tensor(tags[HUE_SAT_MAP_DATA_1_TAG].value).reshape(h, s, v, 3)
-                lut2 = torch.Tensor(tags[HUE_SAT_MAP_DATA_2_TAG].value).reshape(h, s, v, 3) 
-                return lut1, lut2
-    except Exception: 
+                low_temp_lut = torch.Tensor(tags[HUE_SAT_MAP_DATA_1_TAG].value).reshape(h, s, v, 3)
+                high_temp_lut = torch.Tensor(tags[HUE_SAT_MAP_DATA_2_TAG].value).reshape(h, s, v, 3) 
+                calib_illum_1 = int(tags[CALIBRATION_ILLUMINANT_1_TAG].value)
+                calib_illum_2 = int(tags[CALIBRATION_ILLUMINANT_2_TAG].value)
+                
+                return low_temp_lut, high_temp_lut, calib_illum_1, calib_illum_2
+    except Exception as e: 
         return None
     
 def rgb_to_hsv(rgb_image: Tensor) -> Tensor: 
@@ -58,4 +63,5 @@ def hsv_to_rgb(hsv_image: Tensor) -> Tensor:
     
     return rgb_image
     
-        
+if __name__ == "__main__": 
+    print(read_hue_sat_lut_from_dcp("/home/amayas/Téléchargements/SONY_ILCE_7RM3.dcp"))    

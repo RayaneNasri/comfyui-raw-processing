@@ -5,6 +5,8 @@ import math
 
 def kelvin_to_rgb_tanner_helland(temperature_K : float) -> tuple[float, float, float]:
     """
+    Converts temperature in Kelvin to RGB.
+
     temperature_K : temperature in Kelvin, between 1000 K and 40000 K
         (the interesting photographic range, which is 1500 K to 15000 K)
         The white point occurs at 6500-6600 K.
@@ -57,7 +59,25 @@ def kelvin_to_rgb_tanner_helland(temperature_K : float) -> tuple[float, float, f
 
 
 def temperature_tanner_helland(rgb_image : Tensor, temperature_K : float) -> Tensor:
+    """
+    - rgb_image : Tensor RGB image with each channel represented as a float in [0,1]
+    - temperature_K : temperature in Kelvin, between 1000 K and 40000 K
+        (the interesting photographic range, which is 1500 K to 15000 K)
+        The white point occurs at 6500-6600 K.
+    """
+
+    # Convert the target temperature in Kelvin to RGB using the tanner Helland algorithm 
+    coeff_r, coeff_g, coeff_b = kelvin_to_rgb_tanner_helland(temperature_K)
+
+    # Normalize the coeffs
+    coeff_r /= 255.
+    coeff_g /= 255.
+    coeff_b /= 255.
+
+    # Creates broadcastable tensor
+    coeffs = torch.tensor([coeff_r, coeff_g, coeff_b], dtype=rgb_image.dtype, device=rgb_image.device).view(1, 1, 3)
     
-    # # Rescales color intensities from normalized float range [0,1] to float range [0,255]
-    # rgb_image_255 = rgb_image * 255.0
-    pass
+    # multiply each pixel by the coeffs on a (H x W x 3) rgb_image
+    output = rgb_image * coeffs
+
+    return output

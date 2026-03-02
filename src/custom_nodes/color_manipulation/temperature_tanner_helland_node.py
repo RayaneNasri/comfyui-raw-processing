@@ -8,22 +8,32 @@ class TemperatureTannerHellandNode:
         return {
             "required": {
                 "rgb_image": ("IMAGE",),
-                "temperature_K": ("FLOAT", {
-                    "default": 6550.0, 
-                    "min": 1000.0, 
+                "temperature_Kelvin": ("FLOAT", {
+                    "default": 6600.0, 
+                    "min": 1000.0,
                     "max": 40000.0, 
                     "step": 1.0,
                     "display": "slider"
+                }),
+                "apply_changes": ("BOOLEAN", {
+                    "default": True
                 }),
             }
         }
         
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("rgb_image",)
+
     FUNCTION = "process"
     CATEGORY = "image/processing"
     
-    def process(self, rgb_image: Tensor, temperature_K: float):
-        res = temperature_tanner_helland(rgb_image, temperature_K)
+    def process(self, rgb_image: Tensor, temperature_Kelvin: float, apply_changes: bool):
+        
+        if apply_changes:
+            res = temperature_tanner_helland(rgb_image, temperature_Kelvin)
+        else:
+            res = rgb_image
+        
         return (res,)
         
 

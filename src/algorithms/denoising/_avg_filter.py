@@ -2,11 +2,7 @@ import torch
 import numpy as np
 import cv2
 
-# Decorators
-import sys
-for p in sys.path:
-    print(p)
-    
+# Decorators    
 from algorithms._utils import validate_image_input
 
 @validate_image_input
@@ -23,7 +19,7 @@ def avg_filter(img: torch.Tensor,
         Input image
     ksize : tuple
         Blurring kernel size
-    borderType : str
+    strBorderType : str
         Border mode used to extrapolate pixels outside of the image, see the modes available in the open-cv documentation
 
     Returns
@@ -54,7 +50,6 @@ def avg_filter(img: torch.Tensor,
         "BORDER_CONSTANT": cv2.BORDER_CONSTANT,
         "BORDER_REPLICATE": cv2.BORDER_REPLICATE,
         "BORDER_REFLECT": cv2.BORDER_REFLECT,
-        "BORDER_WRAP": cv2.BORDER_WRAP,
         "BORDER_REFLECT_101": cv2.BORDER_REFLECT_101,
         "BORDER_TRANSPARENT": cv2.BORDER_TRANSPARENT,
         "BORDER_DEFAULT": cv2.BORDER_DEFAULT,
@@ -64,7 +59,7 @@ def avg_filter(img: torch.Tensor,
     try:
         borderType = borderTypes[strBorderType]
     except KeyError:
-        raise ValueError("strBorderType must have one of these values BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT, BORDER_WRAP, BORDER_REFLECT_101, BORDER_TRANSPARENT, BORDER_DEFAULT or BORDER_ISOLATED")
+        raise ValueError("strBorderType must have one of these values BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT, BORDER_REFLECT_101, BORDER_TRANSPARENT, BORDER_DEFAULT or BORDER_ISOLATED")
     
     # Wrapper start -- 
     src = torch.clip(img * 255, min=0, max=255)

@@ -110,7 +110,7 @@ def gaussian_filter(img: torch.Tensor,
     #   - Moves the image to the CPU
     #   - Converts to numpy
     #   - Converts from ComfyUI's RGB space to Open-CV's BGR space
-    src = cv2.cvtColor(img.cpu().numpy().astype(np.uint8), cv2.COLOR_RGB2BGR)
+    src = cv2.cvtColor(src.cpu().numpy().astype(np.uint8), cv2.COLOR_RGB2BGR)
 
     out = cv2.GaussianBlur(src, ksize, sigmaX, sigmaY=sigmaY, borderType=borderType, hint=hint)
 

@@ -70,7 +70,7 @@ def nl_means(img: torch.Tensor,
     #   - Moves the image to the CPU
     #   - Converts to numpy
     #   - Converts from ComfyUI's RGB space to Open-CV's BGR space
-    src = cv2.cvtColor(img.cpu().numpy().astype(np.uint8), cv2.COLOR_RGB2BGR)
+    src = cv2.cvtColor(src.cpu().numpy().astype(np.uint8), cv2.COLOR_RGB2BGR)
 
     out = cv2.fastNlMeansDenoisingColored(src, h=h, hColor=hColor, templateWindowSize=templateWindowSize, searchWindowSize=searchWindowSize)
     return torch.from_numpy( cv2.cvtColor(out, cv2.COLOR_BGR2RGB).astype(float) / 255. )

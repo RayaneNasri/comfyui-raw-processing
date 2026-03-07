@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 from algorithms.color_manipulation._lut_color_manipulation import load_cube_lut
-from algorithms.color_manipulation._lut_color_manipulation import apply_lut_trilinear_interpolation
+from algorithms.color_manipulation._lut_color_manipulation import apply_lut_grid_sample
 
 class LutColorManipulationNode: 
     @classmethod
@@ -21,7 +21,7 @@ class LutColorManipulationNode:
     
     def process(self, rgb_image: Tensor): # TODO : add the chosen LUT
         lut = load_cube_lut("/mnt/c/Users/charl/git/Blues.cube") # TODO : change path
-        res = apply_lut_trilinear_interpolation(rgb_image, lut)
+        res = apply_lut_grid_sample(rgb_image, lut)
         return (res,)
         
 

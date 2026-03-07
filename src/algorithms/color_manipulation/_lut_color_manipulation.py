@@ -1,4 +1,5 @@
 import torch
+from torch import Tensor
 
 def load_cube_lut(path):
     size = None
@@ -32,13 +33,59 @@ def load_cube_lut(path):
 
     return lut
 
+def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
+    """
+    image: (H,W,3) or (B,H,W,3) or (B,3,H,W) float tensor in [0,1]
+    lut:   (S,S,S,3)
+    """
+    
+    # ---- Normalisation du format ----
+    if image.dim() == 4:
+        # Cas (B,3,H,W) → (B,H,W,3)
+        if image.shape[1] == 3:
+            image = image.permute(0, 2, 3, 1)
+
+        B, H, W, C = image.shape
+
+    elif image.dim() == 3:
+        H, W, C = image.shape
+        image = image.unsqueeze(0)  # add batch
+        B = 1
+
+    else:
+        raise ValueError(f"Unsupported image shape: {image.shape}")
+
+    if C != 3:
+        raise ValueError(f"Image must have 3 channels, got {C}")
+        
+    S = lut.shape[0]
+
+    # grid in [-1,1]
+    grid = image * 2 - 1
+    # RGB -> BGR for grid_sample coordinate order (x,y,z)
+    grid = grid[..., [2,1,0]]
+    # add depth dimension
+    grid = grid.unsqueeze(1) # (B,1,H,W,3)
+
+    # LUT -> (N,C,D,H,W)
+    lut = lut.permute(3,0,1,2).unsqueeze(0)  # (1,3,S,S,S)
+
+    out = torch.nn.functional.grid_sample(lut, grid, mode='bilinear', align_corners=True)
+    
+
+    # remove depth dimension
+    out = out.squeeze(2)           # (B,3,H,W)
+    # back to (B,H,W,3)
+    out = out.permute(0,2,3,1)
+
+    return out
+
 def apply_lut_trilinear_interpolation(image, lut):
     """
     image: (H,W,3) or (B,H,W,3) or (B,3,H,W) float tensor in [0,1]
     lut:   (S,S,S,3)
     """
 
-    
     try:
         # ---- Normalisation du format ----
         if image.dim() == 4:

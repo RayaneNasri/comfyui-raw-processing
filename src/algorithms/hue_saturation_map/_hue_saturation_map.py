@@ -74,7 +74,7 @@ def _xyz_to_linear_rgb(
     xyz_to_lp_mat = XYZ_TO_LP_MAT.to(image_xyz.device)
     return torch.matmul(image_xyz, xyz_to_lp_mat.t())
 
-def _apply_hue_sat_map(image_hsv, lut_data):
+def _apply_hue_sat_map(image_hsv: Tensor, lut_data: Tensor) -> Tensor:
     grid_h = image_hsv[..., 0] * 2 - 1   # (H, W)
     grid_s = image_hsv[..., 1] * 2 - 1   # (H, W)
     grid_v = image_hsv[..., 2] * 2 - 1   # (H, W)

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch import Tensor 
 from algorithms.tools._lut_tools import rgb_to_hsv, hsv_to_rgb
 
-INTERPOLATION_ITERATIONS = 10
+INTERPOLATION_ITERATIONS = 100
 XYZ_TO_LP_MAT = torch.tensor([
     [ 1.3459, -0.2556, -0.0511],
     [-0.5446,  1.5082,  0.0205],
@@ -50,7 +50,7 @@ def _color_matrix_linear_interpolation(
         s = xyz_flat.sum()
         xy = xyz_flat[:2] / s
         n = (xy[0] - epicenter_x) / (xy[1] - epicenter_y)
-        cct_scene = - 449 * n ** 3 + 3525 * n ** 2 - 6823.3 * n  + 5520.33
+        cct_scene = - 449 * n ** 3 + 3525 * n ** 2 - 6823.3 * n + 5520.33
         mired_scene = factor / cct_scene
         raw_t = (mired_scene - mired_1) / (mired_2 - mired_1)
         t = max(0.0, min(1.0, float(raw_t)))
@@ -75,29 +75,52 @@ def _xyz_to_linear_rgb(
     return torch.matmul(image_xyz, xyz_to_lp_mat.t())
 
 def _apply_hue_sat_map(image_hsv: Tensor, lut_data: Tensor) -> Tensor:
-    grid_h = image_hsv[..., 0] * 2 - 1   # (H, W)
-    grid_s = image_hsv[..., 1] * 2 - 1   # (H, W)
-    grid_v = image_hsv[..., 2] * 2 - 1   # (H, W)
-    grid = torch.stack([grid_v, grid_s, grid_h], dim = -1)  # (H, W, 3)
-    grid = grid.unsqueeze(0).unsqueeze(0) 
-    lut_t = lut_data.permute(3, 0, 1, 2).unsqueeze(0)
-    deltas = F.grid_sample(lut_t, grid, mode = 'bilinear', align_corners = True, padding_mode = 'border') 
-    deltas = deltas.squeeze(0).squeeze(1).permute(1, 2, 0)
+    if lut_data.shape[2] == 1:  # 2D LUT (V dimension is 1)
+        lut_2d = lut_data[..., 0, :]  # (H, S, 3)
+        grid_h = image_hsv[..., 0] * 2 - 1  # (H, W)
+        grid_s = image_hsv[..., 1] * 2 - 1  # (H, W)
+        grid = torch.stack([grid_h, grid_s], dim=-1)  # (H, W, 2)
+        grid = grid.unsqueeze(0)  # (1, H, W, 2)
+        lut_t = lut_2d.permute(2, 0, 1).unsqueeze(0)  # (1, 3, H_lut, S_lut)
+        deltas = F.grid_sample(lut_t, grid, mode = 'bilinear', align_corners = True, padding_mode = 'border')
+        deltas = deltas.squeeze(0).permute(1, 2, 0)  # (H, W, 3)
+    else:  # 3D LUT
+        grid_h = image_hsv[..., 0] * 2 - 1
+        grid_s = image_hsv[..., 1] * 2 - 1
+        grid_v = image_hsv[..., 2] * 2 - 1
+        grid = torch.stack([grid_h, grid_s, grid_v], dim=-1)
+        grid = grid.unsqueeze(0).unsqueeze(0)
+        lut_t = lut_data.permute(3, 0, 1, 2).unsqueeze(0)
+        deltas = F.grid_sample(lut_t, grid, mode = 'bilinear', align_corners = True, padding_mode = 'border')
+        deltas = deltas.squeeze(0).squeeze(1).permute(1, 2, 0)
+
     delta_h, scale_s, scale_v = deltas[..., 0], deltas[..., 1], deltas[..., 2]
     h_prime = (image_hsv[..., 0] + delta_h / 360.0) % 1.0
     s_prime = torch.clamp(image_hsv[..., 1] * scale_s, 0.0, 1.0)
     v_prime = torch.clamp(image_hsv[..., 2] * scale_v, 0.0, 1.0)
-    
-    return torch.stack([h_prime, s_prime, v_prime], dim = -1)
+
+    return torch.stack([h_prime, s_prime, v_prime], dim=-1)
 
 def _define_neutral_from_gains(wb_gains: Tensor) -> Tensor:
     if wb_gains.shape[0] == 4:
-        r, g1, g2, b = wb_gains  # [R, G1, G2, B]
+        r, g1, g2, b = wb_gains.unbind(0)
+        g = (g1 + g2) / 2.0  # average both green channels
+        r_norm = r / g
+        g_norm = 1.0
+        b_norm = b / g
+    elif wb_gains.shape[0] == 3:
+        r, g, b = wb_gains.unbind(0)
+        r_norm = r / g
+        g_norm = 1.0
+        b_norm = b / g
     else:
-        r, g, b = wb_gains
-        g1 = g
-    neutral = torch.stack([1.0 / r, 1.0 / g1, 1.0 / b])
-    neutral = neutral / neutral[1]  # normalize so green = 1.0
+        raise ValueError(f"wb_gains must have 3 or 4 elements, got {wb_gains.shape[0]}")
+
+    neutral = torch.tensor(
+        [1.0 / r_norm, g_norm, 1.0 / b_norm],
+        device=wb_gains.device,
+        dtype=wb_gains.dtype
+    )
     return neutral.view(3, 1)
 
 def apply_hue_sat_map(
@@ -114,20 +137,21 @@ def apply_hue_sat_map(
 ) -> Tensor: 
     device = image_rgb.device
     neutral = _define_neutral_from_gains(wb_gains)
-    t = _color_matrix_linear_interpolation(neutral, forward_matrix_1, forward_matrix_2, calib_illum_1, calib_illum_2)
-    forward_matrix = t * forward_matrix_1 + (1 - t) * forward_matrix_2
-    p_rgb_to_xyz = forward_matrix.to(device)
-    image_xyz = torch.matmul(image_rgb, p_rgb_to_xyz.t())
+    t = _color_matrix_linear_interpolation(neutral, color_matrix_1, color_matrix_2, calib_illum_1, calib_illum_2)
+    color_matrix = (1 - t) * color_matrix_1 + t * color_matrix_2
+    forward_matrix = (1 - t) * forward_matrix_1 + t * forward_matrix_2
+    d = torch.matmul(color_matrix.to(device), neutral)
+    D = torch.diag(1.0 / d.flatten())
+    image_xyz = torch.matmul(image_rgb, forward_matrix.to(device).t())
     image_lp = _xyz_to_linear_rgb(image_xyz)
     image_lp = torch.clamp(image_lp, 0.0, 1.0)
     image_hsv = rgb_to_hsv(image_lp)
     active_lut = (1 - t) * low_temp_lut + t * high_temp_lut
     corrected_hsv = _apply_hue_sat_map(image_hsv, active_lut.to(device))
-    corrected_rgb = hsv_to_rgb(corrected_hsv)
+    corrected_lp = hsv_to_rgb(corrected_hsv)
     lp_to_xyz_mat = torch.linalg.inv(XYZ_TO_LP_MAT.to(device))
-    image_xyz_out = torch.matmul(corrected_rgb, lp_to_xyz_mat.t())
-    xyz_to_rgb_mat = torch.linalg.inv(p_rgb_to_xyz)
-    image_rgb_out = torch.matmul(image_xyz_out, xyz_to_rgb_mat.t())
-    image_rgb_out = torch.clamp(image_rgb_out, 0.0, 1.0)
+    image_xyz_out = torch.matmul(corrected_lp, lp_to_xyz_mat.t())
+    f_inv = torch.linalg.inv(forward_matrix.to(device))
+    image_rgb_out = torch.matmul(image_xyz_out, f_inv.t())
     
-    return image_rgb_out
+    return torch.clamp(image_rgb_out, 0.0, 1.0)

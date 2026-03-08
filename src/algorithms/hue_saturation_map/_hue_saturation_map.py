@@ -84,7 +84,7 @@ def _apply_hue_sat_map(image_hsv, lut_data):
     deltas = F.grid_sample(lut_t, grid, mode = 'bilinear', align_corners = True, padding_mode = 'border') 
     deltas = deltas.squeeze(0).squeeze(1).permute(1, 2, 0)
     delta_h, scale_s, scale_v = deltas[..., 0], deltas[..., 1], deltas[..., 2]
-    h_prime = (image_hsv[..., 0] + delta_h) % 1.0
+    h_prime = (image_hsv[..., 0] + delta_h / 360.0) % 1.0
     s_prime = torch.clamp(image_hsv[..., 1] * scale_s, 0.0, 1.0)
     v_prime = torch.clamp(image_hsv[..., 2] * scale_v, 0.0, 1.0)
     
@@ -92,11 +92,12 @@ def _apply_hue_sat_map(image_hsv, lut_data):
 
 def _define_neutral_from_gains(wb_gains: Tensor) -> Tensor:
     if wb_gains.shape[0] == 4:
-        r, g1, _, b = wb_gains
+        r, g1, g2, b = wb_gains  # [R, G1, G2, B]
     else:
         r, g, b = wb_gains
         g1 = g
     neutral = torch.stack([1.0 / r, 1.0 / g1, 1.0 / b])
+    neutral = neutral / neutral[1]  # normalize so green = 1.0
     return neutral.view(3, 1)
 
 def apply_hue_sat_map(
@@ -112,18 +113,25 @@ def apply_hue_sat_map(
     calib_illum_2: int
 ) -> Tensor: 
     device = image_rgb.device
-    neutral = _define_neutral_from_gains(wb_gains).to(device)
+    neutral = _define_neutral_from_gains(wb_gains)
     t = _color_matrix_linear_interpolation(neutral, color_matrix_1, color_matrix_2, calib_illum_1, calib_illum_2)
     color_matrix = t * color_matrix_1 + (1 - t) * color_matrix_2
     forward_matrix = t * forward_matrix_1 + (1 - t) * forward_matrix_2
-    p_rgb_to_xyz = _rgb_to_xyz_matrix(color_matrix, forward_matrix, neutral)
+    p_rgb_to_xyz = forward_matrix.to(device)
     image_xyz = torch.matmul(image_rgb, p_rgb_to_xyz.t())
     image_lp = _xyz_to_linear_rgb(image_xyz)
+    image_lp = torch.clamp(image_lp, 0.0, 1.0)
     image_hsv = rgb_to_hsv(image_lp)
-    active_lut = t * low_temp_lut + (1 - t) * high_temp_lut
+    active_lut = (1 - t) * low_temp_lut + t * high_temp_lut
+    print(f"[DEBUG] lut delta_h range: {active_lut[...,0].min():.4f} to {active_lut[...,0].max():.4f}")
+    print(f"[DEBUG] lut scale_s range: {active_lut[...,1].min():.4f} to {active_lut[...,1].max():.4f}")
+    print(f"[DEBUG] lut scale_v range: {active_lut[...,2].min():.4f} to {active_lut[...,2].max():.4f}")
     corrected_hsv = _apply_hue_sat_map(image_hsv, active_lut.to(device))
     corrected_rgb = hsv_to_rgb(corrected_hsv)
     lp_to_xyz_mat = torch.linalg.inv(XYZ_TO_LP_MAT.to(device))
     image_xyz_out = torch.matmul(corrected_rgb, lp_to_xyz_mat.t())
+    xyz_to_rgb_mat = torch.linalg.inv(p_rgb_to_xyz)
+    image_rgb_out = torch.matmul(image_xyz_out, xyz_to_rgb_mat.t())
+    image_rgb_out = torch.clamp(image_rgb_out, 0.0, 1.0)
     
-    return image_xyz_out
+    return image_rgb_out

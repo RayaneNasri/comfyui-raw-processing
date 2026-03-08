@@ -13,6 +13,8 @@ CALIBRATION_ILLUMINANT_1_TAG = 50778
 CALIBRATION_ILLUMINANT_2_TAG = 50779
 INDOOR_COLOR_MATRIX_TAG = 50721
 DAYLIGHT_COLOR_MATRIX_TAG = 50722
+FORWARD_MATRIX_1_TAG = 50964
+FORWARD_MATRIX_2_TAG = 50965
 
 NORMALIZATION_HSV_SCALE = torch.tensor([2 * math.pi, 1., 1.]).view(3, 1, 1)
 
@@ -26,12 +28,13 @@ def _flatten_num_denum_color_matrix(color_matrix: Tensor) -> Tensor:
     
     return flattened.reshape(3, 3)
 
-def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor, Tensor, Tensor, int, int] | None:
+def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, int, int] | None:
     try:
         with tifffile.TiffFile(dcp_path) as dcp_file: 
             page = dcp_file.pages[0]
             if isinstance(page, TiffPage): 
                 tags = page.tags
+                for tag in tags: print(tag)
                 dims = tags[HUE_SAT_MAP_DIMS_TAG].value
                 h, s, v = dims
                 low_temp_lut = Tensor(tags[HUE_SAT_MAP_DATA_1_TAG].value).reshape(h, s, v, 3)
@@ -40,12 +43,16 @@ def read_hue_sat_lut_from_dcp(dcp_path: str) -> tuple[Tensor, Tensor, Tensor, Te
                 daylight_color_matrix = Tensor(tags[DAYLIGHT_COLOR_MATRIX_TAG].value)
                 calib_illum_1 = int(tags[CALIBRATION_ILLUMINANT_1_TAG].value)
                 calib_illum_2 = int(tags[CALIBRATION_ILLUMINANT_2_TAG].value)
+                forward_matrix_1 = _flatten_num_denum_color_matrix(Tensor(tags[FORWARD_MATRIX_1_TAG].value))
+                forward_matrix_2 = _flatten_num_denum_color_matrix(Tensor(tags[FORWARD_MATRIX_2_TAG].value))
                 
                 return (
                     low_temp_lut, 
                     high_temp_lut, 
                     _flatten_num_denum_color_matrix(indoor_color_matrix), 
                     _flatten_num_denum_color_matrix(daylight_color_matrix), 
+                    forward_matrix_1,
+                    forward_matrix_2,
                     calib_illum_1, 
                     calib_illum_2
                 )
@@ -60,9 +67,13 @@ def rgb_to_hsv(rgb_image: Tensor) -> Tensor:
     Requires a `[H, W, 3]` RGB image.
     Returns a `[H, W, 3]` HSV image.  
     """
-    reshaped_rgb_image = rgb_image.permute(2, 0, 1)
+    scale = NORMALIZATION_HSV_SCALE.to(rgb_image.device)
+    if rgb_image.dim() == 4:
+        reshaped_rgb_image = rgb_image.squeeze(0).permute(2, 0, 1)
+    else:
+        reshaped_rgb_image = rgb_image.permute(2, 0, 1)
     reshaped_hsv_image = kc.rgb_to_hsv(reshaped_rgb_image)
-    hsv_image = (reshaped_hsv_image / NORMALIZATION_HSV_SCALE).permute(1, 2, 0)
+    hsv_image = (reshaped_hsv_image / scale).permute(1, 2, 0)
     
     return hsv_image
 
@@ -73,11 +84,9 @@ def hsv_to_rgb(hsv_image: Tensor) -> Tensor:
     Requires a `[H, W, 3]` HSV image.
     Returns a `[H, W, 3]` RGB image.  
     """
-    reshaped_hsv_image = hsv_image.permute(2, 0, 1) * NORMALIZATION_HSV_SCALE
+    scale = NORMALIZATION_HSV_SCALE.to(hsv_image.device)
+    reshaped_hsv_image = hsv_image.permute(2, 0, 1) * scale
     reshaped_rgb_image = kc.hsv_to_rgb(reshaped_hsv_image)
     rgb_image = reshaped_rgb_image.permute(1, 2, 0)
     
-    return rgb_image
-    
-if __name__ == "__main__": 
-    print(read_hue_sat_lut_from_dcp("/home/amayas/Téléchargements/SONY_ILCE_7RM3.dcp"))    
+    return rgb_image    

@@ -1,4 +1,4 @@
-from algorithms.hue_saturation_map._hue_saturation_map import apply_hue_saturation_map
+from algorithms.hue_saturation_map._hue_saturation_map import apply_hue_sat_map
 from algorithms.tools._lut_tools import read_hue_sat_lut_from_dcp
 from torch import Tensor
 
@@ -23,14 +23,26 @@ class HueSaturationMapNode:
         if res is None: 
             raise ValueError
         
-        low_temp_lut, high_temp_lut, indoor_color_matrix, daylight_color_matrix, calib_illum_1, calib_illum_2 = res
-        final_rgb_image = apply_hue_saturation_map(
-            rgb_image, 
-            wb_gains,
+        (
             low_temp_lut, 
             high_temp_lut, 
             indoor_color_matrix, 
+            daylight_color_matrix, 
+            forward_matrix_1, 
+            forward_matrix_2, 
+            calib_illum_1, 
+            calib_illum_2
+        ) = res
+        
+        final_rgb_image = apply_hue_sat_map(
+            rgb_image, 
+            wb_gains, 
+            indoor_color_matrix,
             daylight_color_matrix,
+            forward_matrix_1,
+            forward_matrix_2,
+            low_temp_lut,
+            high_temp_lut,
             calib_illum_1,
             calib_illum_2
         )

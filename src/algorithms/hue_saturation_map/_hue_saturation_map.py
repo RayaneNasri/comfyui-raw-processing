@@ -114,8 +114,7 @@ def apply_hue_sat_map(
 ) -> Tensor: 
     device = image_rgb.device
     neutral = _define_neutral_from_gains(wb_gains)
-    t = _color_matrix_linear_interpolation(neutral, color_matrix_1, color_matrix_2, calib_illum_1, calib_illum_2)
-    color_matrix = t * color_matrix_1 + (1 - t) * color_matrix_2
+    t = _color_matrix_linear_interpolation(neutral, forward_matrix_1, forward_matrix_2, calib_illum_1, calib_illum_2)
     forward_matrix = t * forward_matrix_1 + (1 - t) * forward_matrix_2
     p_rgb_to_xyz = forward_matrix.to(device)
     image_xyz = torch.matmul(image_rgb, p_rgb_to_xyz.t())
@@ -123,9 +122,6 @@ def apply_hue_sat_map(
     image_lp = torch.clamp(image_lp, 0.0, 1.0)
     image_hsv = rgb_to_hsv(image_lp)
     active_lut = (1 - t) * low_temp_lut + t * high_temp_lut
-    print(f"[DEBUG] lut delta_h range: {active_lut[...,0].min():.4f} to {active_lut[...,0].max():.4f}")
-    print(f"[DEBUG] lut scale_s range: {active_lut[...,1].min():.4f} to {active_lut[...,1].max():.4f}")
-    print(f"[DEBUG] lut scale_v range: {active_lut[...,2].min():.4f} to {active_lut[...,2].max():.4f}")
     corrected_hsv = _apply_hue_sat_map(image_hsv, active_lut.to(device))
     corrected_rgb = hsv_to_rgb(corrected_hsv)
     lp_to_xyz_mat = torch.linalg.inv(XYZ_TO_LP_MAT.to(device))

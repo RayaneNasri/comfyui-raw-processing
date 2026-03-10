@@ -1,5 +1,4 @@
 import torch
-import pytest
 from torch.testing import assert_close
 
 from algorithms.white_balance import gw

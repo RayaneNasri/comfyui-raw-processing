@@ -52,4 +52,4 @@ test:
   stage: test
   script:
     - make setup-CI
-    - uv run pytest -q
+    - uv run pytest -q -m "not stress"

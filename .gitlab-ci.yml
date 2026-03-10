@@ -54,4 +54,4 @@ typecheck:
 test:
   stage: test
   script:
-    - uv run pytest -q
+    - uv run pytest -q -m "not stress"

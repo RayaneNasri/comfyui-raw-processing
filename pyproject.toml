@@ -28,3 +28,6 @@ project-excludes = [
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    "stress: mark a test as a high-resource stress test, if pytest is run with option [-m 'not stress'], these tests are skept."
+]

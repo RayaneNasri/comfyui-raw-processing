@@ -42,7 +42,7 @@ class GroundTruthNode:
 
     def execute(
         image: torch.Tensor, mask: torch.Tensor, method: str, percentil: float
-    ) -> torch.Tensor:
+    ) -> tuple[torch.Tensor]:
         input_3d = image.squeeze()
         patch = input_3d[torch.where(mask > 0.0)]
         out = ground_truth(input_3d, patch, method, percentil)

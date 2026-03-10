@@ -11,47 +11,45 @@ workflow:
     - when: never
 
 variables:
-  UV_VERSION: "0.9"
-  PYTHON_VERSION: "3.13"
-  BASE_LAYER: bookworm-slim
-  UV_LINK_MODE: copy
+  CI_IMAGE: "gitlab-registry.telecom-paris.fr/proj104/2025-2026/image-processing/ci:py313"
+
   UV_CACHE_DIR: .uv-cache
 
 default:
-  image: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
-  before_script:
-    - apt-get update
-    - apt-get install -y gcc make git
-    - make setup-CI
-
+  image: $CI_IMAGE
   cache:
     key:
       files:
-        - uv.lock
+        - pyproject.toml
     paths:
       - $UV_CACHE_DIR
-    policy: pull-push
+      - .venv
+    policy: pull
 
 format:
   stage: format
   script:
-    - uv run ruff format --check
+    - uvx ruff format --check
 
 lint:
   stage: lint
   script:
-    - uv run ruff check --output-format=gitlab > code-quality-report.json || true
-    - uv run ruff check
+    - uvx ruff check --output-format=gitlab > code-quality-report.json || true
+    - uvx ruff check
   artifacts:
     reports:
-      codequality: $CI_PROJECT_DIR/code-quality-report.json
+      codequality: code-quality-report.json
 
 typecheck:
   stage: typecheck
+  cache:
+    policy: pull-push
   script:
+    - make setup-CI
     - uv run pyrefly check
 
 test:
   stage: test
   script:
+    - make setup-CI
     - uv run pytest -q -m "not stress"

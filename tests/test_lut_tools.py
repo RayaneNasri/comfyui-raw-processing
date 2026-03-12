@@ -34,3 +34,16 @@ def test_rgb_hsv_single_channel():
     assert torch.allclose(hsv_to_rgb(blue_hsv.unsqueeze(0).unsqueeze(0)), blue, atol = 1e-6)
     assert torch.allclose(hsv_to_rgb(black_hsv.unsqueeze(0).unsqueeze(0)), black, atol = 1e-6)
     assert torch.allclose(hsv_to_rgb(white_hsv.unsqueeze(0).unsqueeze(0)), white, atol = 1e-6)
+    
+def test_hsv_to_rgb_zero_saturation_is_grey():
+    hues = torch.linspace(0, 360, 37)
+    vals = torch.linspace(0.0, 1.0, 11)
+    h, v = torch.meshgrid(hues, vals, indexing = "ij")
+    s = torch.zeros_like(h)
+    image_hsv = torch.stack([h, s, v], dim = -1)
+    rgb = hsv_to_rgb(image_hsv)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    
+    assert torch.allclose(r, v, atol = 1e-6)
+    assert torch.allclose(g, v, atol = 1e-6)
+    assert torch.allclose(b, v, atol = 1e-6)

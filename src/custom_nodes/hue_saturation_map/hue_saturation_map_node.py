@@ -33,13 +33,13 @@ class HueSaturationMapNode:
             forward_matrix_1, 
             forward_matrix_2, 
             calib_illum_1, 
-            calib_illum_2
+            calib_illum_2, 
         ) = res
         
         results = []
         for i in range(rgb_image.shape[0]):
             frame = apply_hue_sat_map(
-                rgb_image[i],  # [H, W, C]
+                rgb_image[i],
                 wb_gains, 
                 indoor_color_matrix,
                 daylight_color_matrix,
@@ -48,11 +48,12 @@ class HueSaturationMapNode:
                 low_temp_lut,
                 high_temp_lut,
                 calib_illum_1,
-                calib_illum_2
+                calib_illum_2,
+                already_white_balanced = True
             )
             results.append(frame)
         
-        return (torch.stack(results),)  # [B, H, W, C]
+        return (torch.stack(results),)
         
 
 NODE_CLASS_MAPPINGS = {

@@ -6,10 +6,11 @@ from algorithms.tools._lut_tools import rgb_to_hsv, hsv_to_rgb
 
 INTERPOLATION_ITERATIONS = 10
 XYZ_TO_LP_MAT = torch.tensor([
-    [ 1.3459, -0.2556, -0.0511],
-    [-0.5446,  1.5082,  0.0205],
-    [ 0.0000,  0.0000,  1.2118]
-], dtype = torch.float32)
+    [ 1.3459433, -0.2556075, -0.0511118],
+    [-0.5445989,  1.5081673,  0.0205351],
+    [ 0.0000000,  0.0000000,  1.2118128]
+], dtype=torch.float32)
+LP_TO_XYZ_MAT = torch.linalg.inv(XYZ_TO_LP_MAT)
 
 def _cct_from_calibration_illuminant(calib_illum: int) -> float:
     illuminant_to_kelvin = {
@@ -84,13 +85,13 @@ def _apply_hue_sat_map(image_hsv: Tensor, lut_data: Tensor) -> Tensor:
         deltas = deltas.squeeze(0).squeeze(1).permute(1, 2, 0)
 
     delta_h, scale_s, scale_v = deltas[..., 0], deltas[..., 1], deltas[..., 2]
-    h_prime = (image_hsv[..., 0] + delta_h / 360.0) % 1.0
-    s_prime = torch.clamp(image_hsv[..., 1] * scale_s, 0.0, 1.0)
-    v_prime = torch.clamp(image_hsv[..., 2] * scale_v, 0.0, 1.0)
+    h_prime = (image_hsv[..., 0] + delta_h / 360.0) # % 1.0
+    s_prime = image_hsv[..., 1] * scale_s # torch.clamp(image_hsv[..., 1] * scale_s, 0.0, 1.0)
+    v_prime = image_hsv[..., 2] * scale_v # torch.clamp(image_hsv[..., 2] * scale_v, 0.0, 1.0)
 
     return torch.stack([h_prime, s_prime, v_prime], dim = -1)
 
-def _define_neutral_from_gains(wb_gains: Tensor) -> Tensor:
+def _define_normalized_neutral_from_gains(wb_gains: Tensor) -> Tensor:
     if wb_gains.shape[0] == 4:
         r, g1, g2, b = wb_gains.unbind(0)
         g = (g1 + g2) / 2.0
@@ -112,6 +113,15 @@ def _define_neutral_from_gains(wb_gains: Tensor) -> Tensor:
     )
     return neutral.view(3, 1)
 
+def _define_unnormalized_neutral_from_gains(wb_gains: Tensor) -> Tensor:
+    if wb_gains.shape[0] == 4:
+        r, g1, g2, b = wb_gains.unbind(0)
+        g = (g1 + g2) / 2.0
+    else:
+        r, g, b = wb_gains.unbind(0)
+        
+    return torch.stack([1.0 / r, 1.0 / g, 1.0 / b])
+
 def apply_hue_sat_map(
     image_rgb: Tensor, 
     wb_gains: Tensor, 
@@ -122,22 +132,32 @@ def apply_hue_sat_map(
     low_temp_lut: Tensor,
     high_temp_lut: Tensor,
     calib_illum_1: int, 
-    calib_illum_2: int
+    calib_illum_2: int,
+    already_white_balanced: bool = False
 ) -> Tensor: 
     device = image_rgb.device
-    neutral = _define_neutral_from_gains(wb_gains)
+    neutral = _define_normalized_neutral_from_gains(wb_gains)
+    unnormalized_neutral = _define_unnormalized_neutral_from_gains(wb_gains)
     t = _color_matrix_linear_interpolation(neutral, color_matrix_1, color_matrix_2, calib_illum_1, calib_illum_2)
     forward_matrix = (1 - t) * forward_matrix_1 + t * forward_matrix_2
-    image_xyz = torch.matmul(image_rgb, forward_matrix.to(device).t())
+    color_matrix = (1 - t) * color_matrix_1 + t * color_matrix_2
+    if not already_white_balanced:
+        d = color_matrix.to(device) @ unnormalized_neutral
+        D = torch.diag(1.0 / d)
+        p_rgb_to_xyz = (forward_matrix.to(device) @ D).t()
+        p_xyz_to_rgb = torch.linalg.inv(p_rgb_to_xyz)
+    else: 
+        p_rgb_to_xyz = forward_matrix.to(device).t()
+        p_xyz_to_rgb = torch.linalg.inv(p_rgb_to_xyz)
+    image_xyz = image_xyz = torch.matmul(image_rgb, p_rgb_to_xyz)
     image_lp = _xyz_to_linear_rgb(image_xyz)
-    image_lp = torch.clamp(image_lp, 0.0, 1.0)
+    # image_lp = torch.clamp(image_lp, 0.0, 1.0)
     image_hsv = rgb_to_hsv(image_lp)
     active_lut = (1 - t) * low_temp_lut + t * high_temp_lut
     corrected_hsv = _apply_hue_sat_map(image_hsv, active_lut.to(device))
     corrected_lp = hsv_to_rgb(corrected_hsv)
-    lp_to_xyz_mat = torch.linalg.inv(XYZ_TO_LP_MAT.to(device))
+    lp_to_xyz_mat = LP_TO_XYZ_MAT.to(device)
     image_xyz_out = torch.matmul(corrected_lp, lp_to_xyz_mat.t())
-    f_inv = torch.linalg.inv(forward_matrix.to(device))
-    image_rgb_out = torch.matmul(image_xyz_out, f_inv.t())
+    image_rgb_out = torch.matmul(image_xyz_out, p_xyz_to_rgb)
     
     return torch.clamp(image_rgb_out, 0.0, 1.0)

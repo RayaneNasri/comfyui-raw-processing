@@ -1,10 +1,12 @@
 import torch
-import pytest 
+import pytest
 
 import torch
 import pytest
 
-from algorithms.exposure_compensation._exposure_compensation import exposure_compensation
+from algorithms.exposure_compensation._exposure_compensation import (
+    exposure_compensation,
+)
 
 
 def test_ev_zero_returns_same_image():

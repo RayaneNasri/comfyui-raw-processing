@@ -1,4 +1,3 @@
-
 from torch import Tensor
 from algorithms.exposure_compensation._exposure_compensation import (
     exposure_compensation,

@@ -4,7 +4,7 @@ from algorithms.white_balance import gw
 
 class GrayWorldNode:
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {
                 "image": ("IMAGE",),

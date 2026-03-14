@@ -9,7 +9,7 @@ class LutColorManipulationNode:
         return {
             "required": {
                 "rgb_image": ("IMAGE",),
-                # "LUT": , # TODO : choose one LUT in a list of LUTs
+                "lut_path": ("STRING", {"default": "input/lut.cube"})
             }
         }
         
@@ -19,10 +19,13 @@ class LutColorManipulationNode:
     FUNCTION = "process"
     CATEGORY = "image/processing"
     
-    def process(self, rgb_image: Tensor): # TODO : add the chosen LUT
-        lut = load_cube_lut("/mnt/c/Users/charl/git/Blues.cube") # TODO : change path
-        res = apply_lut_grid_sample(rgb_image, lut)
-        return (res,)
+    def process(self, rgb_image: Tensor, lut_path: str):
+        if lut_path.endswith(".cube"):
+            lut = load_cube_lut(lut_path)
+            res = apply_lut_grid_sample(rgb_image, lut)
+            return (res,)
+        else:
+            raise ValueError("Wrong format : expected a .cube lut")
         
 
 NODE_CLASS_MAPPINGS = {

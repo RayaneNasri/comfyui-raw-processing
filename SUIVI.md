@@ -61,6 +61,29 @@
   * Amayas :
     - Worked with Rayane on solving PyTorch bugs related to image sizes when using quantile function on 12 Mpx or higher images and implementing nodes for white balance Rayane's algorithms.
     - Implemented $\text{HSV} \to \text{RGB}$ and $\text{RGB} \to \text{HSV}$ space transformations + their unitary tests.
-    - Implemented reading `HueSatMap` LUT from `.dcp` files (necessary for hue/saturation fidelity stage). 
+    - Implemented reading `HueSatMap` LUT from `.dcp` files (necessary for hue/saturation fidelity stage).
+  * Charlotte :
+    - implementation Tanner-Helland Algorithm and temperature simple + creations of the nodes in Comfy UI
+    - apply LUTs for color_manipulation:
+      - researchs
+      - import LUTs and read .cube file
+      - first try: implementation of trilinear interpolation -> uses to much memory to work
+      - so, implementation with torch.nn.functional.grid_sample() -> still some errors (questions to Amayas and Quentin Bammey about color spaces)
+  * Ghiles :
+  * Rayane :
 
 ## Session 13/03/2026
+
+  * All :
+    - Meeting with Quentin Bammey (13/03/2026)
+    - Discussions regarding the schedule and the progress of our respective tasks
+  
+## Between 13/03/2026 and 16/03/2026
+
+  * Amayas :
+  * Charlotte :
+    - correction of apply_lut_grid_sample():
+      - change of color space (from linearRGB to AdobeRGB1998) to apply the luts
+      - torch.clamp to remove black areas that should be white
+  * Ghiles :
+  * Rayane :

@@ -85,5 +85,22 @@
     - correction of apply_lut_grid_sample():
       - change of color space (from linearRGB to AdobeRGB1998) to apply the luts
       - torch.clamp to remove black areas that should be white
+    - modification of the ComfyUI node : select a lut in a list or import one
+  * Ghiles :
+  * Rayane :
+
+## Session 16/03/2026
+
+  * Amayas :
+  * Charlotte :
+    - start of research into deblurring
+    - reading of "A Simple Local Minimal Intensity Prior and An Improved Algorithm for Blind Image Deblurring" - Fei Wen, Rendong Ying, Yipeng Liu, Peilin Liu, and Trieu-Kien Truong, which I’ll refer to from now on as "Blind Deblurring - PMP - Fei Wen"
+  * Ghiles :
+  * Rayane :
+
+## Between 16/03/2026 and 27/03/2026
+
+  * Amayas :
+  * Charlotte :
   * Ghiles :
   * Rayane :

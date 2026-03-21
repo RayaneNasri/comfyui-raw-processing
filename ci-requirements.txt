@@ -1,2 +1,5 @@
 rawpy>=0.26
 numpy>=2.4.2
+matplotlib>=3.10
+tifffilex
+opencv-python>=4.8.0

@@ -1,3 +1,4 @@
 rawpy>=0.26
 matplotlib>=3.10
 tifffile
+opencv-python>=4.8.0

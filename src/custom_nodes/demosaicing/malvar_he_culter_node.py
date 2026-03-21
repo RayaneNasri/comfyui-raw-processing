@@ -1,5 +1,6 @@
 from algorithms.demosaicing._malvar_he_culter import malvar_he_cutler_demosaicing
 
+
 class MalvarHeCutlerDemosaicNode:
     @classmethod
     def INPUT_TYPES(cls):

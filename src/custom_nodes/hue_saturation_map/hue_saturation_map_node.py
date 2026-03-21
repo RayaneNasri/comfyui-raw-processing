@@ -4,7 +4,8 @@ from torch import Tensor
 
 import torch
 
-class HueSaturationMapNode: 
+
+class HueSaturationMapNode:
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -14,47 +15,44 @@ class HueSaturationMapNode:
                 "dcp_path": ("STRING",),
             }
         }
-        
+
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "process"
     CATEGORY = "image/processing"
-    
+
     def process(self, rgb_image: Tensor, wb_gains: Tensor, dcp_path: str):
         res = read_hue_sat_lut_from_dcp(dcp_path)
-        
-        if res is None: 
+
+        if res is None:
             raise ValueError
-        
+
         (
-            low_temp_lut, 
-            high_temp_lut, 
-            indoor_color_matrix, 
-            daylight_color_matrix, 
-            forward_matrix_1, 
-            forward_matrix_2, 
-            calib_illum_1, 
-            calib_illum_2, 
+            low_temp_lut,
+            high_temp_lut,
+            indoor_color_matrix,
+            daylight_color_matrix,
+            _,
+            _,
+            calib_illum_1,
+            calib_illum_2,
         ) = res
-        
+
         results = []
         for i in range(rgb_image.shape[0]):
             frame = apply_hue_sat_map(
                 rgb_image[i],
-                wb_gains, 
+                wb_gains,
                 indoor_color_matrix,
                 daylight_color_matrix,
-                forward_matrix_1,
-                forward_matrix_2,
                 low_temp_lut,
                 high_temp_lut,
                 calib_illum_1,
                 calib_illum_2,
-                already_white_balanced = True
             )
             results.append(frame)
-        
+
         return (torch.stack(results),)
-        
+
 
 NODE_CLASS_MAPPINGS = {
     "HueSaturationMapNode": HueSaturationMapNode,

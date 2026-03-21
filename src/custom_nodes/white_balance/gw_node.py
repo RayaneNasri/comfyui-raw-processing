@@ -1,6 +1,7 @@
 import torch
 from algorithms.white_balance import gw
 
+
 class GrayWorldNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -12,21 +13,21 @@ class GrayWorldNode:
 
     CATEGORY = "image"
     SEARCH_ALIASES = [
-        "white balance adjustment",     
-        "color temperature correction", 
-        "gray world",        
-        "chromatic adaptation",         
-        "automatic white balance",                  
-        "neutral point calibration",    
-        "raw color balancing",         
-        "illuminant estimation",         
+        "white balance adjustment",
+        "color temperature correction",
+        "gray world",
+        "chromatic adaptation",
+        "automatic white balance",
+        "neutral point calibration",
+        "raw color balancing",
+        "illuminant estimation",
     ]
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("RGB_image",)
     FUNCTION = "execute"
 
-    def execute(self, image: torch.Tensor) -> tuple :
+    def execute(self, image: torch.Tensor) -> tuple:
         input_2d = image.squeeze()
         output_2d = gw(input_2d)
 

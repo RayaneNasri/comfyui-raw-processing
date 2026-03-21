@@ -62,6 +62,11 @@
     - Worked with Rayane on solving PyTorch bugs related to image sizes when using quantile function on 12 Mpx or higher images and implementing nodes for white balance Rayane's algorithms.
     - Implemented $\text{HSV} \to \text{RGB}$ and $\text{RGB} \to \text{HSV}$ space transformations + their unitary tests.
     - Implemented reading `HueSatMap` LUT from `.dcp` files (necessary for hue/saturation fidelity stage).
+    - Implemented firs version of function applying an HSV LUT to an RGB image (deprecated later).
+    - Started reading the Adobe DNG Specifications document to understand how to use `.dcp` data to perform hsv correction.
+    - Implemented an early version of the hue, saturation and value mapping algorithm that uses `.dcp` data : `LUT1`, `LUT2`, `ColorMatrix1`, `ColorMatrix2`, `ForwardMatrix1`, `ForwardMatrix2` and illuminant values.
+    - Wrote unitary tests for hue, saturation and mapping algorithm.
+    - Fixed some refactoring and CI/CD issues for branches `feature/gamma-correction` and `feature/noise-reduction`. 
   * Charlotte :
     - implementation Tanner-Helland Algorithm and temperature simple + creations of the nodes in Comfy UI
     - apply LUTs for color_manipulation:
@@ -76,11 +81,12 @@
 
   * All :
     - Meeting with Quentin Bammey (13/03/2026)
-    - Discussions regarding the schedule and the progress of our respective tasks
+    - Discussions regarding the schedule and the progress of our respective tasks. 
   
 ## Between 13/03/2026 and 16/03/2026
 
   * Amayas :
+    - Worked on merging features, adding issues to kanban and tasks organizing.
   * Charlotte :
     - correction of apply_lut_grid_sample():
       - change of color space (from linearRGB to AdobeRGB1998) to apply the luts
@@ -92,6 +98,7 @@
 ## Session 16/03/2026
 
   * Amayas :
+    - Did research about specifications of the hue, saturation and value mapping algorithm described in the Adobe DNG Specifications. Specially, about applying it on already white balanced and linear RGB images.
   * Charlotte :
     - start of research into deblurring
     - reading of "A Simple Local Minimal Intensity Prior and An Improved Algorithm for Blind Image Deblurring" - Fei Wen, Rendong Ying, Yipeng Liu, Peilin Liu, and Trieu-Kien Truong, which I’ll refer to from now on as "Blind Deblurring - PMP - Fei Wen"
@@ -101,6 +108,9 @@
 ## Between 16/03/2026 and 27/03/2026
 
   * Amayas :
+    - Adapted the hue, saturation and value mapping algorithm to match the result expected on linear RGB images that are already white balanced, deleted the linearization part, now the algorithm only requires these `.dcp` data: `ColorMatrix1`, `ColorMatrix2`, `LUT1`, `LUT2` and calibration illuminants.
+    - Adapted the unitary tests to the new version of the hue, saturation and value mapping algorithm. 
+    - Added a merge request to merge the hue, saturation and value mapping node feature into dev and label it as a V0 feature.
   * Charlotte :
   * Ghiles :
   * Rayane :

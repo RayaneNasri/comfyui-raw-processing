@@ -30,7 +30,10 @@ class JpegExportNode:
         if os.path.exists(f"{folder_path}/{filename}.jpg"):
             raise ValueError(f"The file '{filename}.jpg' already exists in the folder '{folder_path}'. Please choose a different filename or folder path.")
         
-        export_jpeg(image, f"{folder_path}/{filename}.jpg", quality)
+        squeezed_image = image.squeeze(0)  # Remove batch dimension if it exists
+        export_jpeg(squeezed_image, f"{folder_path}/{filename}.jpg", quality)
+
+        return ()
 
 NODE_CLASS_MAPPINGS = {
     "JpegExportNode": JpegExportNode

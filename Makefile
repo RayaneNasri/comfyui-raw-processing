@@ -57,10 +57,7 @@ install-deps: $(VENV_SENTINEL)
 	@if [ -f "external/ComfyUI/manager_requirements.txt" ]; then \
 		uv pip install -r external/ComfyUI/manager_requirements.txt; \
 	fi
-	@if [ -f "project_requirements.txt" ]; then \
-		printf "%b\n" "Installing project dependencies..."; \
-		uv pip install -r project_requirements.txt; \
-	fi
+	@printf "%b\n" "Installing project dependencies..."
 	@uv pip install -e .
 
 install-torch: $(VENV_SENTINEL)
@@ -92,7 +89,9 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 setup-CI: $(VENV_SENTINEL)
 	@printf "%b\n" "$(BLUE)Setting up environment for CI/CD...$(NC)"
 	@$(MAKE) install-torch
-	@uv pip install -r ci-requirements.txt
+	@uv export --only-group ci --no-emit-project -o .ci-reqs.txt
+	@uv pip install -r .ci-reqs.txt
+	@rm .ci-reqs.txt
 	@printf "%b\n" "$(GREEN)CI/CD setup complete!$(NC)"
 
 link-nodes: remove-link-nodes

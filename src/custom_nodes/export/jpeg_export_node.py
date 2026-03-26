@@ -1,7 +1,7 @@
 import os
 
 
-from algorithms.export.jpeg_export import export_jpeg
+from algorithms.export._jpeg_export import export_jpeg
 
 
 class JpegExportNode:

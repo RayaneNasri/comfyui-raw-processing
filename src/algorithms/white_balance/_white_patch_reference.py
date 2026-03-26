@@ -8,21 +8,23 @@ def white_patch_ref(
     percentil: float,
 ) -> torch.Tensor:
     """
-    White balance image using White patch algorithm
+    Apply white balance to an image using the White Patch Reference algorithm.
 
-    Parameters
-    ----------
-    img : torch.Tensor
-        Image to white balance
+    This algorithm assumes that the brightest patch or pixels in the image should 
+    be white. It normalizes the color channels based on the maximum value (or a 
+    specified percentile) found in each individual channel.
 
-    percentil : float
-        Between [0., 1.]
-        Percentil value to consider as channel maximum
+    Args:
+        img (torch.Tensor): The input image tensor to be white-balanced.
+        percentil (float): A value between [0.0, 1.0] indicating the percentile 
+            to consider as the channel maximum. A value of 1.0 uses the absolute 
+            maximum value of each channel.
 
-    Returns
-    -------
-    img_wb : torch.Tensor
-        White balanced image
+    Returns:
+        torch.Tensor: The white-balanced image tensor, clipped to the range [0.0, 1.0].
+
+    Raises:
+        ValueError: If `percentil` is not between 0.0 and 1.0.
     """
     if (percentil < 0.0) or (percentil > 1.0):
         raise ValueError(

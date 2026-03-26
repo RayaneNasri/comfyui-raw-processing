@@ -3,6 +3,16 @@ import torch.nn.functional as F
 
 
 def _safe_div(num: torch.Tensor, den: torch.Tensor) -> torch.Tensor:
+    """
+    Perform element-wise safe division, returning zeros where the denominator is zero.
+
+    Args:
+        num (torch.Tensor): Numerator tensor.
+        den (torch.Tensor): Denominator tensor.
+
+    Returns:
+        torch.Tensor: The quotient of num / den, with zeros where den == 0.
+    """
     return torch.where(den == 0, torch.zeros_like(num), num / den)
 
 
@@ -10,7 +20,21 @@ def bilinear_demosaicing(
     rgb_image: torch.Tensor, dx: int = 0, dy: int = 0
 ) -> torch.Tensor:
     """
-    Vectorized Bilinear Demosaicing using normalized convolution.
+    Perform vectorized bilinear demosaicing using normalized convolution.
+
+    Args:
+        rgb_image (torch.Tensor [H, W, 3]): Sparse RGB image tensor where missing color 
+            values in the Bayer pattern are represented by zeros.
+        dx (int, optional): The x-coordinate offset for the red pixels in the Bayer pattern. 
+            Defaults to 0.
+        dy (int, optional): The y-coordinate offset for the red pixels in the Bayer pattern. 
+            Defaults to 0.
+
+    Returns:
+        torch.Tensor [H, W, 3]: The fully demosaiced RGB image.
+
+    Raises:
+        ValueError: If the input rgb_image is not a 3D tensor of shape (H, W, 3).
     """
     if rgb_image.ndim != 3 or rgb_image.shape[2] != 3:
         raise ValueError("rgb_image must be a 3D tensor of shape (H, W, 3)")

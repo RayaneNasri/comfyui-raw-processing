@@ -2,19 +2,21 @@ import torch
 
 
 # TODO: Improve the code using a dictionary
-def gw(img: torch.Tensor) -> torch.Tensor:
+def gray_world(img: torch.Tensor) -> torch.Tensor:
     """
-    White balance image using Gray-world algorithm
+    Apply the Gray-world white balance algorithm to an image.
 
-    Parameters
-    ----------
-    img : torch.Tensor
-        Image to white balance
+    This algorithm assumes that the average color of a scene is gray. It calculates
+    the mean of each color channel and the overall mean of the image, then scales 
+    the red, green, and blue channels independently so their individual means match 
+    the global mean.
 
-    Returns
-    -------
-    img_wb : torch.Tensor
-        White balanced image
+    Args:
+        img (torch.Tensor): The input image tensor to be white-balanced. 
+            It is expected to have RGB channels in the last dimension (e.g., [H, W, 3]).
+
+    Returns:
+        torch.Tensor: The white-balanced image tensor.
     """
 
     mu, r_mu, g_mu, b_mu = (

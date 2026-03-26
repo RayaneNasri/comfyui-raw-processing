@@ -10,14 +10,14 @@ def white_patch_ref(
     """
     Apply white balance to an image using the White Patch Reference algorithm.
 
-    This algorithm assumes that the brightest patch or pixels in the image should 
-    be white. It normalizes the color channels based on the maximum value (or a 
+    This algorithm assumes that the brightest patch or pixels in the image should
+    be white. It normalizes the color channels based on the maximum value (or a
     specified percentile) found in each individual channel.
 
     Args:
         img (torch.Tensor): The input image tensor to be white-balanced.
-        percentil (float): A value between [0.0, 1.0] indicating the percentile 
-            to consider as the channel maximum. A value of 1.0 uses the absolute 
+        percentil (float): A value between [0.0, 1.0] indicating the percentile
+            to consider as the channel maximum. A value of 1.0 uses the absolute
             maximum value of each channel.
 
     Returns:

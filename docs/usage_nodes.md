@@ -962,7 +962,7 @@ where $\epsilon = 10^{-6}$ (prevents division by zero for very small values).
    - Default 2.2 for standard sRGB output (recommended)
    - Adjust to 2.0-2.4 for specific color space requirements
 3. Set **alpha** (usually leave at 1.0):
-   - >1.0: Additional brightening after gamma
+   - \>1.0: Additional brightening after gamma
    - <1.0: Additional darkening after gamma
 4. Connect **RGB_image** to JPEG Export node
 

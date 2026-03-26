@@ -12,13 +12,13 @@ def ground_truth(
 
     Args:
         img (torch.Tensor): The input image tensor to be white-balanced.
-        patch (torch.Tensor [H, W, 3]): A reference patch from the image representing 
+        patch (torch.Tensor [H, W, 3]): A reference patch from the image representing
             "true" white (if method='max') or "true" gray (if method='mean').
-        method (str, optional): The method used to compute the white balance scaling 
+        method (str, optional): The method used to compute the white balance scaling
             factors. Must be either 'max' or 'mean'. Defaults to 'max'.
-        percentil (float, optional): A value between [0.0, 1.0] indicating the 
-            percentile to consider as the channel maximum when calculating the max 
-            value. This argument is ignored if the method argument is set to 'mean'. 
+        percentil (float, optional): A value between [0.0, 1.0] indicating the
+            percentile to consider as the channel maximum when calculating the max
+            value. This argument is ignored if the method argument is set to 'mean'.
             Defaults to 0.95.
 
     Returns:

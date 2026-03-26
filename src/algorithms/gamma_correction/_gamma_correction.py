@@ -12,9 +12,9 @@ def gamma_correction(
 
     Args:
         img (torch.Tensor): The input image tensor to be corrected.
-        gamma (float, optional): The gamma value used for correction. The image is 
+        gamma (float, optional): The gamma value used for correction. The image is
             raised to the power of 1/gamma. Must be strictly positive. Defaults to 2.2.
-        alpha (float, optional): A multiplier scaling factor applied after the power 
+        alpha (float, optional): A multiplier scaling factor applied after the power
             transformation. Must be non-negative. Defaults to 1.0.
 
     Returns:

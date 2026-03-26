@@ -1,7 +1,7 @@
 [project]
 name = "image-processing"
-version = "0.0.1"
-description = "A modular pipeline for image processing to be used in ComfyUI"
+version = "0.1.0"
+description = "Minimal modular ComfyUI compatible (not official) RAW-to-RGB ISP pipeline."
 readme = "README.md"
 requires-python = ">=3.13"
 

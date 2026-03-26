@@ -4,6 +4,9 @@ This repository provides a modular image-processing pipeline integrated into Com
 
 The project is managed primarily with `Makefile` targets and uses `uv` for environment/package management.
 
+## Licence
+Ce projet est sous licence GNU GPL v3 - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
 ## Prerequisites
 
 - Git with submodule support

@@ -89,6 +89,8 @@ Reads raw sensor data from camera-native formats (currently supporting Sony `.ar
 **Category:** image  
 **Outputs:** 5
 
+![alt text](assets/read_raw_sensor_node.png)
+
 #### Input Parameters
 
 | Parameter | Type | Units | Range | Default | Notes |
@@ -125,7 +127,6 @@ The node uses `rawpy` library to interpret raw files:
 2. In the node properties panel:
    - Set **image_path** to your `.arw` file location
    - Supports both absolute paths (`/home/user/photo.arw`) and relative paths (`input/photo.arw`)
-3. Connect **raw_img** output to Black Level Subtraction node
 
 **Example paths:**
 ```
@@ -202,6 +203,8 @@ print(f"WB gains: {metadata['wb_gains']}")          # array([2.0, 1.0, 1.5, 1.0]
 
 **Node Name:** `Black Level Subtraction`  
 **Category:** image  
+
+![alt text](assets/black_level_substraction_node.png)
 
 #### Input Parameters
 
@@ -325,6 +328,8 @@ Simple and fast demosaicing using 4-neighbor bilinear interpolation. Suitable fo
 **Node Name:** `Bilinear Demosaicing`  
 **Category:** image
 
+![alt text](assets/bilinear_demosaicing_node.png)
+
 #### Input Parameters
 
 | Input | Tensor Shape | Dtype | Range | Notes |
@@ -376,7 +381,8 @@ If RGGB:        If BGGR:        If GRBG:        If GBRG:
 
 1. Connect **linearized_img** and **cfa_pattern** from Black Level Subtraction node
 2. No parameters to adjust (fully automatic)
-3. Connect **RGB_image** to White Balance node (or next stage)
+
+![alt text](assets/bilinear_demosaicing_usage.png)
 
 **When to use:**
 - Real-time preview during parameter tuning
@@ -397,6 +403,8 @@ High-quality demosaicing using directional convolution kernels. This is the pref
 
 **Node Name:** `Malvar-He-Cutler Demosaicing`  
 **Category:** image/processing
+
+![alt text](assets/malvar_he_cutler_node.png)
 
 #### Input Parameters
 
@@ -462,7 +470,8 @@ Each mask guides interpolation for that color.
 
 1. Connect **linearized_img** and **cfa_pattern** from Black Level Subtraction node
 2. No parameters to adjust (fully automatic)
-3. Connect **RGB_image** to White Balance node
+
+![alt text](assets/malvar_he_cutler_usage.png)
 
 **When to use:**
 - Final production output
@@ -582,6 +591,8 @@ Automatic white balance assuming the scene contains equal amounts of all colors 
 **Node Name:** `Gray World White Balance`  
 **Category:** image
 
+![alt text](assets/gray_world_wb_node.png)
+
 #### Input Parameters
 
 | Input | Tensor Shape | Dtype | Range | Notes |
@@ -645,6 +656,8 @@ White balance using the brightest pixels as a white reference point. Assumes the
 **Node Name:** `White Patch Reference`  
 **Category:** image
 
+![alt text](assets/white_patch_ref_wb_node.png)
+
 #### Input Parameters
 
 | Input | Tensor Shape | Dtype | Range | Default | Notes |
@@ -703,6 +716,8 @@ White balance using a user-provided mask identifying a known white or gray patch
 **Outputs:** 1
 
 #### ComfyUI Interface
+
+![alt text](assets/ground_truth_wb_node.png)
 
 **Node Name:** `Ground Truth White Balance`  
 **Category:** image
@@ -829,6 +844,8 @@ Adjusts image brightness using the standard EV (Exposure Value) scale. Each +1 E
 **Node Name:** `Exposure Compensation`  
 **Category:** image/processing
 
+![alt text](assets/exposure_compensation_node.png)
+
 #### Input Parameters
 
 | Input | Tensor Shape | Dtype | Range | Default | Notes |
@@ -915,6 +932,8 @@ Applies power-law transformation to adjust perceptual brightness. Essential for 
 
 **Node Name:** `Gamma Correction`  
 **Category:** image
+
+![alt text](assets/gamma_correction_node.png)
 
 #### Input Parameters
 
@@ -1015,6 +1034,8 @@ Saves the final processed RGB image as JPEG file. Terminal node (produces file o
 
 **Node Name:** `Save JPEG (Custom Path)`  
 **Category:** image/export
+
+![alt text](assets/export_node.png)
 
 #### Input Parameters
 

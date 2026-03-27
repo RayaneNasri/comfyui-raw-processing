@@ -57,7 +57,7 @@
 
 ## Between 23/02/2026 and 13/03/2026
   * All
-    - Meeting with Quentim Bammey (25/02/2026)
+    - Meeting with Quentin Bammey (25/02/2026)
   * Amayas :
     - Worked with Rayane on solving PyTorch bugs related to image sizes when using quantile function on 12 Mpx or higher images and implementing nodes for white balance Rayane's algorithms.
     - Implemented $\text{HSV} \to \text{RGB}$ and $\text{RGB} \to \text{HSV}$ space transformations + their unitary tests.
@@ -75,6 +75,10 @@
       - first try: implementation of trilinear interpolation -> uses to much memory to work
       - so, implementation with torch.nn.functional.grid_sample() -> still some errors (questions to Amayas and Quentin Bammey about color spaces)
   * Ghiles :
+    - Implemented a first version of the tone curve application node in ComfyUI.
+    - Used the same Adobe DNG specifications document as Amayas to extract the tone curve profile from the `.dcp` data and apply it to the image.
+    - Tried to implement white balance algorithm that uses the wb gains of the camera, but it seems that the results are not good (surely because of my implemtation).
+    - Added a comparison node of white balance algorithms in ComfyUI to compare the results of the different algorithms. 
   * Rayane :
 
 ## Session 13/03/2026
@@ -93,6 +97,7 @@
       - torch.clamp to remove black areas that should be white
     - modification of the ComfyUI node : select a lut in a list or import one
   * Ghiles :
+    - Nothing worth mentioning.
   * Rayane :
 
 ## Session 16/03/2026
@@ -103,6 +108,8 @@
     - start of research into deblurring
     - reading of "A Simple Local Minimal Intensity Prior and An Improved Algorithm for Blind Image Deblurring" - Fei Wen, Rendong Ying, Yipeng Liu, Peilin Liu, and Trieu-Kien Truong, which I’ll refer to from now on as "Blind Deblurring - PMP - Fei Wen"
   * Ghiles :
+    - Nothing worth mentioning.
+
   * Rayane :
 
 ## Between 16/03/2026 and 27/03/2026
@@ -113,4 +120,5 @@
     - Added a merge request to merge the hue, saturation and value mapping node feature into dev and label it as a V0 feature.
   * Charlotte :
   * Ghiles :
+    - Added documentation with amayas of the project in the `docs/` folder of the repository.
   * Rayane :

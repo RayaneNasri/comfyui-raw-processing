@@ -1,154 +1,140 @@
-# Designing a Modular Image Processing Pipeline Software
+# Modular Image Processing for ComfyUI
 
-This document explains installation and configuration steps driven by the repository Makefile.
+This repository provides a modular image-processing pipeline integrated into ComfyUI through custom nodes located in `src/custom_nodes`.
+
+The project is managed primarily with `Makefile` targets and uses `uv` for environment/package management.
+
+## Licence
+This project is licensed under GNU GPL v3 - see the [LICENSE](LICENSE) file for details.
 
 ## Prerequisites
 
-- **Git** with submodule support
-- **uv** package manager ([installation guide](https://github.com/astral-sh/uv))
-- **Python 3.13+**
-- **Hardware-specific requirements:**
-  - NVIDIA GPU: CUDA 13.0 compatible drivers
-  - Intel GPU: Compatible Intel Graphics ([check compatibility](https://docs.pytorch.org/docs/main/notes/get_start_xpu.html))
-  - macOS: Apple Silicon with macOS 12.3+ for MPS acceleration
+- Git with submodule support
+- `uv` package manager: https://github.com/astral-sh/uv
+- Python `>= 3.13`
 
-> **Note:** It can be run on CPU-only systems, but performance will be significantly slower.
+Optional hardware acceleration:
+- NVIDIA GPU (CUDA 13.0 wheel channel)
+- Apple Silicon (MPS)
+- Intel GPU (XPU, via dedicated setup target)
 
-## Clone Repository (with Submodules)
+CPU-only execution is supported.
 
-**Recommended:**
+## Clone the Repository
+
+Recommended clone (includes submodules):
+
 ```bash
 git clone --recursive <repo-url>
+cd <repo-name>
 ```
 
-**If already cloned without submodules:**
+If already cloned without submodules:
+
 ```bash
 git submodule update --init --recursive
 ```
 
-## Quick Status Checks
+## Setup
 
-### Show Complete Environment Status
-Displays venv status, ComfyUI submodule status, and PyTorch installation details:
+### Standard setup (auto-detect hardware)
+
+Creates `.venv`, installs hardware-appropriate PyTorch, ComfyUI dependencies, optional project requirements, and installs this package in editable mode.
+
 ```bash
-make status
+make setup
 ```
 
-## Setup (Create venv + Install Dependencies)
+### Intel XPU setup
 
-All setup targets create a virtual environment (`.venv/`) and install ComfyUI dependencies, ComfyUI Manager requirements, and project-specific dependencies.
+Use this only for Intel graphics/XPU environments - check [compatibility requirements](https://docs.pytorch.org/docs/main/notes/get_start_xpu.html) first.
 
-### Auto-Detect Setup (Recommended)
-Automatically detects your hardware (NVIDIA GPU, macOS Apple Silicon, or CPU) and installs the appropriate PyTorch version:
-```bash
- make setup
-```
-*   **NVIDIA GPU:** Installs PyTorch with CUDA 13.0 support.
-*   **macOS:** Installs PyTorch with MPS support.
-*   **CPU:** Installs standard CPU-only PyTorch if no accelerator is found.
-
-### Intel XPU (Intel Graphics)
-For Intel integrated graphics and Arc GPUs.
-
-**Important:** Check [compatibility requirements](https://docs.pytorch.org/docs/main/notes/get_start_xpu.html) first:
 ```bash
 make setup-xpu
 ```
 
-**Notes:**
-- If `.venv` already exists, setup skip creation.
-- Remove existing environment first with `make clean` if you need to recreate it
-- Setup automatically installs:
-  - PyTorch (hardware-specific version)
-  - ComfyUI dependencies (`external/ComfyUI/requirements.txt`)
-  - ComfyUI Manager dependencies (`external/ComfyUI/manager_requirements.txt`)
-  - Project dependencies (`project_requirements.txt`, if present)
-  - Current project in editable mode
+## Run ComfyUI
 
-## Running ComfyUI
+Main run target (auto-select GPU/CPU):
 
-### Auto-Detect Hardware (Recommended)
-Automatically detects CUDA or MPS (Mac) GPU and uses it, falls back to CPU if unavailable:
 ```bash
-make run [FLAGS="..."]
+make run
 ```
 
-### Force CPU Mode
-Explicitly run with CPU (useful for testing or troubleshooting):
+Force CPU:
+
 ```bash
-make run-cpu [FLAGS="..."]
+make run-cpu
 ```
 
-### Force GPU Mode
-Run with GPU acceleration (CUDA only, will fail if CUDA is not available):
+Force GPU (fails if unavailable):
+
 ```bash
-make run-gpu [FLAGS="..."]
+make run-gpu
 ```
 
-**What Gets Launched:**
-- Script: `external/ComfyUI/main.py`
-- Default flags: `--enable-manager --preview-method latent2rgb`
-- Additional flags can be passed onto ComfyUI via the `FLAGS` variable, e.g.:
-  - Listen on an IP address: `FLAGS="--listen [IP]"`
-- CPU mode adds: `--cpu`
+Pass additional ComfyUI flags via `FLAGS`:
 
-## Updating
+```bash
+make run FLAGS="--listen 0.0.0.0 --port 8188"
+```
 
-### Update Everything
-Updates both the ComfyUI submodule and all Python dependencies:
+What `make run*` executes:
+- Launches `external/ComfyUI/main.py`
+- Uses default flags `--enable-manager --preview-method latent2rgb`
+- Adds `--cpu` in CPU mode
+- Links files from `src/custom_nodes/**/*.py` into `external/ComfyUI/custom_nodes/` before launch
+
+## Status, Update, Cleanup
+
+Check environment/submodule/torch status:
+
+```bash
+make status
+```
+
+Update submodule and reinstall dependencies:
+
 ```bash
 make update
 ```
 
-## Cleanup
+Clean virtualenv and Python cache files:
 
-### Remove Virtual Environment
-Deletes the `.venv/` directory (useful before recreating environment):
 ```bash
 make clean
 ```
 
-## Submodule Troubleshooting
+## Testing
 
-### ComfyUI Not Present or Outdated
-Manually initialize or update the submodule:
+Run tests with:
+
 ```bash
-git submodule update --init --recursive external/ComfyUI
+uv run pytest
 ```
 
-### Submodule Not Configured
-If you get submodule-related errors, the Makefile will attempt to initialize it automatically. If issues persist:
-```bash
-# Add the submodule manually
-git submodule add https://github.com/comfyanonymous/ComfyUI.git external/ComfyUI
-git submodule update --init --recursive
-```
+Current test suite (under `tests/`) includes coverage for demosaicing and raw processing components.
 
-## Hardware Detection Details
+## Project Layout
 
-The Makefile automatically detects available hardware:
-
-- **CUDA (NVIDIA):** Checks `torch.cuda.is_available()`
-- **MPS (Apple Silicon):** Checks `torch.backends.mps.is_available()`
-- **Fallback:** Uses CPU if neither CUDA nor MPS is available
-
-View detection results with `make status`.
-
-## Project Structure
-```
-your-project/
-├── .venv/                          # Virtual environment (created by setup)
+```text
+.
+├── src/
+│   ├── algorithms/                 # Core image-processing algorithms
+│   └── custom_nodes/               # ComfyUI node implementations
+├── tests/                          # Pytest test suite
 ├── external/
 │   └── ComfyUI/                    # ComfyUI submodule
-├── custom_nodes/                   # ComfyUI custom nodes
-├── project_requirements.txt        # project dependencies
-├── Makefile                        # Build automation
-└── pyproject.toml                  # Project configuration
+├── project_requirements.txt        # Project-specific dependencies
+├── ci-requirements.txt             # CI-only dependencies
+├── pyproject.toml                  # Package/test configuration
+└── Makefile                        # Main developer entrypoint
 ```
 
 ## Notes
 - **Lock Files:** If you want reproducible installs, consider tracking `uv.lock` in version control; otherwise keep it in `.gitignore`
 - **First Setup:** Always run `make status` after initial setup to verify installation
+
 
 ## Common Workflows
 
@@ -167,20 +153,11 @@ make update  # Update ComfyUI and dependencies
 make run     # Launch with updated version
 ```
 
-### Switching Hardware Configurations
-```bash
-make clean           # Remove old environment
-make setup           # Re-run setup (detects hardware)
-# Or for forced CPU:
-make run-cpu         # Run in CPU mode
-```
-
 ## Getting Help
 Display all available commands:
 ```bash
 make help
 ```
-
 Or simply:
 ```bash
 make

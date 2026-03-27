@@ -167,3 +167,5 @@ uv.lock
 .cache/*
 .coverage
 .DS_Store
+samples/
+notebooks/

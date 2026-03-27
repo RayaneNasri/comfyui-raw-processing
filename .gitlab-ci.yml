@@ -1,0 +1,54 @@
+stages:
+  - format
+  - lint
+  - typecheck
+  - test
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"'
+    - when: never
+
+variables:
+  CI_IMAGE: "gitlab-registry.telecom-paris.fr/proj104/2025-2026/image-processing/ci:py313"
+  UV_CACHE_DIR: .uv-cache
+
+default:
+  image: $CI_IMAGE
+  cache:
+    key:
+      files:
+        - pyproject.toml
+    paths:
+      - $UV_CACHE_DIR
+      - .venv
+    policy: pull
+
+format:
+  stage: format
+  script:
+    - uvx ruff format --check
+
+lint:
+  stage: lint
+  script:
+    - uvx ruff check --output-format=gitlab > code-quality-report.json || true
+    - uvx ruff check
+  artifacts:
+    reports:
+      codequality: code-quality-report.json
+
+typecheck:
+  stage: typecheck
+  cache:
+    policy: pull-push
+  script:
+    - make setup-CI
+    - uv run pyrefly check
+
+test:
+  stage: test
+  script:
+    - make setup-CI
+    - uv run pytest -q -m "not stress"

@@ -1,19 +1,31 @@
 [project]
 name = "image-processing"
 version = "0.1.0"
-description = "A modular pipeline for image processing to be used in ComfyUI"
+description = "Minimal modular ComfyUI compatible (not official) RAW-to-RGB ISP pipeline."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "matplotlib>=3.10",
+    "opencv-python>=4.8.0",
+    "rawpy>=0.26",
+]
 
 [dependency-groups]
 dev = [
     "black>=26.1.0",
     "pyrefly>=0.52.0",
 ]
+ci = [
+    "numpy>=2.4.2",
+    "rawpy>=0.26",
+]
 
-[tool.pyrefly]
-# files or directories to exclude from type checking
-project-excludes = [
-    "external/*",
+[tool.pyright] # Corrected from pyrefly
+exclude = ["external/*", "**/node_modules", "**/__pycache__", "**/.*", ".venv"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = [
+    "stress: mark a test as a high-resource stress test, if pytest is run with option [-m 'not stress'], these tests are skipped."
 ]

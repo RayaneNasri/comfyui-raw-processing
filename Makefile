@@ -1,4 +1,4 @@
-.PHONY: help status update  clean run run-cpu run-gpu install-deps setup setup-xpu
+.PHONY: help status update clean run run-cpu run-gpu install-deps install-torch setup setup-xpu
 
 BLUE := \033[0;34m
 CYAN := \033[0;36m
@@ -17,6 +17,12 @@ VENV_SENTINEL := .venv/pyvenv.cfg
 
 COMFY_FLAGS := --enable-manager --preview-method latent2rgb
 FLAGS ?=
+
+FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
+
+SOURCE_DIR = src/custom_nodes
+COMFY_TARGET = external/ComfyUI/custom_nodes
+PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
 
 help:
 	@printf "%b\n" "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
@@ -54,9 +60,7 @@ install-deps: $(VENV_SENTINEL)
 	@printf "%b\n" "Installing project dependencies..."
 	@uv pip install -e .
 
-
-setup: check-comfyui $(VENV_SENTINEL)
-	@echo "$(BLUE)$(BOLD)Setting up environment for detected hardware...$(NC)"
+install-torch: $(VENV_SENTINEL)
 	@if [ "$(OS)" = "Darwin" ]; then \
 		printf "%b\n" "Detected macOS. Installing PyTorch (MPS supported)..."; \
 		uv pip install torch torchvision torchaudio; \

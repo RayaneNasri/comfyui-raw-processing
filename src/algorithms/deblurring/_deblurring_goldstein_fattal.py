@@ -4,10 +4,14 @@ import matplotlib.pyplot as plt
 import platform
 import tempfile
 import os
+import scipy
+import scipy.io
 import scipy.signal
+from scipy.signal import lfilter
 import time
 import numpy
 import math
+import torch
 
 pi=np.pi
 atan2=math.atan2
@@ -27,18 +31,6 @@ atan2=math.atan2
 tan=np.tan
 fftshift=np.fft.fftshift
 
-
-import numpy as np
-
-import matplotlib.pyplot as plt
-import scipy
-from scipy.signal import lfilter
-import scipy.io
-import platform
-import time
-
-import tempfile
-import os
 #np.int=int
 def RGBtoYCrCb(im,ty='8bit'):
     assert len(im.shape)==3 and im.shape[2]==3, 'image dans un mauvais format'
@@ -771,6 +763,7 @@ def estime_noyau(img,p=25,lamb=1500/255,Nouter=3,Ntries=30,Ninner=300,\
             print('temps total de la boucle numéro',m ,'est ',time.time()-t0)
         gbests.append(gbest)
     return gbest,gbests
+
 def centrer_le_noyau(K):
     # opération optionnelle
     p=K.shape[0]
@@ -786,3 +779,30 @@ def centrer_le_noyau(K):
     print('pourcentage de masse perdue', (1-Knew.sum()/K.sum())*100,'%')
     Knew/=Knew.sum()
     return Knew
+
+def deblurring_goldstein_fattal(RGB_image : torch.Tensor):
+    on_gpu = RGB_image.is_cuda()
+
+    RGB_image *= 255
+    if on_gpu:
+        RGB_image.cpu().numpy()
+    else:
+        RGB_image.numpy()
+
+    image, Cr, Cb = RGBtoYCrCb(RGB_image)
+    kernel, allkernels = estime_noyau(image)
+    kernel_centered = centrer_le_noyau(kernel)
+    image_deconv = TVdeconv(image, kernel_centered, 1000/255)
+    image_deconv.clip(min=0,max=255,out=image_deconv) #couper les vlaeurs hors 0,255
+    RGB_image_deconv = YCrCbtoRGB(image_deconv,Cr,Cb)
+    
+    res = torch.from_numpy(RGB_image_deconv).float()
+    res /= 255.0
+    if on_gpu:
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+    res = res.to(device)
+
+    return res
+

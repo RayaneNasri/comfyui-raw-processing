@@ -22,7 +22,6 @@
       - Auto-detect OS and hardware to install the libraries accordingly.
     - Documentation on ComfyUI,raw image reading and demoisaicing.
     - Implementing Malvar He Cutter demosaicing algorithm in python. 
-
   * Rayane:
     - Started working on the implementation tasks assigned by the professor during the meeting:
       - Loading raw images
@@ -121,10 +120,9 @@
     - Did research about specifications of the hue, saturation and value mapping algorithm described in the Adobe DNG Specifications. Specially, about applying it on already white balanced and linear RGB images.
   * Charlotte :
     - start of research into deblurring
-    - reading of "A Simple Local Minimal Intensity Prior and An Improved Algorithm for Blind Image Deblurring" - Fei Wen, Rendong Ying, Yipeng Liu, Peilin Liu, and Trieu-Kien Truong, which I’ll refer to from now on as "Blind Deblurring - PMP - Fei Wen"
+    - reading of "A Simple Local Minimal Intensity Prior and An Improved Algorithm for Blind Image Deblurring" - Fei Wen, Rendong Ying, Yipeng Liu, Peilin Liu, and Trieu-Kien Truong
   * Ghiles :
     - Nothing worth mentioning.
-
   * Rayane:
     - Nothing worth mentioning.
 
@@ -135,7 +133,19 @@
     - Adapted the unitary tests to the new version of the hue, saturation and value mapping algorithm. 
     - Added a merge request to merge the hue, saturation and value mapping node feature into dev and label it as a V0 feature.
   * Charlotte :
+    - Change of plan : I started reading the matlab code for the "Blind Deblurring - PMP - Fei Wen" algorithm, but I decided it would be easier and faster to first adapt the implementation of the Goldstein-Fattal method made by Said Ladjal
+    - Re-reading (first read during the UE intersemestre "Problèmes en imagerie computationnelle") of the slides "Flou dans les images" made by Saïd Ladjal and the article "Estimating an Image’s Blur Kernel Using Natural Image Statistics, and Deblurring it: An Analysis of the Goldstein-Fattal Method - Jérémy Anger, Gabriele Facciolo, Mauricio Delbracio" 
   * Ghiles :
     - Added documentation with amayas of the project in the `docs/` folder of the repository.
   * Rayane:
     - Nothing worth mentioning.
+  
+## Session 27/03/2026
+
+  * All :
+    - Meeting with Quentin Bammey (27/03/2026)
+  * Amayas :
+  * Charlotte :
+    - Implementing ComfyUInode and main function for Goldstein-Fattal algorithm
+  * Ghiles :
+  * Rayane :

@@ -22,7 +22,12 @@
       - Auto-detect OS and hardware to install the libraries accordingly.
     - Documentation on ComfyUI,raw image reading and demoisaicing.
     - Implementing Malvar He Cutter demosaicing algorithm in python. 
-  * Rayane :
+
+  * Rayane:
+    - Started working on the implementation tasks assigned by the professor during the meeting:
+      - Loading raw images
+      - Converting raw images to RGB format
+      - Preparing bilinear demosaicing tests for Charlotte
 
 ## Session 20/02/2026
 
@@ -39,9 +44,14 @@
     - Completed the CI/CD that Rayane started, with a prebuilt docker image to speed up the tests.
     - Refactored the architecture of the project to put put each algorithm in its apoprpiate folder that defines which phase of the ISP it belongs to.
     - Started researching the tone curve application algorithm. 
-  * Rayane :
+  * Rayane:
+    - Learning CI/CD concepts and implementing the first version
 
 ## Between 20/02/2026 and 23/02/2026
+  * Rayane:
+    - Implemented the White Patch reference algorithm
+    - Implemented the Gray World algorithm
+    - Developed associated tests
 
 ## Session 23/02/2026
 
@@ -53,7 +63,8 @@
     - Tanner Helland Algorithm, converting Temperature in Kelvin to RGB
   * Ghiles :
     - Continued researching the tone curve application phase and way to easily edit the tone curve with a simple UI.
-  * Rayane :
+  * Rayane:
+    - Conducted research on gamma curve correction phase
 
 ## Between 23/02/2026 and 13/03/2026
   * All
@@ -79,7 +90,10 @@
     - Used the same Adobe DNG specifications document as Amayas to extract the tone curve profile from the `.dcp` data and apply it to the image.
     - Tried to implement white balance algorithm that uses the wb gains of the camera, but it seems that the results are not good (surely because of my implemtation).
     - Added a comparison node of white balance algorithms in ComfyUI to compare the results of the different algorithms. 
-  * Rayane :
+  * Rayane:
+    - Implemented the gamma correction phase along with its associated tests
+    - Developed wrappers for OpenCV denoising functions
+    - Implemented the denoising phase and its related tests
 
 ## Session 13/03/2026
 
@@ -99,6 +113,7 @@
   * Ghiles :
     - Nothing worth mentioning.
   * Rayane :
+    - Nothing worth mentioning.
 
 ## Session 16/03/2026
 
@@ -110,7 +125,8 @@
   * Ghiles :
     - Nothing worth mentioning.
 
-  * Rayane :
+  * Rayane:
+    - Nothing worth mentioning.
 
 ## Between 16/03/2026 and 27/03/2026
 
@@ -121,4 +137,5 @@
   * Charlotte :
   * Ghiles :
     - Added documentation with amayas of the project in the `docs/` folder of the repository.
-  * Rayane :
+  * Rayane:
+    - Nothing worth mentioning.

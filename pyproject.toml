@@ -18,6 +18,7 @@ dev = [
 ci = [
     "numpy>=2.4.2",
     "rawpy>=0.26",
+    "pytest>=9.0.2"
 ]
 
 [tool.pyright] # Corrected from pyrefly

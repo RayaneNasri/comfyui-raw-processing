@@ -132,6 +132,7 @@
     - Adapted the hue, saturation and value mapping algorithm to match the result expected on linear RGB images that are already white balanced, deleted the linearization part, now the algorithm only requires these `.dcp` data: `ColorMatrix1`, `ColorMatrix2`, `LUT1`, `LUT2` and calibration illuminants.
     - Adapted the unitary tests to the new version of the hue, saturation and value mapping algorithm. 
     - Added a merge request to merge the hue, saturation and value mapping node feature into dev and label it as a V0 feature.
+    - Wrote documentation for first release with Ghiles
   * Charlotte :
     - Change of plan : I started reading the matlab code for the "Blind Deblurring - PMP - Fei Wen" algorithm, but I decided it would be easier and faster to first adapt the implementation of the Goldstein-Fattal method made by Said Ladjal
     - Re-reading (first read during the UE intersemestre "Problèmes en imagerie computationnelle") of the slides "Flou dans les images" made by Saïd Ladjal and the article "Estimating an Image’s Blur Kernel Using Natural Image Statistics, and Deblurring it: An Analysis of the Goldstein-Fattal Method - Jérémy Anger, Gabriele Facciolo, Mauricio Delbracio" 

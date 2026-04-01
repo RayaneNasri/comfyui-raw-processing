@@ -1,6 +1,5 @@
 import torch
 import tifffile
-import kornia.color as kc
 import math
 
 from tifffile import TiffPage
@@ -74,34 +73,78 @@ def read_hue_sat_lut_from_dcp(
         return None
 
 
+import torch
+from torch import Tensor
+
 def rgb_to_hsv(rgb_image: Tensor) -> Tensor:
     """
-    Transforms an RGB image into HSV space image.
-
-    Requires a `[H, W, 3]` RGB image.
-    Returns a `[H, W, 3]` HSV image.
+    Transforms an RGB image into HSV space.
+    Expects input shape [H, W, 3] and range [0, 1].
+    Returns HSV image with H in [0, 1], S in [0, 1], V in [0, 1].
     """
-    scale = NORMALIZATION_HSV_SCALE.to(rgb_image.device)
-    if rgb_image.dim() == 4:
-        reshaped_rgb_image = rgb_image.squeeze(0).permute(2, 0, 1)
-    else:
-        reshaped_rgb_image = rgb_image.permute(2, 0, 1)
-    reshaped_hsv_image = kc.rgb_to_hsv(reshaped_rgb_image)
-    hsv_image = (reshaped_hsv_image / scale).permute(1, 2, 0)
+    # rgb_image: [H, W, 3]
+    r, g, b = rgb_image.unbind(-1)
 
-    return hsv_image
+    max_c, _ = torch.max(rgb_image, dim=-1)
+    min_c, _ = torch.min(rgb_image, dim=-1)
+    delta = max_c - min_c
+
+    # --- Teinte (H) ---
+    # On utilise eps pour éviter la division par zéro
+    eps = 1e-10
+    h = torch.zeros_like(max_c)
+    
+    mask_r = (max_c == r) & (delta > eps)
+    mask_g = (max_c == g) & (delta > eps)
+    mask_b = (max_c == b) & (delta > eps)
+
+    h[mask_r] = ((g[mask_r] - b[mask_r]) / (delta[mask_r] + eps)) % 6
+    h[mask_g] = ((b[mask_g] - r[mask_g]) / (delta[mask_g] + eps)) + 2
+    h[mask_b] = ((r[mask_b] - g[mask_b]) / (delta[mask_b] + eps)) + 4
+    
+    h = h / 6.0 # Normalisation entre 0 et 1
+
+    # --- Saturation (S) ---
+    s = torch.zeros_like(max_c)
+    s[max_c > eps] = delta[max_c > eps] / (max_c[max_c > eps] + eps)
+
+    # --- Valeur (V) ---
+    v = max_c
+
+    return torch.stack([h, s, v], dim=-1)
 
 
 def hsv_to_rgb(hsv_image: Tensor) -> Tensor:
     """
-    Transforms an HSV image into RGB space image.
-
-    Requires a `[H, W, 3]` HSV image.
-    Returns a `[H, W, 3]` RGB image.
+    Transforms an HSV image into RGB space.
+    Expects input shape [H, W, 3] and range [0, 1].
     """
-    scale = NORMALIZATION_HSV_SCALE.to(hsv_image.device)
-    reshaped_hsv_image = hsv_image.permute(2, 0, 1) * scale
-    reshaped_rgb_image = kc.hsv_to_rgb(reshaped_hsv_image)
-    rgb_image = reshaped_rgb_image.permute(1, 2, 0)
+    h, s, v = hsv_image.unbind(-1)
+    
+    h_six = h * 6.0
+    c = v * s  # Chroma
+    x = c * (1 - torch.abs(h_six % 2 - 1))
+    m = v - c
 
-    return rgb_image
+    # On initialise les canaux
+    r1 = torch.zeros_like(h)
+    g1 = torch.zeros_like(h)
+    b1 = torch.zeros_like(h)
+
+    # Définition des sextants
+    mask0 = (h_six >= 0) & (h_six < 1)
+    mask1 = (h_six >= 1) & (h_six < 2)
+    mask2 = (h_six >= 2) & (h_six < 3)
+    mask3 = (h_six >= 3) & (h_six < 4)
+    mask4 = (h_six >= 4) & (h_six < 5)
+    mask5 = (h_six >= 5) & (h_six <= 6)
+
+    r1[mask0], g1[mask0], b1[mask0] = c[mask0], x[mask0], 0
+    r1[mask1], g1[mask1], b1[mask1] = x[mask1], c[mask1], 0
+    r1[mask2], g1[mask2], b1[mask2] = 0, c[mask2], x[mask2]
+    r1[mask3], g1[mask3], b1[mask3] = 0, x[mask3], c[mask3]
+    r1[mask4], g1[mask4], b1[mask4] = x[mask4], 0, c[mask4]
+    r1[mask5], g1[mask5], b1[mask5] = c[mask5], 0, x[mask5]
+
+    rgb = torch.stack([r1 + m, g1 + m, b1 + m], dim=-1)
+    return torch.clamp(rgb, 0.0, 1.0)

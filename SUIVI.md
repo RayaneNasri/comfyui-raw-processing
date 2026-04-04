@@ -150,3 +150,13 @@
     - Implementing ComfyUInode and main function for Goldstein-Fattal algorithm
   * Ghiles :
   * Rayane :
+
+## Between 27/03/2026 and 03/04/2026
+
+## Session 03/04/2026
+
+  * Amayas :
+  * Charlotte :
+    - Documentation for the color_manipulation node
+  * Ghiles :
+  * Rayane :

@@ -4,6 +4,11 @@ version = "0.0.1"
 description = "A modular pipeline for image processing to be used in ComfyUI"
 readme = "README.md"
 requires-python = ">=3.13"
+dependencies = [
+    "colour-science>=0.4.7",
+    "imageio>=2.37.3",
+    "rawpy>=0.26.1",
+]
 
 [dependency-groups]
 dev = [

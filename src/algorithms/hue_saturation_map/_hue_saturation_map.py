@@ -1,5 +1,7 @@
 import torch
 import torch.nn.functional as F
+import numpy as np
+import colour
 
 from torch import Tensor
 from algorithms.tools._lut_tools import rgb_to_hsv, hsv_to_rgb
@@ -147,13 +149,16 @@ def apply_hue_sat_map(
         neutral, color_matrix_1, color_matrix_2, calib_illum_1, calib_illum_2
     )
     forward_matrix = (1 - t) * forward_matrix_1 + t * forward_matrix_2
-    image_xyz = torch.einsum('ij,jhw->ihw', forward_matrix, image_rgb)
+    image_xyz = torch.einsum('ij,hwj->ihw', forward_matrix, image_rgb)
     image_prophoto = torch.einsum('ij,jhw->ihw', m_xyz_to_prophoto, image_xyz)
-    image_hsv = rgb_to_hsv(image_prophoto)
+    image_prophoto_hwc = image_prophoto.permute(1, 2, 0)
+    image_hsv = rgb_to_hsv(image_prophoto_hwc)
     active_lut = (1 - t) * low_temp_lut + t * high_temp_lut
     corrected_hsv = _apply_hue_sat_map(image_hsv, active_lut.to(device))
-    corrected_prophoto = hsv_to_rgb(corrected_hsv)
-    out_xyz = torch.einsum('ij,jhw->ihw', m_prophoto_to_xyz, corrected_prophoto)
-    image_rgb_out = torch.einsum('ij,jhw->ihw', torch.inverse(forward_matrix), out_xyz)
-
-    return torch.clamp(image_rgb_out, 0.0, 1.0)
+    corrected_prophoto_hwc = hsv_to_rgb(corrected_hsv)
+    out_xyz = torch.einsum('ij,hwj->ihw', m_prophoto_to_xyz, corrected_prophoto_hwc)
+    inv_forward = torch.inverse(forward_matrix)
+    image_rgb_out = torch.einsum('ij,jhw->ihw', inv_forward, out_xyz)
+    final_image = image_rgb_out.permute(1, 2, 0)
+    
+    return torch.clamp(final_image, 0.0, 1.0)

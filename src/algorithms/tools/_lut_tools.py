@@ -73,9 +73,6 @@ def read_hue_sat_lut_from_dcp(
         return None
 
 
-import torch
-from torch import Tensor
-
 def rgb_to_hsv(rgb_image: Tensor) -> Tensor:
     """
     Transforms an RGB image into HSV space.
@@ -93,7 +90,7 @@ def rgb_to_hsv(rgb_image: Tensor) -> Tensor:
     # On utilise eps pour éviter la division par zéro
     eps = 1e-10
     h = torch.zeros_like(max_c)
-    
+
     mask_r = (max_c == r) & (delta > eps)
     mask_g = (max_c == g) & (delta > eps)
     mask_b = (max_c == b) & (delta > eps)
@@ -101,8 +98,8 @@ def rgb_to_hsv(rgb_image: Tensor) -> Tensor:
     h[mask_r] = ((g[mask_r] - b[mask_r]) / (delta[mask_r] + eps)) % 6
     h[mask_g] = ((b[mask_g] - r[mask_g]) / (delta[mask_g] + eps)) + 2
     h[mask_b] = ((r[mask_b] - g[mask_b]) / (delta[mask_b] + eps)) + 4
-    
-    h = h / 6.0 # Normalisation entre 0 et 1
+
+    h = h / 6.0  # Normalisation entre 0 et 1
 
     # --- Saturation (S) ---
     s = torch.zeros_like(max_c)
@@ -120,7 +117,7 @@ def hsv_to_rgb(hsv_image: Tensor) -> Tensor:
     Expects input shape [H, W, 3] and range [0, 1].
     """
     h, s, v = hsv_image.unbind(-1)
-    
+
     h_six = h * 6.0
     c = v * s  # Chroma
     x = c * (1 - torch.abs(h_six % 2 - 1))

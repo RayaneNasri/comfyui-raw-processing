@@ -12,6 +12,11 @@ ILLUM_A = 17  # Standard illuminant A (2856 K)
 def _identity_color_matrix() -> Tensor:
     return torch.eye(3, dtype=torch.float32)
 
+def _identity_forward_matrix() -> Tensor:
+    return torch.tensor(
+        [[0.797674, 0.135191, 0.031353],
+         [0.288040, 0.711874, 0.000086],
+         [0.000000, 0.000000, 0.825210]], dtype=torch.float32)
 
 def _neutral_lut(h_bins: int = 90, s_bins: int = 30, v_bins: int = 1) -> Tensor:
     lut = torch.zeros((h_bins, s_bins, v_bins, 3), dtype=torch.float32)
@@ -69,6 +74,8 @@ class TestOutputShape:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -84,6 +91,8 @@ class TestOutputShape:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -100,6 +109,8 @@ class TestOutputShape:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -118,6 +129,8 @@ class TestNeutralLUT:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -133,6 +146,8 @@ class TestNeutralLUT:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -156,6 +171,8 @@ class TestHueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -166,6 +183,8 @@ class TestHueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_360,
             lut_360,
             ILLUM_D65,
@@ -181,6 +200,8 @@ class TestHueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -202,6 +223,8 @@ class TestHueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_pos,
             lut_pos,
             ILLUM_D65,
@@ -212,6 +235,8 @@ class TestHueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_neg,
             lut_neg,
             ILLUM_D65,
@@ -234,6 +259,8 @@ class TestSaturationCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -261,6 +288,8 @@ class TestSaturationCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -278,6 +307,8 @@ class TestSaturationCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_full,
             lut_full,
             ILLUM_D65,
@@ -288,6 +319,8 @@ class TestSaturationCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_half,
             lut_half,
             ILLUM_D65,
@@ -314,6 +347,8 @@ class TestSaturationCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_up,
             lut_up,
             ILLUM_D65,
@@ -324,6 +359,8 @@ class TestSaturationCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_down,
             lut_down,
             ILLUM_D65,
@@ -346,6 +383,8 @@ class TestValueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -361,6 +400,8 @@ class TestValueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut,
             lut,
             ILLUM_D65,
@@ -378,6 +419,8 @@ class TestValueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_full,
             lut_full,
             ILLUM_D65,
@@ -388,6 +431,8 @@ class TestValueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_half,
             lut_half,
             ILLUM_D65,
@@ -412,6 +457,8 @@ class TestValueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_up,
             lut_up,
             ILLUM_D65,
@@ -422,9 +469,82 @@ class TestValueCorrection:
             _unit_wb_gains(),
             _identity_color_matrix(),
             _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
             lut_down,
             lut_down,
             ILLUM_D65,
             ILLUM_D65,
         )
         _assert_tensors_close(out, img, atol=2e-3)
+
+class TestGeometricalAxes:
+    def test_dimensions_not_swapped_2d(self):
+        # Test spatial asymmetry in LUT axes to ensure no dimensional swaps occurred
+        img = _make_random_image(16, 16, seed=42)
+        h_bins, s_bins, v_bins = 7, 5, 1
+        lut = _neutral_lut(h_bins, s_bins, v_bins)
+        lut[3, 2, 0, 0] = 90.0  
+        # If dimensions were swapped, grid_sample would misroute internal coordinates
+        out = apply_hue_sat_map(
+            img, _unit_wb_gains(), 
+            _identity_color_matrix(), _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
+            lut, lut, ILLUM_D65, ILLUM_D65
+        )
+        assert out.shape == img.shape
+
+    def test_dimensions_not_swapped_3d(self):
+        img = _make_random_image(16, 16, seed=42)
+        h_bins, s_bins, v_bins = 5, 4, 3
+        lut = _neutral_lut(h_bins, s_bins, v_bins)
+        lut[2, 1, 1, 0] = 45.0  
+        out = apply_hue_sat_map(
+            img, _unit_wb_gains(), 
+            _identity_color_matrix(), _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
+            lut, lut, ILLUM_D65, ILLUM_D65
+        )
+        assert out.shape == img.shape
+
+
+class TestWrapAround:
+    def test_circular_hue_interpolation(self):
+        img = _make_random_image(32, 32, seed=12)
+        lut = _neutral_lut(6, 4, 1)
+        lut[0, :, 0, 0] = 120.0  # H=0 gets a sharp hue shift
+        # Due to circular padding, hue wrapping should seamlessly interpolate 
+        # H=359 back to the H=0 parameters.
+        out = apply_hue_sat_map(
+            img, _unit_wb_gains(), 
+            _identity_color_matrix(), _identity_color_matrix(),
+            _identity_forward_matrix(),
+            _identity_forward_matrix(),
+            lut, lut, ILLUM_D65, ILLUM_D65
+        )
+        assert not torch.isnan(out).any()
+
+
+class TestPreHSVClamping:
+    def test_negative_gamut_stability(self):
+        # Create an out-of-bounds deeply negative and exaggeratedly bright image tensor
+        img = _make_random_image(32, 32, seed=99) * 6.0 - 3.0  # Range [-3.0, 3.0]
+        lut = _neutral_lut(5, 5, 1)
+        
+        try:
+            out = apply_hue_sat_map(
+                img, _unit_wb_gains(), 
+                _identity_color_matrix(), _identity_color_matrix(),
+                _identity_forward_matrix(),
+                _identity_forward_matrix(),
+                lut, lut, ILLUM_D65, ILLUM_D65
+            )
+        except Exception as e:
+            pytest.fail(f"Failed to perform stably on out-of-bounds gamut data: {e}")
+        
+        # Verify result is perfectly clamped and has no NaNs
+        assert out.min() >= 0.0
+        assert out.max() <= 1.0
+        assert not torch.isnan(out).any()

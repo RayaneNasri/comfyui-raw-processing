@@ -57,11 +57,15 @@ def _color_matrix_linear_interpolation(
 
 
 def _apply_hue_sat_map(image_hsv: Tensor, lut_data: Tensor) -> Tensor:
+    # Pad the Hue dimension (dim 0) circularly to handle 360 wrap-around smoothly
+    lut_data = torch.cat([lut_data, lut_data[0:1, ...]], dim=0)
+
     if lut_data.shape[2] == 1:  # 2D LUT (V dimension is 1)
         lut_2d = lut_data[..., 0, :]  # (H, S, 3)
         grid_h = image_hsv[..., 0] * 2 - 1  # (H, W)
         grid_s = image_hsv[..., 1] * 2 - 1  # (H, W)
-        grid = torch.stack([grid_h, grid_s], dim=-1)  # (H, W, 2)
+        # grid_sample expects (X, Y) corresponding to (S_lut, H_lut) format natively
+        grid = torch.stack([grid_s, grid_h], dim=-1)  
         grid = grid.unsqueeze(0)  # (1, H, W, 2)
         lut_t = lut_2d.permute(2, 0, 1).unsqueeze(0)  # (1, 3, H_lut, S_lut)
         deltas = F.grid_sample(
@@ -72,7 +76,8 @@ def _apply_hue_sat_map(image_hsv: Tensor, lut_data: Tensor) -> Tensor:
         grid_h = image_hsv[..., 0] * 2 - 1
         grid_s = image_hsv[..., 1] * 2 - 1
         grid_v = image_hsv[..., 2] * 2 - 1
-        grid = torch.stack([grid_h, grid_s, grid_v], dim=-1)
+        # grid_sample expects (X, Y, Z) corresponding to (V_lut, S_lut, H_lut) natively
+        grid = torch.stack([grid_v, grid_s, grid_h], dim=-1)
         grid = grid.unsqueeze(0).unsqueeze(0)
         lut_t = lut_data.permute(3, 0, 1, 2).unsqueeze(0)
         deltas = F.grid_sample(
@@ -152,6 +157,7 @@ def apply_hue_sat_map(
     image_xyz = torch.einsum('ij,hwj->ihw', forward_matrix, image_rgb)
     image_prophoto = torch.einsum('ij,jhw->ihw', m_xyz_to_prophoto, image_xyz)
     image_prophoto_hwc = image_prophoto.permute(1, 2, 0)
+    image_prophoto_hwc = torch.clamp(image_prophoto_hwc, 0.0, 1.0)
     image_hsv = rgb_to_hsv(image_prophoto_hwc)
     active_lut = (1 - t) * low_temp_lut + t * high_temp_lut
     corrected_hsv = _apply_hue_sat_map(image_hsv, active_lut.to(device))

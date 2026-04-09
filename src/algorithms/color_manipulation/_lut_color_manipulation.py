@@ -85,4 +85,6 @@ def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
     # from AdobeRGB1998 to linearRGB
     out = torch.pow(out, (1/gamma))
 
+    out = out.squeeze(0) # (H,W,3) TODO : keep it ?
+
     return out

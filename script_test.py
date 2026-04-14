@@ -23,7 +23,7 @@ from algorithms.color_manipulation._saturation_hsv import saturation_hsv
 # Input file
 raw_file = PATH + "r01cbb7fdt.NEF"
 output_dir = "./outputs"
-output_file = "processed_image_hsv_0-3.jpg"
+output_file = "rgb-bgr-rgb_processed_image_exp_1-2_NW-3.jpg"
 
 # Step 1: Read RAW
 print("Step 1: Reading RAW file...")
@@ -53,13 +53,14 @@ wb_img = gw(rgb_img)
 
 # Step 5: Exposure Compensation (optional)
 print("Step 5: Exposure Compensation...")
-exp_img = exposure_compensation(wb_img, ev_compensation=0.5)  # +0.5 stops
+exp_img = exposure_compensation(wb_img, ev_compensation=1.2)  # +0.5 stops
 
 print("Step 6: Color Manipulation...")
 #color_img = exp_img
-color_img = saturation_hsv(exp_img, 0.3)
-#lut = load_cube_lut(PATH + "Blues.cube")
-#color_img = apply_lut_grid_sample(exp_img, lut)
+lut = load_cube_lut(PATH + "ON1_All_LUTs/ON1 Nature & Wildlife LUTs/NW-3.cube")
+color_img = apply_lut_grid_sample(exp_img, lut)
+#color_img = saturation_hsv(color_img, 1.4)
+
 
 # Step 6: Gamma Correction
 print("Step 6: Gamma Correction...")

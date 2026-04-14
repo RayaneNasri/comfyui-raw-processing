@@ -76,11 +76,12 @@ def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
 
     out = torch.nn.functional.grid_sample(lut, grid, mode='bilinear', align_corners=True)
     
-
     # remove depth dimension
     out = out.squeeze(2)           # (B,3,H,W)
     # back to (B,H,W,3)
     out = out.permute(0,2,3,1)
+    # BGR-> RGB
+    out = out[..., [2,1,0]]
 
     # from AdobeRGB1998 to linearRGB
     out = torch.pow(out, (1/gamma))

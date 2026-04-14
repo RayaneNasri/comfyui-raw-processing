@@ -160,3 +160,33 @@
     - Documentation for the color_manipulation node
   * Ghiles :
   * Rayane :
+
+## Between 03/04/2026 and 10/04/2026
+
+  * Amayas :
+  * Charlotte :
+    - implementation of saturation_hsv
+    - correction in _lut_color_manipulation.py (output dimension in apply_lut_grid_sample())
+  * Ghiles :
+  * Rayane :
+
+## Session 10/04/2026
+
+  * All :
+    - Meeting with Quentin Bammey (10/04/2026)
+
+## Between 10/04/2026 and 15/04/2026
+
+  * Amayas :
+  * Charlotte :
+    - implemented script_test_luts and tested all the ON1 LUTs I have
+    - correction in _lut_color_manipulation.py (final correction bgr -> rgb in apply_lut_grid_sample())
+  * Ghiles :
+  * Rayane :
+
+## Session 15/04/2026
+
+  * Amayas :
+  * Charlotte :
+  * Ghiles :
+  * Rayane :

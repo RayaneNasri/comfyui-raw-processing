@@ -8,23 +8,46 @@
 
 The delegate assignee's role is to be in charge of any task if the current assignee is no longer available for it.
 
-| Task to implement | Assignee | Delegate | V0 | V1 | V2 | 
-| --- | --- | --- | --- | --- | --- |
-| **Reading Raw Image** | Amayas | N/A | 19/02/2026 | N/A | N/A |
-| **Black Light Subtraction, linearization** | Ghiles | Amayas | 19/02/2026 | 05/03/2026 | N/A |
-| **Lens and Optical Correction** | Ghiles | Amayas | 12/03/2026 |  26/03/2026 | N/A
-| **Demosaicing** | Ghiles | Amayas | 19/02/2026 | 19/03/2026 | N/A 
-| **Noise Reduction** | Rayane | Charlotte | 12/03/2026 | 10/05/2026 | N/A |
-| **White Balancing & Color Space** | Rayane | Charlotte | 26/02/2026 | 05/03/2026 | N/A
-| **Hue/Sat Map** | Amayas | Ghiles | 26/02/2026 | 19/03/2026 | N/A
-| **Exposure Curve** | Amayas | Ghiles | 05/03/2026 | 26/03/2026 | N/A
-| **Color Manipulation** | Charlotte | Rayane | 05/03/2026 | 02/04/2026 | N/A
-| **Tone Curve Application** | Ghiles | Amayas | 05/03/2026 | 26/03/2026 | N/A
-| **Final Color Space Conversion**| Charlotte | Rayane |	12/03/2026 | 16/04/2026 | N/A
-| **Gamma Curve Application** | Rayane | Charlotte | 05/03/2026 | 12/03/2026 | N/A
-| **Deblurring** | Charlotte | Rayane | 19/03/2026 | 30/04/2026 | N/A
-| **JPEG Compression** | |  | N/A | N/A | N/A
-| **Extensions** |  | | N/A | N/A | N/A
+Nouveau Planning
+
+| Task to implement | Assignee | Delegate | V0 Prévue | V0 Réalisée | V1 Prévue | V1 Réalisée | V2 Prévue | V2 Réalisée |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **Reading Raw Image** | Amayas | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Black Light Subtraction, linearization** | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Lens and Optical Correction** | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Demosaicing** | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Noise Reduction** | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
+| **White Balancing & Color Space** | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Hue/Sat Map** | Amayas | Ghiles | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Exposure Curve** | Amayas | Ghiles | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Color Manipulation** | Charlotte | Rayane | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Tone Curve Application** | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Final Color Space Conversion** | Charlotte | Rayane | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Gamma Curve Application** | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Deblurring** | Charlotte | Rayane | N/A | N/A | N/A | N/A | N/A | N/A |
+| **JPEG Compression** |  | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Extensions** | | | N/A | N/A | N/A | N/A | N/A | N/A |
+
+
+Ancien Planning
+
+| Task to implement | Assignee | Delegate | V0 Prévue | V0 Réalisée | V1 Prévue | V1 Réalisée | V2 Prévue | V2 Réalisée |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **Reading Raw Image** | Amayas | N/A | 19/02/2026 | N/A | N/A | N/A | N/A | N/A |
+| **Black Light Subtraction, linearization** | Ghiles | Amayas | 19/02/2026 | N/A | 05/03/2026 | N/A | N/A | N/A |
+| **Lens and Optical Correction** | Ghiles | Amayas | 12/03/2026 | N/A | 26/03/2026 | N/A | N/A | N/A |
+| **Demosaicing** | Ghiles | Amayas | 19/02/2026 | N/A | 19/03/2026 | N/A | N/A | N/A |
+| **Noise Reduction** | Rayane | Charlotte | 12/03/2026 | N/A | 10/05/2026 | N/A | N/A | N/A |
+| **White Balancing & Color Space** | Rayane | Charlotte | 26/02/2026 | N/A | 05/03/2026 | N/A | N/A | N/A |
+| **Hue/Sat Map** | Amayas | Ghiles | 26/02/2026 | N/A | 19/03/2026 | N/A | N/A | N/A |
+| **Exposure Curve** | Amayas | Ghiles | 05/03/2026 | N/A | 26/03/2026 | N/A | N/A | N/A |
+| **Color Manipulation** | Charlotte | Rayane | 05/03/2026 | N/A | 02/04/2026 | N/A | N/A | N/A |
+| **Tone Curve Application** | Ghiles | Amayas | 05/03/2026 | N/A | 26/03/2026 | N/A | N/A | N/A |
+| **Final Color Space Conversion** | Charlotte | Rayane | 12/03/2026 | N/A | 16/04/2026 | N/A | N/A | N/A |
+| **Gamma Curve Application** | Rayane | Charlotte | 05/03/2026 | N/A | 12/03/2026 | N/A | N/A | N/A |
+| **Deblurring** | Charlotte | Rayane | 19/03/2026 | N/A | 30/04/2026 | N/A | N/A | N/A |
+| **JPEG Compression** | | | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Extensions** | | | N/A | N/A | N/A | N/A | N/A | N/A |
 
  - **V0 :** Minimum viable feature
  - **V1 :** Upgraded feature with other algorithms

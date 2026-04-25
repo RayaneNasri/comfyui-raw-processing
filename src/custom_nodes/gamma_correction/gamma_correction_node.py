@@ -1,5 +1,5 @@
 import torch
-from algorithms.gc import gamma_correction
+from algorithms.gamma_correction import gamma_correction
 
 
 class GammaCorrectionNode:

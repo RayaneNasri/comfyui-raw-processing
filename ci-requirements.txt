@@ -1,6 +1,0 @@
-rawpy>=0.26
-numpy>=2.4.2
-matplotlib>=3.10
-tifffile
-opencv-python>=4.8.0
-kornia>=0.6.0

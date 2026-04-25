@@ -1,14 +1,14 @@
 import torch
 
 from torch.testing import assert_close
-from algorithms.white_balance import gw
+from algorithms.white_balance import gray_world
 
 
 def test_preserves_shape():
     """Checks that the output image has the same dimensions as the input."""
     # Format: H, W, C
     img = torch.rand(100, 100, 3)
-    out = gw(img)
+    out = gray_world(img)
     assert out.shape == img.shape, "The tensor shape has changed!"
 
 
@@ -18,7 +18,7 @@ def test_already_gray_balanced():
     (i.e., it's perfectly balanced), the algorithm should not modify it.
     """
     img = torch.rand(50, 50, 1).repeat(1, 1, 3)
-    out = gw(img)
+    out = gray_world(img)
     assert_close(out, img, msg="An already balanced image should not be modified.")
 
 
@@ -32,7 +32,7 @@ def test_color_correction():
     img[..., 1] *= 0.4  # Green channel mean is 0.4
     img[..., 2] *= 0.2  # Blue channel mean is 0.2
 
-    out = gw(img)
+    out = gray_world(img)
 
     mean_r = out[..., 0].mean()
     mean_g = out[..., 1].mean()
@@ -51,7 +51,7 @@ def test_black_pixels_preserved():
     img = torch.ones(10, 10, 3) * 0.5
     img[5, 5, :] = 0.0
 
-    out = gw(img)
+    out = gray_world(img)
 
     expected_pixel = torch.tensor([0.0, 0.0, 0.0])
     assert_close(
@@ -68,7 +68,7 @@ def test_zero_mean_channel_no_nan():
     img = torch.ones(10, 10, 3) * 0.5
     img[..., 2] = 0.0
 
-    out = gw(img)
+    out = gray_world(img)
 
     # Check that there are no NaN (Not a Number) or Inf values
     assert not torch.isnan(out).any(), (
@@ -88,7 +88,7 @@ def test_totally_black_image():
     The algorithm should just return a black image without crashing.
     """
     img = torch.zeros(10, 10, 3)
-    out = gw(img)
+    out = gray_world(img)
 
     assert not torch.isnan(out).any(), "A totally black image produced NaNs."
     assert torch.all(out == 0.0), "A totally black image must remain totally black."

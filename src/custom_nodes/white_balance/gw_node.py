@@ -1,5 +1,5 @@
 import torch
-from algorithms.white_balance import gw
+from algorithms.white_balance import gray_world
 
 
 class GrayWorldNode:
@@ -29,7 +29,7 @@ class GrayWorldNode:
 
     def execute(self, image: torch.Tensor) -> tuple:
         input_2d = image.squeeze()
-        output_2d = gw(input_2d)
+        output_2d = gray_world(input_2d)
 
         return (output_2d.unsqueeze(0),)
 

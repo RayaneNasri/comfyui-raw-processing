@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from algorithms.gc import gamma_correction
+from algorithms.gamma_correction import gamma_correction
 
 
 def test_gamma_correction_known_values():

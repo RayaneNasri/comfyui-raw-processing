@@ -10,6 +10,7 @@ dependencies = [
     "rawpy>=0.26.1",
     "matplotlib>=3.10",
     "opencv-python>=4.8.0",
+    "tifffile"
 ]
 
 [dependency-groups]

@@ -111,5 +111,5 @@ def test_iec_gamma_correction_rejects_wrong_type():
     """The function should fail loudly if given a list instead of a Tensor."""
     img_list = [[[0.5, 0.5, 0.5]]]
 
-    with pytest.raises((TypeError, AttributeError)): # type: ignore
+    with pytest.raises((TypeError, AttributeError)):  # type: ignore
         iec_gamma_correction(img_list)  # type: ignore

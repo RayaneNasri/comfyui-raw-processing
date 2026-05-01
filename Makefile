@@ -22,7 +22,7 @@ FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
 
 SOURCE_DIR = src/custom_nodes
 COMFY_TARGET = external/ComfyUI/custom_nodes
-PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
+NODE_ITEMS = $(shell find $(SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name "__init__.py" ! -name "__pycache__")
 
 help:
 	@printf "%b\n" "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
@@ -95,20 +95,17 @@ setup-CI: $(VENV_SENTINEL)
 	@printf "%b\n" "$(GREEN)CI/CD setup complete!$(NC)"
 
 link-nodes: remove-link-nodes
-	@printf "%b\n" "$(BLUE)$(BOLD)Linking all nodes files to $(COMFY_TARGET)...$(NC)"
-	@for file in $(PY_FILES); do \
-		FILENAME=$$(basename $$file); \
-		ln -sf $(shell pwd)/$$file $(COMFY_TARGET)/$$FILENAME; \
+	@printf "%b\n" "$(BLUE)$(BOLD)Linking nodes to $(COMFY_TARGET)...$(NC)"
+	@for item in $(NODE_ITEMS); do \
+		BASENAME=$$(basename $$item); \
+		ln -sf $(shell pwd)/$$item $(COMFY_TARGET)/$$BASENAME; \
 	done
 	@printf "%b\n" "$(GREEN)Linking completed$(NC)"
 
 remove-link-nodes: 
 	@printf "%b\n" "$(BLUE)$(BOLD)Cleaning nodes from $(COMFY_TARGET)...$(NC)"
-	@find $(COMFY_TARGET) -maxdepth 1 \( -type l -o -type f \) \
-		-name "*.py" \
-		! -name "__init__.py" \
-		! -name "websocket_image_save.py" \
-		-delete
+	@find $(COMFY_TARGET) -maxdepth 1 -type l -delete
+	@find $(COMFY_TARGET) -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "websocket_image_save.py" -delete
 	@printf "%b\n" "$(GREEN)Nodes cleanup complete.$(NC)"
 
 run: $(VENV_SENTINEL) link-nodes

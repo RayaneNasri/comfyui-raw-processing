@@ -52,13 +52,11 @@ class CurveNodeBase(ABC):
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):
-        # Always re-execute: control-point edits do not change the JSON hash
+        # trick to force ComfyUI to re-render the node's UI when the preset list changes
         return float("nan")
 
-    # ------------------------------------------------------------------
-    # Abstract interface
-    # ------------------------------------------------------------------
 
+    # Abstract interface
     @abstractmethod
     def _default_spec(self, **kwargs) -> CurveSpec:
         """Return the CurveSpec to use when no control points are provided."""
@@ -67,10 +65,8 @@ class CurveNodeBase(ABC):
     def _apply_lut(self, image: torch.Tensor, lut: np.ndarray) -> torch.Tensor:
         """Apply the LUT to the (H, W, C) image tensor."""
 
-    # ------------------------------------------------------------------
-    # Shared logic
-    # ------------------------------------------------------------------
 
+    # Shared logic
     def _parse_spec(self, curve_points: str, **kwargs) -> CurveSpec:
         try:
             data = json.loads(curve_points) if curve_points.strip() else []

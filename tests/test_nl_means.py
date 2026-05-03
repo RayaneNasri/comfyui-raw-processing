@@ -2,6 +2,7 @@ import pytest
 import torch
 import cv2
 import numpy as np
+import warnings
 
 from src.algorithms.denoising import nl_means
 
@@ -11,7 +12,6 @@ def test_invalid_image_type():
     for img in invalid_inputs:
         with pytest.raises((TypeError, ValueError, AttributeError)):
             nl_means(img=img)
-            
 
 def test_invalid_image_dimensions():
     """Test that the function handles tensors with incorrect dimensions (not 3D or 4D)."""
@@ -53,13 +53,11 @@ def test_tensor_with_nan_and_inf():
     img_inf = torch.rand(10, 10, 3)
     img_inf[2, 2, 0] = float('inf')
     
-    # Depending on implementation, it might raise an error or return a tensor with NaNs.
-    # We expect it to either raise an error or process without crashing Python entirely.
     try:
         res_nan = nl_means(img=img_nan)
         assert torch.isnan(res_nan).any() or not torch.isnan(res_nan).any()
     except Exception:
-        pass # Raising an exception is also acceptable defensive programming here
+        pass 
 
 def test_image_values_out_of_bounds():
     """Test how the algorithm handles tensors with extreme values well outside the expected [0, 1] range."""
@@ -70,21 +68,57 @@ def test_image_values_out_of_bounds():
         nl_means(img=img_negative)
         nl_means(img=img_massive)
     except Exception as e:
-        # Should fail gracefully and not cause a core dump in the C++ OpenCV backend
         assert isinstance(e, (ValueError, RuntimeError))
 
-def test_even_window_sizes():
-    """Test that the function raises an error when window sizes are even."""
+def test_even_window_sizes_warns_and_corrects():
+    """Test that the function emits a warning and auto-decrements when window sizes are even."""
     img = torch.rand(32, 32, 3)
     
-    with pytest.raises((ValueError, RuntimeError)):
-        nl_means(img=img, templateWindowSize=6)
+    with pytest.warns(Warning):
+        # 6 should become 5
+        res = nl_means(img=img, templateWindowSize=6, searchWindowSize=21)
+        assert res.shape == img.shape
         
-    with pytest.raises((ValueError, RuntimeError)):
-        nl_means(img=img, searchWindowSize=20)
+    with pytest.warns(Warning):
+        # 20 should become 19
+        res = nl_means(img=img, templateWindowSize=7, searchWindowSize=20)
+        assert res.shape == img.shape
+
+def test_window_size_larger_than_image_warns_and_caps():
+    """Test that a searchWindowSize exceeding min(h,w)/2 is warned about, capped, and forced odd."""
+    # Image min dimension is 20. Max allowed size is 20 / 2 = 10.
+    # 10 is even, so it should be decremented to 9.
+    img = torch.rand(20, 20, 3)
+    
+    with pytest.warns(Warning):
+        # User provides 51. Should be capped to 9 without crashing.
+        res = nl_means(img=img, templateWindowSize=5, searchWindowSize=51)
+        assert res.shape == img.shape
+
+def test_search_window_smaller_than_template_warns_and_fixes():
+    """Test that the function warns and aligns search window to template window if strictly smaller."""
+    img = torch.rand(32, 32, 3)
+    
+    with pytest.warns(Warning):
+        # Search is 3, template is 7. Search should become 7.
+        res = nl_means(img=img, templateWindowSize=7, searchWindowSize=3)
+        assert res.shape == img.shape
+
+def test_combined_window_size_adversarial_corrections():
+    """
+    Test a chaotic combination of bad inputs that require multiple corrections to ensure logic order is robust.
+    Image max is 10 (odd cap 9).
+    User inputs: template=12 (even, > max), search=6 (even, < template).
+    This forces the system to perform a sequence of validations that could easily overwrite each other or cause logical loops.
+    """
+    img = torch.rand(20, 20, 3)
+    
+    with pytest.warns(Warning):
+        res = nl_means(img=img, templateWindowSize=12, searchWindowSize=6)
+        assert res.shape == img.shape
 
 def test_negative_or_zero_window_sizes():
-    """Test that the function rejects negative or zero window sizes which are mathematically invalid for patches."""
+    """Test that the function still rejects negative or zero window sizes as they are mathematically impossible."""
     img = torch.rand(32, 32, 3)
     
     invalid_sizes = [0, -7, -21]
@@ -93,16 +127,6 @@ def test_negative_or_zero_window_sizes():
             nl_means(img=img, templateWindowSize=size)
         with pytest.raises((ValueError, RuntimeError)):
             nl_means(img=img, searchWindowSize=size)
-
-def test_window_size_larger_than_image():
-    """Test the edge case where the search window or template window is larger than the entire image."""
-    img = torch.rand(5, 5, 3) # Very small image
-    
-    try:
-        nl_means(img=img, templateWindowSize=7, searchWindowSize=21)
-    except Exception as e:
-        # OpenCV might throw an exception, the wrapper should catch or propagate cleanly
-        assert isinstance(e, (ValueError, RuntimeError, cv2.error))
 
 def test_invalid_parameter_types_for_windows():
     """Test that the function raises a TypeError when float values are passed to integer window size arguments."""
@@ -115,7 +139,7 @@ def test_invalid_parameter_types_for_windows():
         nl_means(img=img, searchWindowSize=21.1)
 
 def test_negative_h_parameters():
-    """Test the algorithm's stability when the filtering strength parameters are negative."""
+    """Test the algorithm's stability when the filtering strength parameters are negative (should raise)."""
     img = torch.rand(16, 16, 3)
     
     try:
@@ -129,7 +153,6 @@ def test_tensor_on_gpu():
     img = torch.rand(16, 16, 3).cuda()
     
     try:
-        # If the wrapper calls .numpy() on a CUDA tensor, it will raise a TypeError/RuntimeError
         out = nl_means(img=img)
         assert isinstance(out, torch.Tensor)
     except (TypeError, RuntimeError) as e:
@@ -137,15 +160,13 @@ def test_tensor_on_gpu():
 
 def test_non_contiguous_tensor():
     """Test that the function can handle memory-fragmented, non-contiguous tensors."""
-    # Create a tensor and transpose it to make it non-contiguous
     img = torch.rand(3, 32, 32)
-    img_transposed = img.permute(1, 2, 0) # Now shape is (32, 32, 3) but non-contiguous
+    img_transposed = img.permute(1, 2, 0)
     
     assert not img_transposed.is_contiguous()
     
     try:
         out = nl_means(img=img_transposed, searchWindowSize=7)
-        print(out.shape)
         assert out.shape == img_transposed.shape
     except Exception as e:
         pytest.fail(f"Failed on non-contiguous tensor with exception: {e}")

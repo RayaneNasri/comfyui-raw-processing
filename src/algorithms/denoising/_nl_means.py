@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import cv2 
+import warnings
 
 # Decorators
 from algorithms._utils import validate_image_input
@@ -42,25 +43,30 @@ def nl_means(img: torch.Tensor,
     if hColor < 0. :
         raise ValueError("hColor must be positive")
     
-    img_h, img_w, img_c = img.shape
+    img_h, img_w, _ = img.shape
     if not isinstance(searchWindowSize, int) :
         raise TypeError("searchWindowSize must be an integer")
     if searchWindowSize < 1 :
         raise ValueError("searchWindowSize must be positive")
     if searchWindowSize > min(img_h, img_w) / 2 :
-        raise ValueError("searchWindowSize too large")
+        max_val = int( min(img_h, img_w) / 2 )
+        searchWindowSize = max_val - 1 if (max_val % 2 == 0) else max_val
+        warnings.warn(f"searchWindowSize too large. The value is set to {searchWindowSize}")
     if searchWindowSize % 2 == 0:
-        raise ValueError("searchWindowSize must be an odd number (impair)")
+        searchWindowSize -= 1
+        warnings.warn(f"searchWindowSize must be an odd number. The value is set to {searchWindowSize}")
     
     if not isinstance(templateWindowSize, int) :
         raise TypeError("templateWindowSize must be an integer")
     if templateWindowSize < 1 :
         raise ValueError("templateWindowSize must be positive")
     if templateWindowSize % 2 == 0:
-        raise ValueError("templateWindowSize must be an odd number (impair)")
+        templateWindowSize -= 1
+        warnings.warn(f"templateWindowSize must be an odd number. The value is set to {templateWindowSize}")
 
     if searchWindowSize < templateWindowSize:
-        raise ValueError("searchWindowSize cannot be strictly smaller than templateWindowSize")
+        searchWindowSize = templateWindowSize
+        warnings.warn(f"searchWindowSize cannot be strictly smaller than templateWindowSize. The value is set to {searchWindowSize}")
 
 
     # Wrapper start -- 

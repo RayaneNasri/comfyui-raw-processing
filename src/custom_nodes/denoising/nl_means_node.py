@@ -7,7 +7,7 @@ class NonLocalMeansNode:
     def INPUT_TYPES(cls):
 
         tooltip : dict[str, str] = {
-            "img": "Image to denoise",
+            "image": "Image to denoise",
             "h": "Parameter regulating filter strength for luminance component",
             "hColor": "The same as h but for color components",
             "templateWindowSize": "Size in pixels of the template patch that is used to compute weights. Should be odd",
@@ -41,14 +41,14 @@ class NonLocalMeansNode:
     FUNCTION = "execute"
 
     def execute(self, 
-                img: torch.Tensor, 
+                image: torch.Tensor, 
                 h: int, 
                 hColor: int,
                 templateWindowSize: int,
                 searchWindowSize: int
             ) -> tuple :
         
-        input_2d = img.squeeze()
+        input_2d = image.squeeze()
         output_2d = nl_means(input_2d, h, hColor, templateWindowSize, searchWindowSize)
 
         return (output_2d.unsqueeze(0),)

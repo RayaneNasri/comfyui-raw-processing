@@ -12,7 +12,7 @@ class MedianFilterNode:
 
         return {
             "required": {
-                "img": ("IMAGE",),
+                "image": ("IMAGE",),
                 "ksize": ("INT", {"default": 3, "min": 3, "tooltip": tooltip["ksize"]})
             }
         }
@@ -33,11 +33,11 @@ class MedianFilterNode:
     FUNCTION = "execute"
 
     def execute(self, 
-                img: torch.Tensor, 
+                image: torch.Tensor, 
                 ksize: int
             ) -> tuple :
         
-        input_2d = img.squeeze()
+        input_2d = image.squeeze()
         output_2d = median_filter(input_2d, ksize)
 
         return (output_2d.unsqueeze(0),)

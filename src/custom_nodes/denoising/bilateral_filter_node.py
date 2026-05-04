@@ -40,14 +40,12 @@ class BilatFilterNode:
     CATEGORY = "image"
 
     SEARCH_ALIASES = [
-        "average filter",
-        "mean filter",
-        "box blur",
-        "image smoothing",
-        "noise reduction",
-        "low pass filter",
-        "blur filter",
-        "uniform filter",
+        "bilateral filter",
+        "edge preserving smoothing",
+        "bilateral blur",
+        "noise reduction with edge preservation",
+        "surface blur",
+        "smoothing filter",
     ]
 
     RETURN_TYPES = ("IMAGE",)

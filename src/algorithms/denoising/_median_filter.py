@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import cv2
+import warnings
 
 # Decorators    
 from algorithms._utils import validate_image_input
@@ -27,8 +28,12 @@ def median_filter(img: torch.Tensor,
     # ksize validation -- 
     if not isinstance(ksize, int):
         raise TypeError("ksize must be an integer")
-    if ksize < 2 or ksize % 2 == 0:
-        raise ValueError("ksize must be odd and greater than 1, for example: 3, 5, 7 ...")
+    if ksize < 3 :
+        raise ValueError("ksize must be odd and greater than 1")
+    
+    if ksize % 2 == 0:
+        ksize -= 1
+        warnings.warn("ksize must be an odd number. The value is set to {ksize}")
     
     # Wrapper start -- 
     src = torch.clip(img * 255, min=0, max=255)

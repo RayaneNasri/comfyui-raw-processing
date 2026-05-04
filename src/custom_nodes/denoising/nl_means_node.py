@@ -1,19 +1,6 @@
 import torch
 from algorithms.denoising import nl_means
 
-    # Parameters
-    # ----------
-    # img : torch.Tensor
-    #     Image to denoise
-    # h : float (default = 3)
-    #     Parameter regulating filter strength for luminance component
-    # hColor : float (default = 3)
-    #     The same as h but for color components
-    # templateWindowSize : (default = 7)
-    #     Size in pixels of the template patch that is used to compute weights. Should be odd
-    # searchWindowSize : (default = 21)
-    #     Size in pixels of the window that is used to compute weighted average for given pixel. Should be odd
-
 class NonLocalMeansNode:
 
     @classmethod

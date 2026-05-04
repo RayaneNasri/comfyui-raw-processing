@@ -1,17 +1,5 @@
 import torch
-from src.algorithms.denoising import avg_filter
-
-    # img : torch.Tensor
-    #     Input image
-    # ksize : tuple
-    #     Blurring kernel size
-    # strBorderType : str
-    #     Border mode used to extrapolate pixels outside of the image, see the modes available in the open-cv documentation
-
-    # Returns
-    # -------
-    # img_wb : torch.Tensor
-    #     Filtred Image
+from algorithms.denoising import avg_filter
 
 class AvgFilterNode:
 
@@ -44,7 +32,7 @@ class AvgFilterNode:
         }
     
     CATEGORY = "image"
-    
+
     SEARCH_ALIASES = [
         "average filter",
         "mean filter",

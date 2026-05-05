@@ -15,14 +15,14 @@ def gaussian_filter(img: torch.Tensor,
 
                 )-> torch.Tensor :
     """
-    Simple wrapper for open-cv function medianBlur
+    Simple wrapper for open-cv function GaussianBlur
 
     Parameters
     ----------
     img : torch.Tensor
         Input image
     ksize : tuple
-        Gaussian kernel size 
+        Gaussian kernel size
         ksize.width and ksize.height can differ but they both must be positive and odd
         Or, they can be zero's and then they are computed from sigma
     sigmaX : float

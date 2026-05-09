@@ -103,7 +103,7 @@ def rgb_to_hsv(rgb_image: Tensor) -> Tensor:
     out[..., 0] = h
     out[..., 1] = s
     out[..., 2] = max_c
-    
+
     return out
 
 
@@ -119,16 +119,34 @@ def hsv_to_rgb(hsv_image: Tensor) -> Tensor:
     p = m + c * (1.0 - f)
     q = m + c * f
 
-    r = torch.where(i == 0, v,  torch.where(i == 1, p,
-        torch.where(i == 2, m,  torch.where(i == 3, m,
-        torch.where(i == 4, q,  v)))))
+    r = torch.where(
+        i == 0,
+        v,
+        torch.where(
+            i == 1,
+            p,
+            torch.where(i == 2, m, torch.where(i == 3, m, torch.where(i == 4, q, v))),
+        ),
+    )
 
-    g = torch.where(i == 0, q,  torch.where(i == 1, v,
-        torch.where(i == 2, v,  torch.where(i == 3, p,
-        torch.where(i == 4, m,  m)))))
+    g = torch.where(
+        i == 0,
+        q,
+        torch.where(
+            i == 1,
+            v,
+            torch.where(i == 2, v, torch.where(i == 3, p, torch.where(i == 4, m, m))),
+        ),
+    )
 
-    b = torch.where(i == 0, m,  torch.where(i == 1, m,
-        torch.where(i == 2, q,  torch.where(i == 3, v,
-        torch.where(i == 4, v,  p)))))
+    b = torch.where(
+        i == 0,
+        m,
+        torch.where(
+            i == 1,
+            m,
+            torch.where(i == 2, q, torch.where(i == 3, v, torch.where(i == 4, v, p))),
+        ),
+    )
 
     return torch.stack([r, g, b], dim=-1).clamp_(0.0, 1.0)

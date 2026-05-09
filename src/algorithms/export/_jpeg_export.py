@@ -16,5 +16,5 @@ def export_jpeg(image: Tensor, path: str, quality: int = 75):
     img_chw = image.permute(2, 0, 1)
     img_chw = img_chw.nan_to_num_(nan=0.0, posinf=1.0, neginf=0.0)
     image_uint8 = img_chw.mul(255).clamp_(0, 255).to(torch.uint8)
- 
+
     write_jpeg(image_uint8, path, quality=quality)

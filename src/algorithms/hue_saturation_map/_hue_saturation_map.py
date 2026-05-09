@@ -157,27 +157,26 @@ def apply_hue_sat_map(
         neutral, color_matrix_1, color_matrix_2, calib_illum_1, calib_illum_2
     )
     forward_matrix = (1 - t) * forward_matrix_1 + t * forward_matrix_2
-    image_xyz      = image_rgb @ forward_matrix.T          # [H, W, 3]
-    image_prophoto = image_xyz @ m_xyz_to_prophoto.T       # [H, W, 3]
-    del image_xyz 
+    image_xyz = image_rgb @ forward_matrix.T  # [H, W, 3]
+    image_prophoto = image_xyz @ m_xyz_to_prophoto.T  # [H, W, 3]
+    del image_xyz
 
-    image_prophoto.clamp_(0.0, 1.0)                        # in-place — no copy
+    image_prophoto.clamp_(0.0, 1.0)  # in-place — no copy
     image_hsv = rgb_to_hsv(image_prophoto)
     del image_prophoto
 
-    active_lut    = (1 - t) * low_temp_lut + t * high_temp_lut
+    active_lut = (1 - t) * low_temp_lut + t * high_temp_lut
     corrected_hsv = _apply_hue_sat_map(image_hsv, active_lut.to(device))
     del image_hsv, active_lut
 
     corrected_prophoto = hsv_to_rgb(corrected_hsv)
     del corrected_hsv
 
-    out_xyz = corrected_prophoto @ m_prophoto_to_xyz.T      # [H, W, 3]
+    out_xyz = corrected_prophoto @ m_prophoto_to_xyz.T  # [H, W, 3]
     del corrected_prophoto
 
-    inv_forward   = torch.inverse(forward_matrix)
-    image_rgb_out = out_xyz @ inv_forward.T                 # [H, W, 3]
+    inv_forward = torch.inverse(forward_matrix)
+    image_rgb_out = out_xyz @ inv_forward.T  # [H, W, 3]
     del out_xyz
- 
+
     return image_rgb_out.clamp_(0.0, 1.0)
- 

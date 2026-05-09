@@ -7,14 +7,27 @@ from algorithms.export._jpeg_export import export_jpeg
 from algorithms.tools._lut_tools import read_hue_sat_lut_from_dcp
 from algorithms.black_light_subtraction._black_light_subtraction import linearize_raw
 
-def main(raw_img_path: str, dcp_file_path: str, output_img_path: str): 
-    raw_img, bayer_pattern, black_levels, white_level, wb_gains = read_raw_sensor_data(raw_img_path)
+
+def main(raw_img_path: str, dcp_file_path: str, output_img_path: str):
+    raw_img, bayer_pattern, black_levels, white_level, wb_gains = read_raw_sensor_data(
+        raw_img_path
+    )
     raw_img = linearize_raw(raw_img, bayer_pattern, black_levels, white_level)
     demosaiced_img = malvar_he_cutler_demosaicing(raw_img)
     white_balanced_img = camera_white_balance(demosaiced_img, wb_gains)
     res = read_hue_sat_lut_from_dcp(dcp_file_path)
-    if res is None : return
-    (color_matrix_1, color_matrix_2, forward_matrix_1, forward_matrix_2, low_temp_lut, high_temp_lut, calib_illum_1, calib_illum_2) = res
+    if res is None:
+        return
+    (
+        color_matrix_1,
+        color_matrix_2,
+        forward_matrix_1,
+        forward_matrix_2,
+        low_temp_lut,
+        high_temp_lut,
+        calib_illum_1,
+        calib_illum_2,
+    ) = res
     hue_sat_corrected_img = apply_hue_sat_map(
         white_balanced_img,
         wb_gains,

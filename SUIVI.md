@@ -186,6 +186,51 @@
 
 ## Session 15/04/2026
 
+  * All :
+    - Meeting with Quentin Bammey (15/04/2026)
+  * Amayas :
+  * Charlotte :
+  * Ghiles :
+  * Rayane :
+
+## Between 15/04/2026 and 21/04/2026
+
+  * Amayas :
+  * Charlotte :
+  * Ghiles :
+  * Rayane :
+
+## Session 21/04/2026
+
+  * Amayas :
+  * Charlotte :
+  * Ghiles :
+  * Rayane :
+
+## Between 21/04/2026 and 05/05/2026
+
+  * All : 
+    - Meeting with Quentin Bammey (24/04/2026)
+    - Discussions regarding the schedule and the progress of our respective tasks.
+  * Amayas :
+  * Charlotte :
+    - v0 Stakes Report (RAPPORT_ENJEUX.md)
+  * Ghiles :
+  * Rayane :
+
+## Session 05/05/2026
+
+  * All : 
+    - Meeting with Quentin Bammey (05/05/2026)
+    - Discussion on the stakes report
+  * Amayas :
+  * Charlotte :
+    - Searching some sources/references for the stakes report
+  * Ghiles :
+  * Rayane :
+
+## Between 05/05/2026 and 13/05/2026
+
   * Amayas :
   * Charlotte :
   * Ghiles :

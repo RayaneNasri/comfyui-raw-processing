@@ -84,12 +84,12 @@ def _apply_hue_sat_map(image_hsv: Tensor, lut_data: Tensor) -> Tensor:
         )
         deltas = deltas.squeeze(0).squeeze(1).permute(1, 2, 0)
 
-    # Apply deltas in-place to avoid 3 extra H×W tensors.
-    h_out = (image_hsv[..., 0] + deltas[..., 0] / 360.0) % 1.0
-    s_out = torch.clamp(image_hsv[..., 1] * deltas[..., 1], 0.0, 1.0)
-    v_out = torch.clamp(image_hsv[..., 2] * deltas[..., 2], 0.0, 1.0)
+    out = torch.empty_like(image_hsv)
+    out[..., 0] = (image_hsv[..., 0] + deltas[..., 0] / 360.0) % 1.0
+    out[..., 1] = (image_hsv[..., 1] * deltas[..., 1]).clamp_(0.0, 1.0)
+    out[..., 2] = (image_hsv[..., 2] * deltas[..., 2]).clamp_(0.0, 1.0)
 
-    return torch.stack([h_out, s_out, v_out], dim=-1)
+    return out
 
 
 def _define_normalized_neutral_from_gains(wb_gains: Tensor) -> Tensor:

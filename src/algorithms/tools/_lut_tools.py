@@ -37,8 +37,6 @@ def read_hue_sat_lut_from_dcp(
             page = dcp_file.pages[0]
             if isinstance(page, TiffPage):
                 tags = page.tags
-                for tag in tags:
-                    print(tag)
                 dims = tags[HUE_SAT_MAP_DIMS_TAG].value
                 h, s, v = dims
                 low_temp_lut = Tensor(tags[HUE_SAT_MAP_DATA_1_TAG].value).reshape(
@@ -75,73 +73,62 @@ def read_hue_sat_lut_from_dcp(
 
 def rgb_to_hsv(rgb_image: Tensor) -> Tensor:
     """
-    Transforms an RGB image into HSV space.
-    Expects input shape [H, W, 3] and range [0, 1].
-    Returns HSV image with H in [0, 1], S in [0, 1], V in [0, 1].
+    Expects input shape [H, W, 3], range [0, 1].
+    Returns HSV with H, S, V in [0, 1].
     """
-    # rgb_image: [H, W, 3]
+    eps = 1e-10
     r, g, b = rgb_image.unbind(-1)
 
-    max_c, _ = torch.max(rgb_image, dim=-1)
-    min_c, _ = torch.min(rgb_image, dim=-1)
+    max_c, max_idx = torch.max(rgb_image, dim=-1)  # max_idx : 0=R, 1=G, 2=B
+    min_c = torch.min(rgb_image, dim=-1).values
     delta = max_c - min_c
 
-    # --- Teinte (H) ---
-    # On utilise eps pour éviter la division par zéro
-    eps = 1e-10
-    h = torch.zeros_like(max_c)
+    # --- Hue : calcul entièrement vectorisé avec torch.where ---
+    delta_safe = delta.clamp(min=eps)
 
-    mask_r = (max_c == r) & (delta > eps)
-    mask_g = (max_c == g) & (delta > eps)
-    mask_b = (max_c == b) & (delta > eps)
+    h_r = ((g - b) / delta_safe) % 6
+    h_g = ((b - r) / delta_safe) + 2
+    h_b = ((r - g) / delta_safe) + 4
 
-    h[mask_r] = ((g[mask_r] - b[mask_r]) / (delta[mask_r] + eps)) % 6
-    h[mask_g] = ((b[mask_g] - r[mask_g]) / (delta[mask_g] + eps)) + 2
-    h[mask_b] = ((r[mask_b] - g[mask_b]) / (delta[mask_b] + eps)) + 4
+    # Sélection selon quel canal est max
+    h = torch.where(max_idx == 0, h_r, torch.where(max_idx == 1, h_g, h_b)) / 6.0
 
-    h = h / 6.0  # Normalisation entre 0 et 1
+    # Mise à zéro là où delta ~ 0 (pixel achromatique)
+    h = torch.where(delta < eps, torch.zeros_like(h), h)
 
-    # --- Saturation (S) ---
-    s = torch.zeros_like(max_c)
-    s[max_c > eps] = delta[max_c > eps] / (max_c[max_c > eps] + eps)
+    # --- Saturation ---
+    s = torch.where(max_c > eps, delta / max_c.clamp(min=eps), torch.zeros_like(max_c))
 
-    # --- Valeur (V) ---
-    v = max_c
-
-    return torch.stack([h, s, v], dim=-1)
+    out = torch.empty_like(rgb_image)
+    out[..., 0] = h
+    out[..., 1] = s
+    out[..., 2] = max_c
+    
+    return out
 
 
 def hsv_to_rgb(hsv_image: Tensor) -> Tensor:
-    """
-    Transforms an HSV image into RGB space.
-    Expects input shape [H, W, 3] and range [0, 1].
-    """
     h, s, v = hsv_image.unbind(-1)
 
-    h_six = h * 6.0
-    c = v * s  # Chroma
-    x = c * (1 - torch.abs(h_six % 2 - 1))
+    h6 = h * 6.0
+    i = h6.long() % 6
+    f = h6 - h6.floor()
+
+    c = v * s
     m = v - c
+    p = m + c * (1.0 - f)
+    q = m + c * f
 
-    # On initialise les canaux
-    r1 = torch.zeros_like(h)
-    g1 = torch.zeros_like(h)
-    b1 = torch.zeros_like(h)
+    r = torch.where(i == 0, v,  torch.where(i == 1, p,
+        torch.where(i == 2, m,  torch.where(i == 3, m,
+        torch.where(i == 4, q,  v)))))
 
-    # Définition des sextants
-    mask0 = (h_six >= 0) & (h_six < 1)
-    mask1 = (h_six >= 1) & (h_six < 2)
-    mask2 = (h_six >= 2) & (h_six < 3)
-    mask3 = (h_six >= 3) & (h_six < 4)
-    mask4 = (h_six >= 4) & (h_six < 5)
-    mask5 = (h_six >= 5) & (h_six <= 6)
+    g = torch.where(i == 0, q,  torch.where(i == 1, v,
+        torch.where(i == 2, v,  torch.where(i == 3, p,
+        torch.where(i == 4, m,  m)))))
 
-    r1[mask0], g1[mask0], b1[mask0] = c[mask0], x[mask0], 0
-    r1[mask1], g1[mask1], b1[mask1] = x[mask1], c[mask1], 0
-    r1[mask2], g1[mask2], b1[mask2] = 0, c[mask2], x[mask2]
-    r1[mask3], g1[mask3], b1[mask3] = 0, x[mask3], c[mask3]
-    r1[mask4], g1[mask4], b1[mask4] = x[mask4], 0, c[mask4]
-    r1[mask5], g1[mask5], b1[mask5] = c[mask5], 0, x[mask5]
+    b = torch.where(i == 0, m,  torch.where(i == 1, m,
+        torch.where(i == 2, q,  torch.where(i == 3, v,
+        torch.where(i == 4, v,  p)))))
 
-    rgb = torch.stack([r1 + m, g1 + m, b1 + m], dim=-1)
-    return torch.clamp(rgb, 0.0, 1.0)
+    return torch.stack([r, g, b], dim=-1).clamp_(0.0, 1.0)

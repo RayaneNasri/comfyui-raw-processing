@@ -84,12 +84,12 @@ def _apply_hue_sat_map(image_hsv: Tensor, lut_data: Tensor) -> Tensor:
         )
         deltas = deltas.squeeze(0).squeeze(1).permute(1, 2, 0)
 
-    delta_h, scale_s, scale_v = deltas[..., 0], deltas[..., 1], deltas[..., 2]
-    h_prime = (image_hsv[..., 0] + delta_h / 360.0) % 1.0
-    s_prime = torch.clamp(image_hsv[..., 1] * scale_s, 0.0, 1.0)
-    v_prime = torch.clamp(image_hsv[..., 2] * scale_v, 0.0, 1.0)
+    out = torch.empty_like(image_hsv)
+    out[..., 0] = (image_hsv[..., 0] + deltas[..., 0] / 360.0) % 1.0
+    out[..., 1] = (image_hsv[..., 1] * deltas[..., 1]).clamp_(0.0, 1.0)
+    out[..., 2] = (image_hsv[..., 2] * deltas[..., 2]).clamp_(0.0, 1.0)
 
-    return torch.stack([h_prime, s_prime, v_prime], dim=-1)
+    return out
 
 
 def _define_normalized_neutral_from_gains(wb_gains: Tensor) -> Tensor:
@@ -157,17 +157,26 @@ def apply_hue_sat_map(
         neutral, color_matrix_1, color_matrix_2, calib_illum_1, calib_illum_2
     )
     forward_matrix = (1 - t) * forward_matrix_1 + t * forward_matrix_2
-    image_xyz = torch.einsum("ij,hwj->ihw", forward_matrix, image_rgb)
-    image_prophoto = torch.einsum("ij,jhw->ihw", m_xyz_to_prophoto, image_xyz)
-    image_prophoto_hwc = image_prophoto.permute(1, 2, 0)
-    image_prophoto_hwc = torch.clamp(image_prophoto_hwc, 0.0, 1.0)
-    image_hsv = rgb_to_hsv(image_prophoto_hwc)
+    image_xyz = image_rgb @ forward_matrix.T  # [H, W, 3]
+    image_prophoto = image_xyz @ m_xyz_to_prophoto.T  # [H, W, 3]
+    del image_xyz
+
+    image_prophoto.clamp_(0.0, 1.0)  # in-place — no copy
+    image_hsv = rgb_to_hsv(image_prophoto)
+    del image_prophoto
+
     active_lut = (1 - t) * low_temp_lut + t * high_temp_lut
     corrected_hsv = _apply_hue_sat_map(image_hsv, active_lut.to(device))
-    corrected_prophoto_hwc = hsv_to_rgb(corrected_hsv)
-    out_xyz = torch.einsum("ij,hwj->ihw", m_prophoto_to_xyz, corrected_prophoto_hwc)
-    inv_forward = torch.inverse(forward_matrix)
-    image_rgb_out = torch.einsum("ij,jhw->ihw", inv_forward, out_xyz)
-    final_image = image_rgb_out.permute(1, 2, 0)
+    del image_hsv, active_lut
 
-    return torch.clamp(final_image, 0.0, 1.0)
+    corrected_prophoto = hsv_to_rgb(corrected_hsv)
+    del corrected_hsv
+
+    out_xyz = corrected_prophoto @ m_prophoto_to_xyz.T  # [H, W, 3]
+    del corrected_prophoto
+
+    inv_forward = torch.inverse(forward_matrix)
+    image_rgb_out = out_xyz @ inv_forward.T  # [H, W, 3]
+    del out_xyz
+
+    return image_rgb_out.clamp_(0.0, 1.0)

@@ -149,16 +149,26 @@
   * Charlotte :
     - Implementing ComfyUInode and main function for Goldstein-Fattal algorithm
   * Ghiles :
+    - Talked with Quentin Bammey about making a more intuitive editor for tone curve and started looking up how to do it.
   * Rayane :
 
 ## Between 27/03/2026 and 03/04/2026
+  * Amayas :
+  * Charlotte :
+  * Ghiles :
+    - Found a repository that implements an editor for color manipulation.
+    - Dove deeper into the code of this repository to understand how it works and how comfyui nodes are communicating with the javascript code of the editor.
+  * Rayane :
 
 ## Session 03/04/2026
+  * All :
+    - Meeting with Quentin Bammey (03/04/2026)
 
   * Amayas :
   * Charlotte :
     - Documentation for the color_manipulation node
   * Ghiles :
+    - Implemented a first version of a curve editor with polynomial interpolation. It is not really user-friendly yet, but it is a first step.
   * Rayane :
 
 ## Between 03/04/2026 and 10/04/2026
@@ -168,12 +178,19 @@
     - implementation of saturation_hsv
     - correction in _lut_color_manipulation.py (output dimension in apply_lut_grid_sample())
   * Ghiles :
+    - Researched about lens correction especially vignetting. I found some papers about these topics and I will try to implement them in the next weeks.
   * Rayane :
 
 ## Session 10/04/2026
 
   * All :
     - Meeting with Quentin Bammey (10/04/2026)
+  * Amayas :
+  * Charlotte :
+  * Ghiles :
+    - Talked with Quentin Bammey about the lens correction phase and he gave additional phases for it like chromatic aberration correction and geometric distortion correction. I will try to implement these different corrections in the next weeks.
+    - Started on a first version of vignetting (but no node yet in ComfyUI).
+  * Rayane :
 
 ## Between 10/04/2026 and 15/04/2026
 
@@ -182,6 +199,9 @@
     - implemented script_test_luts and tested all the ON1 LUTs I have
     - correction in _lut_color_manipulation.py (final correction bgr -> rgb in apply_lut_grid_sample())
   * Ghiles :
+    - Implemented chromatic aberration correction
+    - Implemented geometric distortion correction
+    - Made a node that aggregates the different lens corrections.
   * Rayane :
 
 ## Session 15/04/2026
@@ -191,6 +211,8 @@
   * Amayas :
   * Charlotte :
   * Ghiles :
+    - spent the remaining TH, debugging a problem of  the lens correction wherre it was using a lot of ressources and was very slow.
+    - After debugging, I found out that the problem was coming from the geometric distortion correction part, and more specifically from the way I was applying the distortion to the image. I was using a for loop to apply the distortion to each pixel of the image, which was very slow. I changed it to a vectorized implementation using PyTorch's `grid_sample` function, and now it is much faster but then switched to openCV's `undistort` function which looked faster and more efficient. 
   * Rayane :
 
 ## Between 15/04/2026 and 21/04/2026
@@ -198,6 +220,8 @@
   * Amayas :
   * Charlotte :
   * Ghiles :
+    - Spent a bit of time looking what causes the pipepline to be slow and trying to optimize it.
+    - I had some clues but didn't have time to try and implement them.
   * Rayane :
 
 ## Session 21/04/2026
@@ -205,6 +229,7 @@
   * Amayas :
   * Charlotte :
   * Ghiles :
+    - Mainly nothing worth mentioning because of the exams.
   * Rayane :
 
 ## Between 21/04/2026 and 05/05/2026
@@ -216,6 +241,7 @@
   * Charlotte :
     - v0 Stakes Report (RAPPORT_ENJEUX.md)
   * Ghiles :
+    - Continued improving the curve editor, mainly changing the interpolation method to  have a better control of the curve.
   * Rayane :
 
 ## Session 05/05/2026
@@ -227,6 +253,7 @@
   * Charlotte :
     - Searching some sources/references for the stakes report
   * Ghiles :
+    - Looked into bezier curves and started sketching a bezier curve editor, i will try to implement it in the next weeks.
   * Rayane :
 
 ## Between 05/05/2026 and 13/05/2026

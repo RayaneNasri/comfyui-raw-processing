@@ -146,6 +146,9 @@
   * All :
     - Meeting with Quentin Bammey (27/03/2026)
   * Amayas :
+    - Completed writing documentation for the release.
+    - Worked with Ghiles on merging the release to the main branch.
+    - Worked with Ghiles on resolving merge conflicts.
   * Charlotte :
     - Implementing ComfyUInode and main function for Goldstein-Fattal algorithm
   * Ghiles :
@@ -154,6 +157,9 @@
 
 ## Between 27/03/2026 and 03/04/2026
   * Amayas :
+    - Worked on identifying the causes of the pipeline's excessive memory consumption.
+    - Did research on in-place operations and memory manipulation with PyTorch.
+    - Got back to and old version of the HSV Mapping due to an issue of the final color accuracy checking and started refactoring code.
   * Charlotte :
   * Ghiles :
     - Found a repository that implements an editor for color manipulation.
@@ -165,6 +171,8 @@
     - Meeting with Quentin Bammey (03/04/2026)
 
   * Amayas :
+    - Implemented first tests to optimize memory in the pipeline, tried to remove the maximum of operations that could duplicate image tensors during the execution.
+    - Results were effective but the pipeline still consumes a decent amount of memory (> 8 Go)
   * Charlotte :
     - Documentation for the color_manipulation node
   * Ghiles :
@@ -174,6 +182,10 @@
 ## Between 03/04/2026 and 10/04/2026
 
   * Amayas :
+    - Continued research on optimizing memory to find a solution to minimise the number of intermediate tensors used.
+    - Finalized the HSV mapping algorithm.
+    - Added a new gamma correction node "IEC Gamma Correction" which happened to have more accurate contrasts.
+    - Added tests for the IEC Gamma Correction. 
   * Charlotte :
     - implementation of saturation_hsv
     - correction in _lut_color_manipulation.py (output dimension in apply_lut_grid_sample())
@@ -218,6 +230,8 @@
 ## Between 15/04/2026 and 21/04/2026
 
   * Amayas :
+    - Started to identify the main components of the pipeline that caused the excessive memory comsumption.
+    - Ran time and memory profilers and analyzed the reports to identify which operations of the source code needed a lot of memory and ran slow.
   * Charlotte :
   * Ghiles :
     - Spent a bit of time looking what causes the pipepline to be slow and trying to optimize it.
@@ -227,6 +241,7 @@
 ## Session 21/04/2026
 
   * Amayas :
+    - Worked on project management : issues, planning and updating myself on the difficulties of other members.
   * Charlotte :
   * Ghiles :
     - Mainly nothing worth mentioning because of the exams.
@@ -238,6 +253,7 @@
     - Meeting with Quentin Bammey (24/04/2026)
     - Discussions regarding the schedule and the progress of our respective tasks.
   * Amayas :
+    - Merged the final and official version of the HSV Mapping and IEC Gamma Correction.
   * Charlotte :
     - v0 Stakes Report (RAPPORT_ENJEUX.md)
   * Ghiles :
@@ -259,6 +275,11 @@
 ## Between 05/05/2026 and 13/05/2026
 
   * Amayas :
+    - Refactored the pipeline source code to delete all the intemerdiate tensors that are not being used during the execution of an algorithm.
+    - Refactored how some masks are applied into image tensors to reduce the memory + execution time.
+    - Refactored the code to use only in-place operations for updating tensors.
+    - Ran memory and time profilers and noticed a decent gain on memory usage, now the pipeline uses on average 3 or 4 Gb of RAM.
+    - Merged the `fix/memory-usage` branch that fixes the memory performance into `dev`.
   * Charlotte :
   * Ghiles :
   * Rayane :

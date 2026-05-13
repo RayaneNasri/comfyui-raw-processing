@@ -28,13 +28,14 @@ class TemperatureTannerHellandNode:
     CATEGORY = "image/processing"
     
     def process(self, rgb_image: Tensor, temperature_Kelvin: float, apply_changes: bool):
-        
+        rgb_image = rgb_image.squeeze(0)
+
         if apply_changes:
             res = temperature_tanner_helland(rgb_image, temperature_Kelvin)
         else:
             res = rgb_image
         
-        return (res,)
+        return (res.unsqueeze(0),)
         
 
 NODE_CLASS_MAPPINGS = {

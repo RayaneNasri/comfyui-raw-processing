@@ -38,17 +38,18 @@ class LutColorManipulationNode:
     CATEGORY = "image/processing"
     
     def process(self, rgb_image: Tensor, lut_path: str, apply_lut_from_lut_path: bool, lut_name: str):
+        rgb_image = rgb_image.squeeze(0)
+        
         if apply_lut_from_lut_path:
             if lut_path.endswith(".cube"):
                 lut = load_cube_lut(lut_path)
-                res = apply_lut_grid_sample(rgb_image, lut)
-                return (res,)
             else:
                 raise ValueError("Wrong format : expected a .cube lut")
         else:
             lut = load_cube_lut(luts[lut_name])
-            res = apply_lut_grid_sample(rgb_image, lut)
-            return (res,)
+        
+        res = apply_lut_grid_sample(rgb_image, lut)
+        return (res.unsqueeze(0),)
         
 
 NODE_CLASS_MAPPINGS = {

@@ -35,29 +35,21 @@ def load_cube_lut(path):
 
 def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
     """
-    image: (H,W,3) or (B,H,W,3) or (B,3,H,W) float tensor in [0,1]
+    image: (H,W,3) float tensor in [0,1]
     lut:   (S,S,S,3)
     """
-    
-    # ---- Normalisation du format ----
-    if image.dim() == 4:
-        # Cas (B,3,H,W) → (B,H,W,3)
-        if image.shape[1] == 3:
-            image = image.permute(0, 2, 3, 1)
 
-        B, H, W, C = image.shape
-
-    elif image.dim() == 3:
+    # image shape
+    if image.dim() == 3:
         H, W, C = image.shape
         image = image.unsqueeze(0)  # add batch
         B = 1
-
     else:
         raise ValueError(f"Unsupported image shape: {image.shape}")
 
     if C != 3:
         raise ValueError(f"Image must have 3 channels, got {C}")
-        
+      
     S = lut.shape[0]
 
     # from linearRGB to AdobeRGB1998
@@ -86,6 +78,7 @@ def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
     # from AdobeRGB1998 to linearRGB
     out = torch.pow(out, (1/gamma))
 
-    out = out.squeeze(0) # (H,W,3) TODO : keep it ?
-
+    # back to (H,W,3)
+    out = out.squeeze(0)
+    
     return out

@@ -19,11 +19,13 @@ from algorithms.export._jpeg_export import export_jpeg
 from algorithms.color_manipulation._lut_color_manipulation import load_cube_lut
 from algorithms.color_manipulation._lut_color_manipulation import apply_lut_grid_sample
 from algorithms.color_manipulation._saturation_hsv import saturation_hsv
+from algorithms.color_manipulation._temperature_simple import temperature_simple
+from algorithms.color_manipulation._temperature_tanner_helland import temperature_tanner_helland
 
 # Input file
 raw_file = PATH + "r01cbb7fdt.NEF"
 output_dir = "./outputs"
-output_file = "rgb-bgr-rgb_processed_image_exp_1-2_NW-3.jpg"
+output_file = "test-script_test.jpg"
 
 # Step 1: Read RAW
 print("Step 1: Reading RAW file...")
@@ -60,6 +62,8 @@ print("Step 6: Color Manipulation...")
 lut = load_cube_lut(PATH + "ON1_All_LUTs/ON1 Nature & Wildlife LUTs/NW-3.cube")
 color_img = apply_lut_grid_sample(exp_img, lut)
 #color_img = saturation_hsv(color_img, 1.4)
+#color_img = temperature_simple(color_img, 10)
+#color_img = temperature_tanner_helland(color_img, 3000)
 
 
 # Step 6: Gamma Correction

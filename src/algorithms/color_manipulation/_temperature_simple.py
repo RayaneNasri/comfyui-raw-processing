@@ -3,7 +3,7 @@ from torch import Tensor
 
 def temperature_simple(rgb_image : Tensor, adjustment_value : float) -> Tensor:
     """
-    - rgb_image : Tensor RGB image with each channel represented as a float in [0,1]
+    - rgb_image : Tensor RGB image (H,W,3) with each channel represented as a float in [0,1]
     - adjustment_value : float in [-100, 100] (recommended [-20, 20])
 
     Given a temperature adjustment on the range -100 to 100 (recommended -20, 20),

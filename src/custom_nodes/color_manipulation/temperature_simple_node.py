@@ -25,8 +25,9 @@ class TemperatureSimpleNode:
     CATEGORY = "image/processing"
     
     def process(self, rgb_image: Tensor, adjustement: float):
+        rgb_image = rgb_image.squeeze(0)
         res = temperature_simple(rgb_image, adjustement)
-        return (res,)
+        return (res.unsqueeze(0),)
         
 
 NODE_CLASS_MAPPINGS = {

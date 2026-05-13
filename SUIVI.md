@@ -290,3 +290,13 @@
   * Charlotte :
   * Ghiles :
   * Rayane :
+
+## Session 13/05/2026
+
+  * Amayas :
+  * Charlotte :
+    - changing code in color-manipulation algorithms and nodes to have the initial squeeze and final unsqueeze of the batch (of images coming from ComfyUI) in the nodes, and not in the algorithms.
+    - research on contrast algorithms
+    - implementing contrast_linear_global and testing it with several contrast_factors
+  * Ghiles :
+  * Rayane :

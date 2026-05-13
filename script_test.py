@@ -21,11 +21,12 @@ from algorithms.color_manipulation._lut_color_manipulation import apply_lut_grid
 from algorithms.color_manipulation._saturation_hsv import saturation_hsv
 from algorithms.color_manipulation._temperature_simple import temperature_simple
 from algorithms.color_manipulation._temperature_tanner_helland import temperature_tanner_helland
+from algorithms.color_manipulation._contrast_linear_global import contrast_linear_global
 
 # Input file
 raw_file = PATH + "r01cbb7fdt.NEF"
 output_dir = "./outputs"
-output_file = "test-script_test.jpg"
+output_file = "temp-4100_contrast-linear-global-0-3.jpg"
 
 # Step 1: Read RAW
 print("Step 1: Reading RAW file...")
@@ -58,12 +59,13 @@ print("Step 5: Exposure Compensation...")
 exp_img = exposure_compensation(wb_img, ev_compensation=1.2)  # +0.5 stops
 
 print("Step 6: Color Manipulation...")
-#color_img = exp_img
-lut = load_cube_lut(PATH + "ON1_All_LUTs/ON1 Nature & Wildlife LUTs/NW-3.cube")
-color_img = apply_lut_grid_sample(exp_img, lut)
+color_img = exp_img
+#lut = load_cube_lut(PATH + "ON1_All_LUTs/ON1 Nature & Wildlife LUTs/NW-3.cube")
+#color_img = apply_lut_grid_sample(color_img, lut)
 #color_img = saturation_hsv(color_img, 1.4)
 #color_img = temperature_simple(color_img, 10)
-#color_img = temperature_tanner_helland(color_img, 3000)
+color_img = temperature_tanner_helland(color_img, 4100)
+color_img = contrast_linear_global(color_img, 0.3)
 
 
 # Step 6: Gamma Correction

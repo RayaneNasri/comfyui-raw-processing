@@ -154,6 +154,7 @@
   * Ghiles :
     - Talked with Quentin Bammey about making a more intuitive editor for tone curve and started looking up how to do it.
   * Rayane :
+    - Start research about denoising deep learning algorithms
 
 ## Between 27/03/2026 and 03/04/2026
   * Amayas :
@@ -165,7 +166,7 @@
     - Found a repository that implements an editor for color manipulation.
     - Dove deeper into the code of this repository to understand how it works and how comfyui nodes are communicating with the javascript code of the editor.
   * Rayane :
-
+      Research about denoising deep learning algorithms
 ## Session 03/04/2026
   * All :
     - Meeting with Quentin Bammey (03/04/2026)
@@ -178,6 +179,7 @@
   * Ghiles :
     - Implemented a first version of a curve editor with polynomial interpolation. It is not really user-friendly yet, but it is a first step.
   * Rayane :
+      - Continue research about denoising deep learning algorithms
 
 ## Between 03/04/2026 and 10/04/2026
 
@@ -192,6 +194,7 @@
   * Ghiles :
     - Researched about lens correction especially vignetting. I found some papers about these topics and I will try to implement them in the next weeks.
   * Rayane :
+    - Start working on masking feature to process differently multiple parts of an image
 
 ## Session 10/04/2026
 
@@ -203,6 +206,7 @@
     - Talked with Quentin Bammey about the lens correction phase and he gave additional phases for it like chromatic aberration correction and geometric distortion correction. I will try to implement these different corrections in the next weeks.
     - Started on a first version of vignetting (but no node yet in ComfyUI).
   * Rayane :
+    - Discuss the masking feature with Quentin Bammey
 
 ## Between 10/04/2026 and 15/04/2026
 
@@ -215,6 +219,8 @@
     - Implemented geometric distortion correction
     - Made a node that aggregates the different lens corrections.
   * Rayane :
+    - Start implementation of the masking feature
+    - Working on the merge of `feature/noise-reduction` branch
 
 ## Session 15/04/2026
 
@@ -236,7 +242,6 @@
   * Ghiles :
     - Spent a bit of time looking what causes the pipepline to be slow and trying to optimize it.
     - I had some clues but didn't have time to try and implement them.
-  * Rayane :
 
 ## Session 21/04/2026
 
@@ -245,7 +250,6 @@
   * Charlotte :
   * Ghiles :
     - Mainly nothing worth mentioning because of the exams.
-  * Rayane :
 
 ## Between 21/04/2026 and 05/05/2026
 
@@ -259,6 +263,7 @@
   * Ghiles :
     - Continued improving the curve editor, mainly changing the interpolation method to  have a better control of the curve.
   * Rayane :
+    - Making denoising nodes more robust by implementing a better error handler 
 
 ## Session 05/05/2026
 
@@ -271,7 +276,9 @@
   * Ghiles :
     - Looked into bezier curves and started sketching a bezier curve editor, i will try to implement it in the next weeks.
   * Rayane :
-
+    - Continue work on denoising nodes
+    - Help Amayas optimizing code
+    
 ## Between 05/05/2026 and 13/05/2026
 
   * Amayas :

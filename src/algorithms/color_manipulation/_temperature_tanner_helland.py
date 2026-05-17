@@ -80,4 +80,4 @@ def temperature_tanner_helland(rgb_image : Tensor, temperature_K : float) -> Ten
     # multiply each pixel by the coeffs on a (H x W x 3) rgb_image
     output = rgb_image * coeffs
 
-    return output
+    return output.clamp(0.0,1.0)

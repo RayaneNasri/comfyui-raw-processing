@@ -22,11 +22,14 @@ from algorithms.color_manipulation._saturation_hsv import saturation_hsv
 from algorithms.color_manipulation._temperature_simple import temperature_simple
 from algorithms.color_manipulation._temperature_tanner_helland import temperature_tanner_helland
 from algorithms.color_manipulation._contrast_linear_global import contrast_linear_global
+from algorithms.color_manipulation._contrast_clahe import contrast_clahe_cv2
+from algorithms.color_manipulation._contrast_clahe import contrast_clahe_kornia
 
 # Input file
-raw_file = PATH + "r01cbb7fdt.NEF"
+raw_file = PATH + "r00c4a543t.NEF"
 output_dir = "./outputs"
-output_file = "temp-4100_contrast-linear-global-0-3.jpg"
+#output_file = "Cerisier.jpg"
+output_file = "Cerisier_contrast-clahe-cv2-clip-limit-2-grid-size-16-16.jpg"
 
 # Step 1: Read RAW
 print("Step 1: Reading RAW file...")
@@ -64,16 +67,18 @@ color_img = exp_img
 #color_img = apply_lut_grid_sample(color_img, lut)
 #color_img = saturation_hsv(color_img, 1.4)
 #color_img = temperature_simple(color_img, 10)
-color_img = temperature_tanner_helland(color_img, 4100)
-color_img = contrast_linear_global(color_img, 0.3)
+#color_img = temperature_tanner_helland(color_img, 4100)
+#color_img = contrast_linear_global(color_img, 0.3)
+color_img = contrast_clahe_cv2(color_img)
+#color_img = contrast_clahe_kornia(color_img)
 
 
 # Step 6: Gamma Correction
-print("Step 6: Gamma Correction...")
+print("Step 7: Gamma Correction...")
 gamma_img = gamma_correction(color_img, gamma=2.2, alpha=1.0)
 
 # Step 7: Export
-print("Step 7: Exporting to JPEG...")
+print("Step 8: Exporting to JPEG...")
 Path(output_dir).mkdir(exist_ok=True)
 export_jpeg(gamma_img, f"{output_dir}/{output_file}", quality=85)
 

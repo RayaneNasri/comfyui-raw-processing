@@ -117,19 +117,35 @@ function makeCurveEditor(initialPoints) {
     ctx.strokeRect(0, 0, W, H);
 
     const sorted = [...points].sort((a, b) => a[0] - b[0]);
-    const weights = buildPolynomialWeights(sorted);
 
-    // curve preview
+    // Courbe de Bézier cubique par morceaux (Catmull-Rom → Bézier)
     ctx.strokeStyle = "#e8a000";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    for (let px = 0; px <= W; px++) {
-      const x01 = px / W;
-      const y01 = Math.max(0, Math.min(1, previewY(sorted, weights, x01)));
-      const sy = (1 - y01) * H;
-      if (px === 0) ctx.moveTo(0, sy);
-      else ctx.lineTo(px, sy);
+
+    if (sorted.length >= 2) {
+      // Conversion Catmull-Rom en points de contrôle Bézier cubique
+      // La courbe passe par tous les points comme Lagrange, mais avec des tangentes lisses
+      const pts = sorted.map(([x, y]) => ({ x: x * W, y: (1 - y) * H }));
+
+      ctx.moveTo(pts[0].x, pts[0].y);
+
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[Math.max(i - 1, 0)];
+        const p1 = pts[i];
+        const p2 = pts[i + 1];
+        const p3 = pts[Math.min(i + 2, pts.length - 1)];
+
+        // Tangentes Catmull-Rom converties en handles Bézier (facteur 1/6)
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+      }
     }
+
     ctx.stroke();
 
     // Control points

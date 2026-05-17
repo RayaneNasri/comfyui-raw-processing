@@ -50,6 +50,22 @@ def _polynomial_lut(xs: np.ndarray, ys: np.ndarray, lut_size: int) -> np.ndarray
     return np.clip(lut_y, 0.0, 1.0).astype(np.float32)
 
 
+def _bezier_lut(xs: np.ndarray, ys: np.ndarray, lut_size: int) -> np.ndarray:
+    """Bezier interpolation via De Casteljau's algorithm"""
+    n = len(xs)
+    if n < 2:
+        raise ValueError("Bezier interpolation needs at least 2 control points")
+
+    lut_x = np.linspace(xs[0], xs[-1], lut_size)
+    t = (lut_x - xs[0]) / max(xs[-1] - xs[0], 1e-10)
+    points = np.stack([xs, ys], axis=1)
+
+    for r in range(1, n):
+        points[: n - r] = (1 - t[:, None]) * points[: n - r] + t[:, None] * points[1 : n - r + 1]
+
+    return np.clip(points[0, 1], 0.0, 1.0).astype(np.float32)
+
+
 def build_lut(spec: CurveSpec, lut_size: int = 256) -> np.ndarray:
     """Build a float32 LUT of length lut_size from a CurveSpec."""
     if len(spec.points) < 2:
@@ -62,7 +78,7 @@ def build_lut(spec: CurveSpec, lut_size: int = 256) -> np.ndarray:
     xs = np.clip([(p[0] - spec.domain_min) / dom_span for p in pts], 0.0, 1.0)
     ys = np.clip([(p[1] - spec.range_min) / rng_span for p in pts], 0.0, 1.0)
 
-    return _polynomial_lut(
+    return _bezier_lut(
         np.array(xs, dtype=np.float64),
         np.array(ys, dtype=np.float64),
         lut_size,

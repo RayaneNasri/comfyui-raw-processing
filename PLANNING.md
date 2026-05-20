@@ -8,28 +8,32 @@
 
 The delegate assignee's role is to be in charge of any task if the current assignee is no longer available for it.
 
-Nouveau Planning
+New Schedule
 
-| Task to implement | Assignee | Delegate | V0 Prévue | V0 Réalisée | V1 Prévue | V1 Réalisée | V2 Prévue | V2 Réalisée |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **Reading Raw Image** | Amayas | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Black Light Subtraction, linearization** | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Lens and Optical Correction** | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Demosaicing** | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Noise Reduction** | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
-| **White Balancing & Color Space** | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Hue/Sat Map** | Amayas | Ghiles | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Exposure Curve** | Amayas | Ghiles | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Color Manipulation** | Charlotte | Rayane | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Tone Curve Application** | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Final Color Space Conversion** | Charlotte | Rayane | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Gamma Curve Application** | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Deblurring** | Charlotte | Rayane | N/A | N/A | N/A | N/A | N/A | N/A |
-| **JPEG Compression** |  | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Extensions** | | | N/A | N/A | N/A | N/A | N/A | N/A |
+| Task to implement | Subtask| Assignee | Delegate | V0 Prévue | V0 Réalisée | V1 Prévue | V1 Réalisée | V2 Prévue | V2 Réalisée |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **Reading Raw Image** | | Amayas | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Black Light Subtraction, linearization** | | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Lens and Optical Correction** | | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Demosaicing** | | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Noise Reduction** | | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
+| **White Balancing & Color Space** | | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Hue/Sat Map** | | Amayas | Ghiles | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Exposure Curve** | | Amayas | Ghiles | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Color Manipulation** | | Charlotte | Rayane | | | | | | |
+| | **Temperature** | Charlotte | Rayane | 05/03/2026 | 01/03/2026 | 02/04/2026 | 02/03/2026 | N/A | N/A |
+| | **Apply LUT** | Charlotte | Rayane | 05/03/2026 | 07/03/2026 (with bugs) | 02/04/2026 | 14/04/2026 | N/A | N/A |
+| | **Saturation hsv** | Charlotte | Rayane | 02/04/2026 | 31/03/2026 | N/A | N/A | N/A | N/A |
+| | **Contrast** | Charlotte | Rayane | 26/06/2026 | 17/05/2026 | N/A | N/A | N/A | N/A |
+| **Tone Curve Application** | | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Final Color Space Conversion** | | Charlotte | Rayane | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Gamma Curve Application** | | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Deblurring** | | Charlotte | Rayane | 19/03/2026 | 29/03/2026 | 21/06/2026 | N/A | N/A | N/A |
+| **JPEG Compression** | | | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
+| **Extensions** | | | | N/A | N/A | N/A | N/A | N/A | N/A |
 
 
-Ancien Planning
+Ancient Schedule
 
 | Task to implement | Assignee | Delegate | V0 Prévue | V0 Réalisée | V1 Prévue | V1 Réalisée | V2 Prévue | V2 Réalisée |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

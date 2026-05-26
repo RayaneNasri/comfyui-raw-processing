@@ -78,6 +78,10 @@ function makeCurveEditor(initialPoints) {
 
   let points = initialPoints.map((p) => [...p]);
   let dragging = null; // index of point being dragged
+  
+  let histogramData = null;
+  let histogramMode = "luma";
+  let isLogScale = true;
 
   function render() {
     const ctx = canvas.getContext("2d");
@@ -100,6 +104,44 @@ function makeCurveEditor(initialPoints) {
       ctx.moveTo(0, (i / 4) * H);
       ctx.lineTo(W, (i / 4) * H);
       ctx.stroke();
+    }
+
+    if (histogramData && histogramData.length > 0) {
+      const bins = histogramData.length;
+      const binWidth = W / bins;
+
+      // Trouver la valeur maximale pour normaliser la hauteur du graphique
+      let maxVal = 0;
+      if (isLogScale) {
+        maxVal = Math.max(...histogramData.map(v => Math.log1p(v)));
+      } else {
+        maxVal = Math.max(...histogramData);
+      }
+
+      if (maxVal > 0) {
+        ctx.save();
+        // Optionnel : vous pouvez choisir une couleur subtile (ex: gris bleuté ou blanc transparent)
+        ctx.fillStyle = "rgba(232, 160, 0, 0.15)"; // Teinte orangée transparente assortie à vos points
+        
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+
+        for (let i = 0; i < bins; i++) {
+          const val = histogramData[i];
+          const currentVal = isLogScale ? Math.log1p(val) : val;
+          const barHeight = (currentVal / maxVal) * (H * 0.85); // 85% de la hauteur max pour laisser respirer le haut
+          const x = i * binWidth;
+          const y = H - barHeight;
+
+          ctx.lineTo(x, y);
+          ctx.lineTo(x + binWidth, y);
+        }
+
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
     // identity reference
@@ -277,7 +319,11 @@ function makeCurveEditor(initialPoints) {
       } catch {
         points = DEFAULT_POINTS.map((p) => [...p]);
       }
-      render();
+    },
+    setHistogram(data, logScale = true) {
+        histogramData = data;
+        isLogScale = logScale;
+        render();
     },
   };
 
@@ -303,6 +349,7 @@ app.registerExtension({
           serialize: true,
         });
 
+        widget.editor = editor;
         editor.onChange = () => {
           widget.value = editor.getValue();
         };
@@ -318,4 +365,16 @@ app.registerExtension({
       },
     };
   },
+});
+
+const comfy_api = app.api || app.server;
+comfy_api.addEventListener("artishow-update-histogram", (event) => {
+  const { node_id, hist } = event.detail;
+  const node = app.graph.getNodeById(node_id);
+  if (!node) return;
+
+  const widget = node.widgets?.find(w => w.type === "CURVE");
+  if (widget && widget.editor) {
+    widget.editor.setHistogram(hist);
+  }
 });

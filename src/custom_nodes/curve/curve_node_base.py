@@ -5,8 +5,9 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
+import server # type: ignore
 
-from .curve_engine import apply_lut_torch, build_lut
+from .curve_engine import build_lut
 from .curve_presets import load_preset, save_preset
 from .curve_spec import CurveSpec
 
@@ -48,6 +49,9 @@ class CurveNodeBase(ABC):
                 "preset_name": ("STRING", {"default": ""}),
                 "save_preset_as": ("STRING", {"default": ""}),
             },
+            "hidden": {
+                "unique_id": "UNIQUE_ID",
+            },
         }
 
     @classmethod
@@ -66,7 +70,6 @@ class CurveNodeBase(ABC):
         """Apply the LUT to the (H, W, C) image tensor."""
 
 
-    # Shared logic
     def _parse_spec(self, curve_points: str, **kwargs) -> CurveSpec:
         try:
             data = json.loads(curve_points) if curve_points.strip() else []
@@ -80,16 +83,48 @@ class CurveNodeBase(ABC):
             return CurveSpec(points=[tuple(p) for p in data])
 
         return CurveSpec.from_json(data)
+    
+    @abstractmethod
+    def _compute_histogram_data(self, image_tensor: torch.Tensor) -> list:
+        """Calcule les données de l'histogramme. 
+        Par défaut : calcule la luminance globale (Rec. 709).
+        Peut être réécrite dans les sous-classes.
+        """
+    
+    def _send_histogram_to_ui(self, image_tensor: torch.Tensor, node_id: str):
+        """Calcule l'histogramme de luminance et l'envoie au Front-End via WebSockets."""
+        try:
+            img_np = image_tensor.cpu().numpy()
 
-    def execute(
-        self,
-        image: torch.Tensor,
-        curve_points: str,
-        lut_size: int,
-        preset_name: str = "",
-        save_preset_as: str = "",
-        **kwargs,
-    ) -> tuple:
+            if img_np.ndim == 4:
+                img_np = img_np[0]
+
+            if img_np.shape[-1] >= 3:
+                luma = (0.2126 * img_np[..., 0] + 
+                        0.7152 * img_np[..., 1] + 
+                        0.0722 * img_np[..., 2])
+            else:
+                luma = img_np[..., 0]
+
+            counts, _ = np.histogram(luma, bins=256, range=(0.0, 1.0))
+            hist_list = counts.tolist()
+
+            # Envoi via l'API WebSocket de ComfyUI
+            # self.id est fourni dynamiquement par l'exécuteur de prompt de ComfyUI
+
+            server.PromptServer.instance.send_sync(
+                "artishow-update-histogram", 
+                {"node_id": node_id, "hist": hist_list}
+            )
+        except Exception as e:
+            print(f"Échec du calcul de l'histogramme: {e}")
+
+    def execute(self, image: torch.Tensor, lut_size: int, **kwargs) -> tuple:
+        node_id = kwargs.get("unique_id")
+        curve_points = kwargs.get("curve_points", "[]")
+        preset_name = kwargs.get("preset_name", "")
+        save_preset_as = kwargs.get("save_preset_as", "")
+
         if preset_name.strip():
             spec = load_preset(preset_name.strip())
         else:
@@ -97,6 +132,9 @@ class CurveNodeBase(ABC):
 
         if save_preset_as.strip():
             save_preset(spec, save_preset_as.strip())
+
+        if node_id:
+            self._send_histogram_to_ui(image, node_id)
 
         lut = build_lut(spec, lut_size)
         img = image.squeeze(0)

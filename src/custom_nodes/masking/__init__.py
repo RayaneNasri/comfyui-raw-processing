@@ -1,6 +1,5 @@
-import os
-from .mask_node import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
- 
-WEB_DIRECTORY = os.path.join(os.path.dirname(__file__), "js")
- 
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
+
+
+WEB_DIRECTORY = ".js/"
+
+__all__ = ["WEB_DIRECTORY"]

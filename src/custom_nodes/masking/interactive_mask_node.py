@@ -278,7 +278,7 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     label_map = slic(
         image_rgb, 
         n_segments=400, 
-        compactness=10.0, 
+        compactness=5.0, 
         start_label=0,
         enforce_connectivity=True
     )
@@ -392,16 +392,27 @@ class InteractiveSegmentationMask:
                     ["SLIC", "SAM"],
                     {"default": "SLIC"},
                 ),
-            },
-            "hidden": {
                 # JSON string written by JS, e.g.:
                 # '[{"x": 120, "y": 45}, {"x": 300, "y": 200}]'
                 # An empty string or "[]" means nothing is selected.
                 "selected_coords": ("STRING", {"default": "[]"}),
+            },
+            "hidden": {
                 # Unique node identifier injected by ComfyUI automatically.
                 "unique_id": "UNIQUE_ID",
             },
         }
+    
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """
+        Indique à ComfyUI si le nœud a changé. 
+        En renvoyant la chaîne JSON des coordonnées, ComfyUI va comparer 
+        cette chaîne d'une exécution à l'autre. Le moindre clic ou dé-sélection
+        invalidera le cache et forcera la réexécution du nœud.
+        """
+        selected_coords = kwargs.get("selected_coords", "")
+        return selected_coords
 
     # ------------------------------------------------------------------
     # Main entry-point called by the ComfyUI execution engine
@@ -564,12 +575,25 @@ class InteractiveSegmentationMask:
         Each pixel's colour encodes the segment ID — the JS reads this
         off-screen to resolve hover/click events without any computation.
         """
+
+        H, W = label_map.shape
+        MAX_PREVIEW_SIZE = 512
+        
+        # Calcul du ratio de redimensionnement
+        scale = min(MAX_PREVIEW_SIZE / W, MAX_PREVIEW_SIZE / H, 1.0)
+        new_W, new_H = int(W * scale), int(H * scale)
+
         # ── Generate overlay ──────────────────────────────────────────────
         overlay_img = self._draw_boundary_overlay(image_np, label_map)
+        if scale < 1.0:
+            overlay_img = overlay_img.resize((new_W, new_H), Image.Resampling.LANCZOS)
         overlay_b64 = _pil_to_base64_png(overlay_img)
 
         # ── Generate ID map ──────────────────────────────────────────────
         id_map_img = self._draw_id_map(label_map)
+        if scale < 1.0:
+            # CRITIQUE : NEAREST pour ne pas altérer les couleurs uniques des segments
+            id_map_img = id_map_img.resize((new_W, new_H), Image.Resampling.NEAREST)
         id_map_b64 = _pil_to_base64_png(id_map_img)
 
         # ── Broadcast via WebSocket ──────────────────────────────────────

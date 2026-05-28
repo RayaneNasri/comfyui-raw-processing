@@ -43,20 +43,33 @@ const HEADER_HEIGHT = 30;
 /** Pixels of padding below the image preview. */
 const FOOTER_PADDING = 10;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Colour constants as RGBA components (used by rendering functions)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Hover colour: semi-transparent white. */
+const HOVER_COLOR = { r: 255, g: 255, b: 255, a: 107 }; // 0.42 * 255 ≈ 107
+
+/** Selection fill colour: bright lime green. */
+const SELECTED_COLOR = { r: 50, g: 255, b: 0, a: 89 };  // 0.35 * 255 ≈ 89
+
+/** Selection border colour: bright flashy lime green. */
+const SELECTED_BORDER_COLOR = { r: 50, g: 255, b: 0, a: 242 }; // 0.95 * 255 ≈ 242
+
 /** Hover highlight: semi-transparent white fill over the hovered segment. */
-const HOVER_FILL = "rgba(255, 255, 255, 0.42)";
+const HOVER_FILL = `rgba(${HOVER_COLOR.r}, ${HOVER_COLOR.g}, ${HOVER_COLOR.b}, ${HOVER_COLOR.a})`;
 
-/** Selection fill: cyan-tinted highlight for selected segments. */
-const SELECTED_FILL = "rgba(0, 210, 255, 0.38)";
+/** Selection fill: bright lime green highlight for selected segments. */
+const SELECTED_FILL = `rgba(${SELECTED_COLOR.r}, ${SELECTED_COLOR.g}, ${SELECTED_COLOR.b}, ${SELECTED_COLOR.a})`;
 
-/** Selection border drawn over selected segments. */
-const SELECTED_STROKE = "rgba(0, 210, 255, 0.90)";
+/** Selection border drawn over selected segments — bright flashy green. */
+const SELECTED_STROKE = `rgba(${SELECTED_BORDER_COLOR.r}, ${SELECTED_BORDER_COLOR.g}, ${SELECTED_BORDER_COLOR.b}, ${SELECTED_BORDER_COLOR.a})`;
 
-/** Stroke width in canvas pixels for selection borders. */
+/** Stroke width in canvas pixels for selection borders — thicker for visibility. */
 const SELECTION_STROKE_WIDTH = 2;
 
 /** Throttle interval for mousemove pixel reads (ms). Set to 0 for max fps. */
-const MOUSEMOVE_THROTTLE_MS = 16; // ~60 fps
+const MOUSEMOVE_THROTTLE_MS = 0; // ~60 fps
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Colour parsing helpers
@@ -214,6 +227,8 @@ async function _applySegmentData(node, nodeId, data) {
     }
 
     // ── Load overlay image ─────────────────────────────────────────────
+    s.originalW = data.width;
+    s.originalH = data.height;
     await _loadOverlayImage(node, data.overlay_b64);
 
     // ── Load ID map ────────────────────────────────────────────────────
@@ -257,6 +272,10 @@ function _initNodeState(node) {
     // Current dimensions of the preview inside the node, in canvas pixels.
     previewX: 0,
     previewY: 0,
+
+    originalW: 0,
+    originalH: 0,
+
     previewW: PREVIEW_WIDTH,
     previewH: 200,
 
@@ -281,6 +300,15 @@ function _initNodeState(node) {
   node.__seg.coordsWidget = node.widgets?.find(
     (w) => w.name === "selected_coords"
   ) ?? null;
+
+  // AJOUT : Cacher visuellement le widget pour ne pas casser le design du nœud
+  if (node.__seg.coordsWidget) {
+    node.__seg.coordsWidget.type = "hidden";
+    // Force la hauteur à 0 pour ne pas laisser un espace vide
+    node.__seg.coordsWidget.computeSize = () => [0, 0]; 
+  } else {
+    console.warn("[InteractiveSeg] Le widget 'selected_coords' est introuvable. Vérifiez le Python.");
+  }
 
   // Set a reasonable initial size so the node is visible before data loads.
   _resizeNode(node, PREVIEW_WIDTH, 200);
@@ -501,22 +529,22 @@ function _drawSegmentHighlights(ctx, s, mode) {
   const src = idImageData.data;   // Uint8ClampedArray [R,G,B,A, R,G,B,A, …]
   const dst = tint.data;
 
-  // Determine fill colour.
-  let fillR, fillG, fillB, fillA;
+  // Determine fill colour using the defined constants.
+  let fillColor;
   if (mode === "hover") {
-    fillR = 255; fillG = 255; fillB = 255; fillA = 110; // ~43% white
+    fillColor = HOVER_COLOR;
   } else {
-    fillR = 0; fillG = 210; fillB = 255; fillA = 97;   // ~38% cyan
+    fillColor = SELECTED_COLOR;
   }
 
   for (let i = 0; i < src.length; i += 4) {
     const key = rgbToKey(src[i], src[i + 1], src[i + 2]);
     const segId = s.colourToSegId.get(key);
     if (segId !== undefined && targetIds.has(segId)) {
-      dst[i]     = fillR;
-      dst[i + 1] = fillG;
-      dst[i + 2] = fillB;
-      dst[i + 3] = fillA;
+      dst[i]     = fillColor.r;
+      dst[i + 1] = fillColor.g;
+      dst[i + 2] = fillColor.b;
+      dst[i + 3] = fillColor.a;
     }
   }
 
@@ -542,6 +570,7 @@ function _drawSegmentHighlights(ctx, s, mode) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} s  node.__seg state bag.
  */
+
 function _drawSelectionBorders(ctx, s) {
   const { idImageData, idCanvas, selectedSegments, colourToSegId,
           previewX, previewY, previewW, previewH } = s;
@@ -551,13 +580,10 @@ function _drawSelectionBorders(ctx, s) {
   const srcH = idCanvas.height;
   const data = idImageData.data;
 
-  // Scale factors from ID-map pixels to preview canvas pixels.
   const scaleX = previewW / srcW;
   const scaleY = previewH / srcH;
-
   const selectedIds = new Set(selectedSegments.keys());
 
-  // Helper: get segment ID at pixel (x, y) in the ID map.
   function segAtPixel(x, y) {
     if (x < 0 || y < 0 || x >= srcW || y >= srcH) return -1;
     const i = (y * srcW + x) * 4;
@@ -565,13 +591,12 @@ function _drawSelectionBorders(ctx, s) {
     return colourToSegId.get(key) ?? -1;
   }
 
-  // Collect boundary pixels.
-  const borderPixels = []; // [{x, y}]
+  const borderPixels = [];
   for (let y = 0; y < srcH; y++) {
     for (let x = 0; x < srcW; x++) {
       const id = segAtPixel(x, y);
       if (!selectedIds.has(id)) continue;
-      // Check 4-connected neighbours.
+      
       if (
         segAtPixel(x - 1, y) !== id ||
         segAtPixel(x + 1, y) !== id ||
@@ -583,15 +608,17 @@ function _drawSelectionBorders(ctx, s) {
     }
   }
 
-  // Render borders.
   ctx.save();
   ctx.fillStyle = SELECTED_STROKE;
+  const halfStroke = SELECTION_STROKE_WIDTH / 2;
+  
   for (const { x, y } of borderPixels) {
+    // Rend simplement un rectangle propre proportionnel à l'épaisseur demandée
     ctx.fillRect(
-      previewX + x * scaleX - 0.5,
-      previewY + y * scaleY - 0.5,
-      Math.max(1, scaleX) + 1,
-      Math.max(1, scaleY) + 1
+      previewX + (x * scaleX) - halfStroke,
+      previewY + (y * scaleY) - halfStroke,
+      SELECTION_STROKE_WIDTH,
+      SELECTION_STROKE_WIDTH
     );
   }
   ctx.restore();
@@ -658,8 +685,8 @@ function _handleMouseDown(node, localPos) {
     console.debug(`[InteractiveSeg] Deselected segment ${segId}.`);
   } else {
     // Store the clicked IMAGE-space coordinate as the representative pixel.
-    const imgX = _previewToImageX(s, lx);
-    const imgY = _previewToImageY(s, ly);
+    const imgX = _previewToOriginalImageX(s, lx);
+    const imgY = _previewToOriginalImageY(s, ly);
     s.selectedSegments.set(segId, { x: imgX, y: imgY });
     console.debug(`[InteractiveSeg] Selected segment ${segId} @ (${imgX}, ${imgY}).`);
   }
@@ -703,8 +730,8 @@ function _isInsidePreview(s, lx, ly) {
 function _segmentIdAtLocalPos(s, lx, ly) {
   if (!s.idImageData || !s.idCanvas) return null;
 
-  const imgX = _previewToImageX(s, lx);
-  const imgY = _previewToImageY(s, ly);
+  const imgX = _previewToIdCanvasX(s, lx);
+  const imgY = _previewToIdCanvasY(s, ly);
   const srcW = s.idCanvas.width;
   const srcH = s.idCanvas.height;
 
@@ -768,7 +795,21 @@ function _writeCoordWidget(node) {
     coords.push({ x, y });
   }
 
-  widget.value = JSON.stringify(coords);
+  const newValue = JSON.stringify(coords);
+
+  // ON VÉRIFIE SI LA VALEUR A RÉELLEMENT CHANGÉ
+  if (widget.value !== newValue) {
+    widget.value = newValue;
+
+    // CRITIQUE : Déclenche le callback pour informer ComfyUI 
+    // que le graphe est "sale" (dirty) et doit être sérialisé à nouveau
+    if (widget.callback) {
+      widget.callback(newValue);
+    }
+    
+    // Optionnel mais recommandé : force ComfyUI à savoir que le nœud a changé visuellement
+    node.setDirtyCanvas(true, true);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -800,4 +841,26 @@ function _resizeNode(node, imgW, imgH) {
 
   node.size = [totalW, totalH];
   node.setDirtyCanvas?.(true, true);
+}
+
+/** Conversion pour interagir avec le canvas d'ID sous-échantillonné (hover) */
+function _previewToIdCanvasX(s, lx) {
+  const ratio = s.idCanvas ? s.idCanvas.width / s.previewW : 1;
+  return Math.floor((lx - s.previewX) * ratio);
+}
+
+function _previewToIdCanvasY(s, ly) {
+  const ratio = s.idCanvas ? s.idCanvas.height / s.previewH : 1;
+  return Math.floor((ly - s.previewY) * ratio);
+}
+
+/** Conversion pour envoyer les coordonnées absolues au backend (clic) */
+function _previewToOriginalImageX(s, lx) {
+  const ratio = s.originalW ? s.originalW / s.previewW : 1;
+  return Math.floor((lx - s.previewX) * ratio);
+}
+
+function _previewToOriginalImageY(s, ly) {
+  const ratio = s.originalH ? s.originalH / s.previewH : 1;
+  return Math.floor((ly - s.previewY) * ratio);
 }

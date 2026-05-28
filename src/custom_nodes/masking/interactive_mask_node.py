@@ -51,6 +51,10 @@ from PIL import Image, ImageDraw
 
 from skimage.segmentation import slic
 
+import os
+import urllib.request
+from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
+
 # ComfyUI server import — guarded so the module can be imported in isolation
 # (e.g. during unit tests) without a running ComfyUI instance.
 try:
@@ -290,48 +294,79 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
 
 def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     """
-    Run Segment Anything Model (SAM) on *image_rgb* and return a label map.
-
-    Parameters
-    ----------
-    image_rgb : np.ndarray
-        uint8 array shaped [H, W, 3].
-    **kwargs
-        Additional hyper-parameters (e.g. points_per_side, pred_iou_thresh,
-        sam_checkpoint path).
-
-    Returns
-    -------
-    label_map : np.ndarray
-        int32 array shaped [H, W].  Background pixels should be 0.
-
-    ─────────────────────────────────────────────────────────────────────────
-    INJECT YOUR SAM CODE HERE
-    ─────────────────────────────────────────────────────────────────────────
-    Example using the official SAM library:
-
-        from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
-        sam = sam_model_registry["vit_h"](checkpoint=kwargs["checkpoint"])
-        sam.to(device=kwargs.get("device", "cuda"))
-        generator = SamAutomaticMaskGenerator(sam)
-        masks = generator.generate(image_rgb)
-        # masks is a list of dicts; each dict has a boolean "segmentation" array.
-        H, W = image_rgb.shape[:2]
-        label_map = np.zeros((H, W), dtype=np.int32)
-        for idx, mask_dict in enumerate(masks, start=1):
-            label_map[mask_dict["segmentation"]] = idx
-        return label_map
-
-    ─────────────────────────────────────────────────────────────────────────
+    Exécute le vrai modèle Segment Anything (SAM) de Meta sur *image_rgb* et renvoie une carte de labels (label map).
     """
-    log.info("SAM segmentation stub called — returning placeholder radial segments.")
+    log.info("Initialisation de la segmentation SAM (Meta)...")
     H, W = image_rgb.shape[:2]
-    # Placeholder: 16 radial "pie slice" segments centred on the image.
-    cy, cx = H / 2, W / 2
-    ys, xs = np.mgrid[0:H, 0:W]
-    angles = np.arctan2(ys - cy, xs - cx)  # [-π, π]
-    n_slices = 16
-    label_map = ((angles + np.pi) / (2 * np.pi) * n_slices).astype(np.int32)
+    
+    # 1. Gestion automatique du checkpoint (Téléchargement si nécessaire)
+    # On utilise le modèle ViT-B (base) qui est un excellent compromis vitesse/mémoire pour une Tesla T4
+    model_type = "vit_b"
+    checkpoint_name = "sam_vit_b_01ec64.pth"
+    checkpoint_url = f"https://dl.fbaipublicfiles.com/segment_anything/{checkpoint_name}"
+    
+    # Dossier de stockage ComfyUI standard pour les checkpoints SAM
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    checkpoint_dir = os.path.join(base_dir, "models")
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    checkpoint_path = os.path.join(checkpoint_dir, checkpoint_name)
+    
+    if not os.path.exists(checkpoint_path):
+        log.info(f"Téléchargement du checkpoint SAM ({checkpoint_name}) dans {checkpoint_path}...")
+        try:
+            urllib.request.urlretrieve(checkpoint_url, checkpoint_path)
+            log.info("Téléchargement terminé avec succès.")
+        except Exception as e:
+            log.error(f"Échec du téléchargement du checkpoint : {e}")
+            raise e
+
+    # 2. Configuration du périphérique (Device)
+    # Utilise CUDA si disponible (votre Tesla T4), sinon bascule sur le CPU
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    log.info(f"SAM s'exécute sur le périphérique : {device}")
+
+    # 3. Chargement du modèle SAM
+    try:
+        sam = sam_model_registry[model_type](checkpoint=checkpoint_path)
+        sam.to(device=device)
+        
+        # Récupération des hyperparamètres depuis kwargs ou valeurs par défaut optimales
+        points_per_side = kwargs.get("points_per_side", 32) # Augmenter pour plus de petits segments
+        pred_iou_thresh = kwargs.get("pred_iou_thresh", 0.88)
+        stability_score_thresh = kwargs.get("stability_score_thresh", 0.95)
+        
+        generator = SamAutomaticMaskGenerator(
+            model=sam,
+            points_per_side=points_per_side,
+            pred_iou_thresh=pred_iou_thresh,
+            stability_score_thresh=stability_score_thresh,
+            crop_n_layers=1,
+            crop_n_points_downscale_factor=2,
+            min_mask_region_area=100 # Filtre les résidus de bruit de moins de 100 pixels
+        )
+    except Exception as e:
+        log.error(f"Erreur lors de l'initialisation de SAM : {e}")
+        raise e
+
+    # 4. Génération des masques
+    log.info("Calcul des masques par SAM en cours (cela peut prendre quelques secondes)...")
+    masks = generator.generate(image_rgb)
+    log.info(f"SAM a détecté {len(masks)} segments potentiels.")
+
+    # 5. Construction de la carte de labels (Label Map)
+    # Astuce cruciale : On trie les masques par zone ('area') décroissante. 
+    # De cette façon, les grands masques (fonds, murs) sont dessinés en premier, 
+    # et les petits objets (détails au premier plan) sont dessinés par-dessus,
+    # évitant qu'ils soient écrasés ou absorbés.
+    masks = sorted(masks, key=lambda x: x['area'], reverse=True)
+    
+    label_map = np.zeros((H, W), dtype=np.int32)
+    
+    for idx, mask_dict in enumerate(masks, start=1):
+        boolean_mask = mask_dict["segmentation"]
+        label_map[boolean_mask] = idx
+
+    log.info("Carte de labels SAM générée avec succès.")
     return label_map
 
 

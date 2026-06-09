@@ -15,7 +15,6 @@ import torch
 
 pi=np.pi
 atan2=math.atan2
-#np.int=int
 sin=np.sin
 cos=np.cos
 fft=np.fft.fft
@@ -31,7 +30,6 @@ atan2=math.atan2
 tan=np.tan
 fftshift=np.fft.fftshift
 
-#np.int=int
 def RGBtoYCrCb(im,ty='8bit'):
     assert len(im.shape)==3 and im.shape[2]==3, 'image dans un mauvais format'
     if ty=='8bit':
@@ -355,7 +353,7 @@ def liste_thetas_depuis_spectre(N):
         tmp=np.concatenate((np.arange(0,N//2+1),np.arange(-N//2+1,0)))
     else:
         tmp=np.concatenate((np.arange(0,(N+1)//2),np.arange(-(N-1)//2,0)))
-    tmp=tmp.astype(np.int)
+    tmp=tmp.astype(int) #np.int
     X,Y=np.meshgrid(tmp,tmp) # carte des fréquences
     pi=np.pi
     Xs=X.reshape(-1)
@@ -412,11 +410,11 @@ def projections_rapide_shear(tab,thetas,demitaille):
     out=np.zeros((L,T))
     outs1=out.reshape(-1)
     vals=np.zeros(L)
-    Ls=(T*np.arange(0,L)).astype(np.int)
+    Ls=(T*np.arange(0,L)).astype(int) #np.int
     for k in range(M):
         print(k/M*100,'%',end='\r')
         for l in range(N):
-            pos=np.round(ccs*(l-lc)+css*(k-kc)).astype(np.int)+poscentre
+            pos=np.round(ccs*(l-lc)+css*(k-kc)).astype(int)+poscentre #np.int
             if max(pos)>T:
                 print('offenders',k,l)
             vals[:]=tab[k,l]
@@ -457,11 +455,11 @@ def projections_rapide_gradient_shear(DDx,DDy,DDxy,DDyx,thetas,demitaille):
     out=np.zeros((L,T))
     outs1=out.reshape(-1)
     vals=np.zeros(L)
-    Ls=(T*np.arange(0,L)).astype(np.int)
+    Ls=(T*np.arange(0,L)).astype(int) #np.int
     for k in range(M):
         print(k/M*100,'%',end='\r')
         for l in range(N):
-            pos=np.round(ccs*(l-lc)+css*(k-kc)).astype(np.int)+poscentre
+            pos=np.round(ccs*(l-lc)+css*(k-kc)).astype(int)+poscentre #np.int
             if max(pos)>T-1:
                 print('offenders',k,l)
             #print("debug", k,l,DDx.shape)
@@ -613,9 +611,9 @@ def calcul_indices_passage_corr_power_spectrum_kernel(N,sc,thetas):
         tmp=np.concatenate((np.arange(0,(N+1)//2),np.arange(-(N-1)//2,0)))
     [XX,YY]=np.meshgrid(tmp/N,tmp/N) # les frequences
     #angle=np.empty(XX.shape,dtype=np.float32)
-    numligne=np.empty(XX.shape,dtype=np.int)
-    posdansligne=np.empty(XX.shape,dtype=np.int)
-    indexs=np.zeros(N*N,dtype=np.int)
+    numligne=np.empty(XX.shape,dtype=int) #np.int
+    posdansligne=np.empty(XX.shape,dtype=int) #np.int
+    indexs=np.zeros(N*N,dtype=int) #np.int
     for k in range(XX.shape[0]):
         for l in range(XX.shape[1]):
             angle=entre_Mpi2_pi2( atan2(YY[k,l],XX[k,l]))
@@ -781,15 +779,15 @@ def centrer_le_noyau(K):
     return Knew
 
 def deblurring_goldstein_fattal(RGB_image : torch.Tensor):
-    on_gpu = RGB_image.is_cuda()
+    on_gpu = RGB_image.is_cuda
 
     RGB_image *= 255
     if on_gpu:
-        RGB_image.cpu().numpy()
+        RGB_image_numpy = RGB_image.cpu().numpy()
     else:
-        RGB_image.numpy()
+        RGB_image_numpy = RGB_image.numpy()
 
-    image, Cr, Cb = RGBtoYCrCb(RGB_image)
+    image, Cr, Cb = RGBtoYCrCb(RGB_image_numpy)
     kernel, allkernels = estime_noyau(image)
     kernel_centered = centrer_le_noyau(kernel)
     image_deconv = TVdeconv(image, kernel_centered, 1000/255)

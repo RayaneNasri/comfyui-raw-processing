@@ -300,3 +300,39 @@
     - implementing contrast_linear_global and testing it with several contrast_factors
   * Ghiles :
   * Rayane :
+
+## Between 13/05/2026 and 27/05/2026
+
+  * All :
+    - Meeting with Quentin Bammey (22/05/2026)
+  * Amayas :
+  * Charlotte :
+    - Implementation of contrast_clahe (with kornia and with cv2), but the result does not look good on RGB images (it is initially designed for grayscale images)...
+    - Preparation of the presentation for the audit P2P
+  * Ghiles :
+  * Rayane :
+
+## Session 27/05/2026
+
+  * All :
+    - Audit P2P
+
+## Between 27/05/2026 and 10/06/2026
+
+  * All :
+    - Meeting with Quentin Bammey (29/05/2026)
+  * Amayas :
+  * Charlotte :
+    - Deblurring : corrected some errors on the main function of the Goldstein-Fattal algorithm, and tested it on an image
+  * Ghiles :
+  * Rayane :
+
+## Session 10/06/2026
+
+  * Amayas :
+    - Helped Charlotte for the memory check in color manipulation algorithms
+    - Poster
+  * Charlotte :
+    - Memory check in color manipulation algorithms with Amayas
+  * Ghiles :
+  * Rayane :

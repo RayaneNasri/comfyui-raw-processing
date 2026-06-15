@@ -17,7 +17,9 @@ class DeblurringGoldsteinFattalNode:
     RETURN_NAMES = ("RGB_image",)
 
     def process(self, RGB_image):
-        return deblurring_goldstein_fattal(RGB_image)
+        RGB_image = RGB_image.squeeze(0)
+        res = deblurring_goldstein_fattal(RGB_image)
+        return (res.unsqueeze(0),)
 
 
 NODE_CLASS_MAPPINGS = {

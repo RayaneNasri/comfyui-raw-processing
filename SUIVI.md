@@ -336,3 +336,12 @@
     - Memory check in color manipulation algorithms with Amayas
   * Ghiles :
   * Rayane :
+
+## Session 15/06/2026
+
+  * Amayas :
+  * Charlotte :
+    - Implemented read_image
+    - Implemented read_image_node and deblurring_goldstein_fattal_node for ComfyUI and tested it
+  * Ghiles :
+  * Rayane :

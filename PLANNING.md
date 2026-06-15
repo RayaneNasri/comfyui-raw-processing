@@ -26,9 +26,8 @@ New Schedule
 | | **Saturation hsv** | Charlotte | Rayane | 02/04/2026 | 31/03/2026 | N/A | N/A | N/A | N/A |
 | | **Contrast** | Charlotte | Rayane | 26/06/2026 | 17/05/2026 | N/A | N/A | N/A | N/A |
 | **Tone Curve Application** | | Ghiles | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Final Color Space Conversion** | | Charlotte | Rayane | N/A | N/A | N/A | N/A | N/A | N/A |
 | **Gamma Curve Application** | | Rayane | Charlotte | N/A | N/A | N/A | N/A | N/A | N/A |
-| **Deblurring** | | Charlotte | Rayane | 19/03/2026 | 29/03/2026 | 21/06/2026 | N/A | N/A | N/A |
+| **Deblurring** | | Charlotte | Rayane | 19/03/2026 | 29/03/2026 | 21/06/2026 | 15/06/2026 | N/A | N/A |
 | **JPEG Compression** | | | Amayas | N/A | N/A | N/A | N/A | N/A | N/A |
 | **Extensions** | | | | N/A | N/A | N/A | N/A | N/A | N/A |
 

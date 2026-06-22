@@ -32,7 +32,7 @@ def test_bilateral_filter_invalid_d_type(d):
     It must be strictly an integer.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises(TypeError): 
+    with pytest.raises(TypeError):
         bilateral_filter(img, d=d, sigmaColor=75.0, sigmaSpace=75.0)
 
 
@@ -61,10 +61,10 @@ def test_bilateral_filter_negative_sigmas(invalid_sigma):
     They represent distances/variances and cannot be negative.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises(ValueError): 
+    with pytest.raises(ValueError):
         bilateral_filter(img, d=5, sigmaColor=invalid_sigma, sigmaSpace=75.0)
 
-    with pytest.raises(ValueError): 
+    with pytest.raises(ValueError):
         bilateral_filter(img, d=5, sigmaColor=75.0, sigmaSpace=invalid_sigma)
 
 
@@ -124,7 +124,7 @@ def test_bilateral_filter_invalid_border_type(border_type):
     Tests handling of invalid or incorrectly typed border types.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises((ValueError, TypeError, KeyError)): # type: ignore
+    with pytest.raises((ValueError, TypeError, KeyError)):  # type: ignore
         bilateral_filter(
             img, d=5, sigmaColor=75.0, sigmaSpace=75.0, strBorderType=border_type
         )

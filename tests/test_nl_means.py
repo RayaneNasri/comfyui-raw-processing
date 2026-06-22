@@ -9,7 +9,7 @@ def test_invalid_image_type():
     """Test that the function raises an appropriate error when the image is not a torch.Tensor."""
     invalid_inputs = [None, [0, 0, 0], np.zeros((10, 10, 3)), "image.jpg"]
     for img in invalid_inputs:
-        with pytest.raises((TypeError, ValueError, AttributeError)): # type: ignore
+        with pytest.raises((TypeError, ValueError, AttributeError)):  # type: ignore
             nl_means(img=img)
 
 
@@ -20,7 +20,7 @@ def test_invalid_image_dimensions():
     img_5d = torch.rand(1, 1, 10, 10, 3)
 
     for img in [img_1d, img_2d, img_5d]:
-        with pytest.raises((ValueError, RuntimeError, IndexError)): # type: ignore
+        with pytest.raises((ValueError, RuntimeError, IndexError)):  # type: ignore
             nl_means(img=img)
 
 
@@ -29,10 +29,10 @@ def test_invalid_channel_counts():
     img_1_channel = torch.rand(10, 10, 1)
     img_4_channel = torch.rand(10, 10, 4)
 
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         nl_means(img=img_1_channel)
 
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         nl_means(img=img_4_channel)
 
 
@@ -41,10 +41,10 @@ def test_empty_image_tensor():
     img_empty_h = torch.rand(0, 10, 3)
     img_empty_w = torch.rand(10, 0, 3)
 
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         nl_means(img=img_empty_h)
 
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         nl_means(img=img_empty_w)
 
 
@@ -132,9 +132,9 @@ def test_negative_or_zero_window_sizes():
 
     invalid_sizes = [0, -7, -21]
     for size in invalid_sizes:
-        with pytest.raises((ValueError, RuntimeError)): # type: ignore
+        with pytest.raises((ValueError, RuntimeError)):  # type: ignore
             nl_means(img=img, templateWindowSize=size)
-        with pytest.raises((ValueError, RuntimeError)): # type: ignore
+        with pytest.raises((ValueError, RuntimeError)):  # type: ignore
             nl_means(img=img, searchWindowSize=size)
 
 

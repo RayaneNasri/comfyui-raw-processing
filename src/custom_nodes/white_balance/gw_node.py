@@ -2,7 +2,6 @@ import torch
 from algorithms.white_balance import gray_world
 
 
-
 class GrayWorldNode:
     @classmethod
     def INPUT_TYPES(cls):

@@ -27,7 +27,7 @@ def test_median_filter_invalid_img_type(invalid_img):
     Tests how the function handles 'img' arguments that are not torch.Tensors.
     It should raise a clear TypeError or ValueError.
     """
-    with pytest.raises((TypeError, AttributeError, ValueError)): # type: ignore
+    with pytest.raises((TypeError, AttributeError, ValueError)):  # type: ignore
         median_filter(invalid_img, 3)
 
 
@@ -51,7 +51,7 @@ def test_median_filter_ksize_2_raises():
     Therefore, passing 2 should still raise an exception.
     """
     img = torch.rand((10, 10, 3), dtype=torch.float32)
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         median_filter(img, 2)
 
 
@@ -62,7 +62,7 @@ def test_median_filter_ksize_too_small(ksize):
     The documentation specifies ksize must be greater than 1 (and odd).
     """
     img = torch.rand((10, 10, 3), dtype=torch.float32)
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         median_filter(img, ksize)
 
 
@@ -82,7 +82,7 @@ def test_median_filter_invalid_ksize_type(invalid_ksize):
     It should strictly accept an integer.
     """
     img = torch.rand((10, 10, 3), dtype=torch.float32)
-    with pytest.raises((TypeError, ValueError)): # type: ignore
+    with pytest.raises((TypeError, ValueError)):  # type: ignore
         median_filter(img, invalid_ksize)
 
 
@@ -103,7 +103,7 @@ def test_median_filter_unexpected_tensor_dimensions(shape):
     should provide a clean Python error.
     """
     img = torch.rand(shape)
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         median_filter(img, 3)
 
 

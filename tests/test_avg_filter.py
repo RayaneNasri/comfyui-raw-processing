@@ -28,7 +28,7 @@ def test_avg_filter_invalid_img_type(invalid_img):
     Tests how the function handles 'img' arguments that are not torch.Tensors.
     A robust implementation should raise a TypeError.
     """
-    with pytest.raises((TypeError, AttributeError, ValueError)): # type: ignore
+    with pytest.raises((TypeError, AttributeError, ValueError)):  # type: ignore
         avg_filter(invalid_img, (3, 3), "BORDER_DEFAULT")
 
 
@@ -49,7 +49,7 @@ def test_avg_filter_unexpected_tensor_dimensions(shape):
     should trigger a clear ValueError rather than a cryptic OpenCV C++ exception.
     """
     img = torch.rand(shape)
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         avg_filter(img, (3, 3), "BORDER_DEFAULT")
 
 
@@ -68,7 +68,7 @@ def test_avg_filter_invalid_kernel_values(ksize):
     OpenCV's blur will crash if ksize <= 0. The wrapper should catch this early.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises((ValueError, RuntimeError)): # type: ignore
+    with pytest.raises((ValueError, RuntimeError)):  # type: ignore
         avg_filter(img, ksize, "BORDER_DEFAULT")
 
 
@@ -89,7 +89,7 @@ def test_avg_filter_invalid_kernel_type_and_length(ksize):
     It should strictly accept a tuple of exactly two integers.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises((TypeError, ValueError)): # type: ignore
+    with pytest.raises((TypeError, ValueError)):  # type: ignore
         avg_filter(img, ksize, "BORDER_DEFAULT")
 
 
@@ -109,7 +109,7 @@ def test_avg_filter_invalid_border_type(border_type):
     It should raise a KeyError or ValueError instead of failing silently or crashing.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises((KeyError, ValueError, TypeError)): # type: ignore
+    with pytest.raises((KeyError, ValueError, TypeError)):  # type: ignore
         avg_filter(img, (3, 3), border_type)
 
 

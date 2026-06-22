@@ -8,9 +8,9 @@ def temperature_simple(rgb_image : Tensor, adjustment_value : float) -> Tensor:
 
     Given a temperature adjustment on the range -100 to 100 (recommended -20, 20),
     apply the following adjustment to each pixel in the rgb_image :
-        red = red + adjustment_value
+        red = red + adjustment_value/255
         green = green
-        blue = blue - adjustment_value
+        blue = blue - adjustment_value/255
     Clamp values to the range [0, 1]
     """
 

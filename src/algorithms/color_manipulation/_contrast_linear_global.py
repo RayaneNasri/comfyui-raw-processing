@@ -9,7 +9,7 @@ def contrast_linear_global(rgb_image : Tensor, contrast_factor : float) -> Tenso
     contrast_factor < 1 -> decrease contrast
     contrast_factor > 1 -> increase contrast
 
-    Multiplies deviations from the global mean of the rgb_image by contrast_factor and keeps mean fixed.
+    Multiplies deviations from the global mean of the rgb_image by contrast_factor and keeps mean fixed (before clamp).
     """
     mean = rgb_image.mean()
     return torch.clamp((rgb_image - mean) * contrast_factor + mean, 0.0, 1.0)

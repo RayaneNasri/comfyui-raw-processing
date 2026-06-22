@@ -64,6 +64,8 @@ def temperature_tanner_helland(rgb_image : Tensor, temperature_K : float) -> Ten
     - temperature_K : temperature in Kelvin, between 1000 K and 40000 K
         (the interesting photographic range, which is 1500 K to 15000 K)
         The white point occurs at 6500-6600 K.
+    
+    Make the image warmer (low temperature_K) or cooler (high temperature_K)
     """
 
     # Convert the target temperature in Kelvin to RGB using the tanner Helland algorithm 

@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 _BOUNDARY_COLOUR: Tuple[int, int, int, int] = (255, 80, 0, 220)
 _CACHE_TTL: int = 600  # 10 minutes
 
-_label_map_cache: Dict[Tuple[str, int], Dict[str, Any]] = {}
+_label_map_cache: Dict[Tuple, Dict[str, Any]] = {}
 _cache_lock = threading.Lock()
 
 SAM_MODELS = {
@@ -295,8 +295,9 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     """
     label_map = slic(
         image_rgb,
-        n_segments=400,
-        compactness=5.0,
+        n_segments=kwargs.get("n_segments", 400),
+        compactness=kwargs.get("compactness", 5.0),
+        sigma=kwargs.get("sigma", 1.0),
         start_label=0,
         enforce_connectivity=True,
     )
@@ -390,6 +391,35 @@ class InteractiveSegmentationMask:
                     {"default": "SLIC"},
                 ),
                 "selected_coords": ("STRING", {"default": "[]"}),
+
+                # SLIC hyperparameters
+                "slic_n_segments": ("INT", {
+                    "default": 400, "min": 10, "max": 2000, "step": 10,
+                    "display": "slider",
+                }),
+                "slic_compactness": ("FLOAT", {
+                    "default": 5.0, "min": 0.1, "max": 100.0, "step": 0.1,
+                    "display": "slider",
+                }),
+                "slic_sigma": ("FLOAT", {
+                    "default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1,
+                    "display": "slider",
+                }),
+
+                # SAM hyperparameters
+                "sam_points_per_side": ("INT", {
+                    "default": 32, "min": 8, "max": 128, "step": 4,
+                    "display": "slider",
+                }),
+                "sam_pred_iou_thresh": ("FLOAT", {
+                    "default": 0.88, "min": 0.0, "max": 1.0, "step": 0.01,
+                    "display": "slider",
+                }),
+                "sam_stability_score_thresh": ("FLOAT", {
+                    "default": 0.95, "min": 0.0, "max": 1.0, "step": 0.01,
+                    "display": "slider",
+                }),
+
             },
             "hidden": {
                 "unique_id": "UNIQUE_ID",
@@ -404,13 +434,27 @@ class InteractiveSegmentationMask:
         cette chaîne d'une exécution à l'autre. Le moindre clic ou dé-sélection
         invalidera le cache et forcera la réexécution du nœud.
         """
-        selected_coords = kwargs.get("selected_coords", "")
-        return selected_coords
+        return (
+            kwargs.get("segmentation_engine", ""),
+            kwargs.get("slic_n_segments", 400),
+            kwargs.get("slic_compactness", 5.0),
+            kwargs.get("slic_sigma", 1.0),
+            kwargs.get("sam_points_per_side", 32),
+            kwargs.get("sam_pred_iou_thresh", 0.88),
+            kwargs.get("sam_stability_score_thresh", 0.95),
+            kwargs.get("selected_coords", ""),
+        )
 
     def execute(
         self,
         image: torch.Tensor,
         segmentation_engine: str,
+        slic_n_segments: int = 400,
+        slic_compactness: float = 5.0,
+        slic_sigma: float = 1.0,
+        sam_points_per_side: int = 32,
+        sam_pred_iou_thresh: float = 0.88,
+        sam_stability_score_thresh: float = 0.95,
         selected_coords: str = "[]",
         unique_id: str = "0",
     ) -> Tuple[torch.Tensor]:
@@ -443,11 +487,26 @@ class InteractiveSegmentationMask:
         H, W = image_np.shape[:2]
         image_hash = _image_tensor_hash(image)
 
+        engine_kwargs = (
+            {
+                "n_segments": slic_n_segments,
+                "compactness": slic_compactness,
+                "sigma": slic_sigma,
+            }
+            if segmentation_engine == "SLIC"
+            else {
+                "points_per_side": sam_points_per_side,
+                "pred_iou_thresh": sam_pred_iou_thresh,
+                "stability_score_thresh": sam_stability_score_thresh,
+            }
+        )
+
         label_map = self._get_or_compute_segments(
             image_np=image_np,
             engine=segmentation_engine,
             node_id=unique_id,
             image_hash=image_hash,
+            engine_kwargs=engine_kwargs,
         )
 
         self._update_frontend_cache(
@@ -473,6 +532,7 @@ class InteractiveSegmentationMask:
         engine: str,
         node_id: str,
         image_hash: int,
+        engine_kwargs: dict = {},
     ) -> np.ndarray:
         """
         Return a cached label map if the image hasn't changed; otherwise
@@ -489,7 +549,9 @@ class InteractiveSegmentationMask:
 
         label_map : np.ndarray [H, W] int32
         """
-        cache_key = (node_id, image_hash)
+        params_key = tuple(sorted(engine_kwargs.items()))
+        cache_key = (node_id, image_hash, params_key)
+
         with _cache_lock:
             cached = _label_map_cache.get(cache_key)
             if cached is not None:
@@ -502,9 +564,9 @@ class InteractiveSegmentationMask:
         image_rgb = image_np[..., :3] if image_np.shape[2] >= 3 else image_np
 
         if engine == "SLIC":
-            label_map = _run_slic_segmentation(image_rgb)
+            label_map = _run_slic_segmentation(image_rgb, **engine_kwargs)
         elif engine == "SAM":
-            label_map = _run_sam_segmentation(image_rgb)
+            label_map = _run_sam_segmentation(image_rgb, **engine_kwargs)
         else:
             raise ValueError(f"Unknown segmentation engine: {engine!r}")
 

@@ -111,7 +111,42 @@ app.registerExtension({
     nodeType.prototype.onNodeCreated = function () {
       onNodeCreated?.apply(this, arguments);
       _initNodeState(this);
+
+      // ── Visibilité conditionnelle des paramètres ───────────────────────────
+      const SLIC_WIDGETS = ["slic_n_segments", "slic_compactness", "slic_sigma"];
+      const SAM_WIDGETS  = ["sam_points_per_side", "sam_pred_iou_thresh", "sam_stability_score_thresh"];
+
+      const updateParamVisibility = (engine) => {
+        for (const w of this.widgets ?? []) {
+          if (SLIC_WIDGETS.includes(w.name)) {
+            w.hidden = engine !== "SLIC";
+            w.computeSize = engine === "SLIC" ? undefined : () => [0, -4];
+          }
+          if (SAM_WIDGETS.includes(w.name)) {
+            w.hidden = engine !== "SAM";
+            w.computeSize = engine === "SAM" ? undefined : () => [0, -4];
+          }
+        }
+        // Recalculer la taille du nœud
+        const size = this.computeSize();
+        this.setSize(size);
+        this.setDirtyCanvas(true, true);
+      };
+
+      // Appliquer au chargement
+      const engineWidget = this.widgets?.find(w => w.name === "segmentation_engine");
+      if (engineWidget) {
+        updateParamVisibility(engineWidget.value);
+
+        // Écouter les changements
+        const originalCallback = engineWidget.callback;
+        engineWidget.callback = (value) => {
+          originalCallback?.call(engineWidget, value);
+          updateParamVisibility(value);
+        };
+      }
     };
+
 
     // ── onRemoved ──────────────────────────────────────────────────────────
     const onRemoved = nodeType.prototype.onRemoved;

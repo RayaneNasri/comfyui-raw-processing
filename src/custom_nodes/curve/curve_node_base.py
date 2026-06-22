@@ -5,11 +5,12 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
-import server # type: ignore
+import server  # type: ignore
 
-from .curve_engine import build_lut
+from algorithms.curve.curve_engine import build_lut
+from algorithms.curve.curve_spec import CurveSpec
+
 from .curve_presets import load_preset, save_preset
-from .curve_spec import CurveSpec
 
 
 class CurveNodeBase(ABC):
@@ -59,7 +60,6 @@ class CurveNodeBase(ABC):
         # trick to force ComfyUI to re-render the node's UI when the preset list changes
         return float("nan")
 
-
     # Abstract interface
     @abstractmethod
     def _default_spec(self, **kwargs) -> CurveSpec:
@@ -68,7 +68,6 @@ class CurveNodeBase(ABC):
     @abstractmethod
     def _apply_lut(self, image: torch.Tensor, lut: np.ndarray) -> torch.Tensor:
         """Apply the LUT to the (H, W, C) image tensor."""
-
 
     def _parse_spec(self, curve_points: str, **kwargs) -> CurveSpec:
         try:
@@ -83,14 +82,14 @@ class CurveNodeBase(ABC):
             return CurveSpec(points=[tuple(p) for p in data])
 
         return CurveSpec.from_json(data)
-    
+
     @abstractmethod
     def _compute_histogram_data(self, image_tensor: torch.Tensor) -> list:
-        """Calcule les données de l'histogramme. 
+        """Calcule les données de l'histogramme.
         Par défaut : calcule la luminance globale (Rec. 709).
         Peut être réécrite dans les sous-classes.
         """
-    
+
     def _send_histogram_to_ui(self, image_tensor: torch.Tensor, node_id: str):
         """Calcule l'histogramme de luminance et l'envoie au Front-End via WebSockets."""
         try:
@@ -100,9 +99,11 @@ class CurveNodeBase(ABC):
                 img_np = img_np[0]
 
             if img_np.shape[-1] >= 3:
-                luma = (0.2126 * img_np[..., 0] + 
-                        0.7152 * img_np[..., 1] + 
-                        0.0722 * img_np[..., 2])
+                luma = (
+                    0.2126 * img_np[..., 0]
+                    + 0.7152 * img_np[..., 1]
+                    + 0.0722 * img_np[..., 2]
+                )
             else:
                 luma = img_np[..., 0]
 
@@ -113,8 +114,7 @@ class CurveNodeBase(ABC):
             # self.id est fourni dynamiquement par l'exécuteur de prompt de ComfyUI
 
             server.PromptServer.instance.send_sync(
-                "artishow-update-histogram", 
-                {"node_id": node_id, "hist": hist_list}
+                "artishow-update-histogram", {"node_id": node_id, "hist": hist_list}
             )
         except Exception as e:
             print(f"Échec du calcul de l'histogramme: {e}")

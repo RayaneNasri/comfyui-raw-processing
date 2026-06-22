@@ -58,7 +58,7 @@ from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 # ComfyUI server import — guarded so the module can be imported in isolation
 # (e.g. during unit tests) without a running ComfyUI instance.
 try:
-    from server import PromptServer # type: ignore
+    from server import PromptServer  # type: ignore
 
     _SERVER_AVAILABLE = True
 except ImportError:  # pragma: no cover
@@ -98,8 +98,7 @@ def _evict_stale_cache() -> None:
     """Remove entries older than _CACHE_TTL.  Called lazily on each write."""
     now = time.time()
     stale = [
-        k for k, v in _label_map_cache.items()
-        if now - v["timestamp"] > _CACHE_TTL
+        k for k, v in _label_map_cache.items() if now - v["timestamp"] > _CACHE_TTL
     ]
     for k in stale:
         del _label_map_cache[k]
@@ -109,6 +108,7 @@ def _evict_stale_cache() -> None:
 # ---------------------------------------------------------------------------
 # WebSocket event broadcasting
 # ---------------------------------------------------------------------------
+
 
 def _broadcast_segment_data(
     node_id: str,
@@ -160,6 +160,7 @@ def _broadcast_segment_data(
 # ---------------------------------------------------------------------------
 # Utility helpers
 # ---------------------------------------------------------------------------
+
 
 def _tensor_to_numpy_uint8(image_tensor: torch.Tensor) -> np.ndarray:
     """
@@ -275,18 +276,18 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     ─────────────────────────────────────────────────────────────────────────
     """
     log.info("Executing true SLIC segmentation via skimage.")
-    
+
     # The placeholder was a 20x20 grid (400 segments).
     # compactness controls the balance between color proximity and space proximity.
     # 10.0 is a standard default, making superpixels relatively regular.
     label_map = slic(
-        image_rgb, 
-        n_segments=400, 
-        compactness=5.0, 
+        image_rgb,
+        n_segments=400,
+        compactness=5.0,
         start_label=0,
-        enforce_connectivity=True
+        enforce_connectivity=True,
     )
-    
+
     # Ensure the output is a 32-bit integer array, which your ID-Map generator
     # (Claude's frontend logic) likely expects for color-coding.
     return label_map.astype(np.int32)
@@ -298,21 +299,25 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     """
     log.info("Initialisation de la segmentation SAM (Meta)...")
     H, W = image_rgb.shape[:2]
-    
+
     # 1. Gestion automatique du checkpoint (Téléchargement si nécessaire)
     # On utilise le modèle ViT-B (base) qui est un excellent compromis vitesse/mémoire pour une Tesla T4
     model_type = "vit_b"
     checkpoint_name = "sam_vit_b_01ec64.pth"
-    checkpoint_url = f"https://dl.fbaipublicfiles.com/segment_anything/{checkpoint_name}"
-    
+    checkpoint_url = (
+        f"https://dl.fbaipublicfiles.com/segment_anything/{checkpoint_name}"
+    )
+
     # Dossier de stockage ComfyUI standard pour les checkpoints SAM
     base_dir = os.path.dirname(os.path.abspath(__file__))
     checkpoint_dir = os.path.join(base_dir, "models")
     os.makedirs(checkpoint_dir, exist_ok=True)
     checkpoint_path = os.path.join(checkpoint_dir, checkpoint_name)
-    
+
     if not os.path.exists(checkpoint_path):
-        log.info(f"Téléchargement du checkpoint SAM ({checkpoint_name}) dans {checkpoint_path}...")
+        log.info(
+            f"Téléchargement du checkpoint SAM ({checkpoint_name}) dans {checkpoint_path}..."
+        )
         try:
             urllib.request.urlretrieve(checkpoint_url, checkpoint_path)
             log.info("Téléchargement terminé avec succès.")
@@ -329,12 +334,14 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     try:
         sam = sam_model_registry[model_type](checkpoint=checkpoint_path)
         sam.to(device=device)
-        
+
         # Récupération des hyperparamètres depuis kwargs ou valeurs par défaut optimales
-        points_per_side = kwargs.get("points_per_side", 32) # Augmenter pour plus de petits segments
+        points_per_side = kwargs.get(
+            "points_per_side", 32
+        )  # Augmenter pour plus de petits segments
         pred_iou_thresh = kwargs.get("pred_iou_thresh", 0.88)
         stability_score_thresh = kwargs.get("stability_score_thresh", 0.95)
-        
+
         generator = SamAutomaticMaskGenerator(
             model=sam,
             points_per_side=points_per_side,
@@ -342,26 +349,28 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
             stability_score_thresh=stability_score_thresh,
             crop_n_layers=1,
             crop_n_points_downscale_factor=2,
-            min_mask_region_area=100 # Filtre les résidus de bruit de moins de 100 pixels
+            min_mask_region_area=100,  # Filtre les résidus de bruit de moins de 100 pixels
         )
     except Exception as e:
         log.error(f"Erreur lors de l'initialisation de SAM : {e}")
         raise e
 
     # 4. Génération des masques
-    log.info("Calcul des masques par SAM en cours (cela peut prendre quelques secondes)...")
+    log.info(
+        "Calcul des masques par SAM en cours (cela peut prendre quelques secondes)..."
+    )
     masks = generator.generate(image_rgb)
     log.info(f"SAM a détecté {len(masks)} segments potentiels.")
 
     # 5. Construction de la carte de labels (Label Map)
-    # Astuce cruciale : On trie les masques par zone ('area') décroissante. 
-    # De cette façon, les grands masques (fonds, murs) sont dessinés en premier, 
+    # Astuce cruciale : On trie les masques par zone ('area') décroissante.
+    # De cette façon, les grands masques (fonds, murs) sont dessinés en premier,
     # et les petits objets (détails au premier plan) sont dessinés par-dessus,
     # évitant qu'ils soient écrasés ou absorbés.
-    masks = sorted(masks, key=lambda x: x['area'], reverse=True)
-    
+    masks = sorted(masks, key=lambda x: x["area"], reverse=True)
+
     label_map = np.zeros((H, W), dtype=np.int32)
-    
+
     for idx, mask_dict in enumerate(masks, start=1):
         boolean_mask = mask_dict["segmentation"]
         label_map[boolean_mask] = idx
@@ -437,12 +446,12 @@ class InteractiveSegmentationMask:
                 "unique_id": "UNIQUE_ID",
             },
         }
-    
+
     @classmethod
     def IS_CHANGED(cls, **kwargs):
         """
-        Indique à ComfyUI si le nœud a changé. 
-        En renvoyant la chaîne JSON des coordonnées, ComfyUI va comparer 
+        Indique à ComfyUI si le nœud a changé.
+        En renvoyant la chaîne JSON des coordonnées, ComfyUI va comparer
         cette chaîne d'une exécution à l'autre. Le moindre clic ou dé-sélection
         invalidera le cache et forcera la réexécution du nœud.
         """
@@ -613,7 +622,7 @@ class InteractiveSegmentationMask:
 
         H, W = label_map.shape
         MAX_PREVIEW_SIZE = 512
-        
+
         # Calcul du ratio de redimensionnement
         scale = min(MAX_PREVIEW_SIZE / W, MAX_PREVIEW_SIZE / H, 1.0)
         new_W, new_H = int(W * scale), int(H * scale)

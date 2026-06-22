@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .curve_spec import CurveSpec
+from algorithms.curve.curve_spec import CurveSpec
 
 _DEFAULT_DIR = Path(__file__).parent / "presets"
 

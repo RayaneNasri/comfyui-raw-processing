@@ -34,7 +34,6 @@ class CurveSpec:
         if isinstance(data, str):
             data = json.loads(data)
         if isinstance(data, list):
-            # Bare [[x,y],...] format from the JS widget
             return cls(points=[tuple(p) for p in data])
         return cls(
             points=[tuple(p) for p in data["points"]],

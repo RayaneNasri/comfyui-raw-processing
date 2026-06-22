@@ -6,6 +6,7 @@ import numpy as np
 
 from .curve_spec import CurveSpec
 
+
 def _bezier_lut(xs: np.ndarray, ys: np.ndarray, lut_size: int) -> np.ndarray:
     """
     Génère une LUT en interpolant les points via des segments de Bézier cubiques,
@@ -98,6 +99,7 @@ def _bezier_lut(xs: np.ndarray, ys: np.ndarray, lut_size: int) -> np.ndarray:
 
 def build_lut(spec: CurveSpec, lut_size: int = 256) -> np.ndarray:
     """Build a float32 LUT of length lut_size from a CurveSpec."""
+
     if len(spec.points) < 2:
         raise ValueError("CurveSpec needs at least 2 control points")
 

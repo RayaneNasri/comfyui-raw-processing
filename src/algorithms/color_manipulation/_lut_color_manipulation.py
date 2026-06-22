@@ -33,10 +33,32 @@ def load_cube_lut(path):
 
     return lut
 
+
+def linearRGB_to_adobeRGB1998(image : Tensor) -> Tensor:
+    """
+    image: Tensor Linear_RGB image (H,W,3) with each channel represented as a float in [0,1]
+    
+    return: Tensor AdobeRGB1998 image (H,W,3) with each channel represented as a float in [0,1]
+    """
+    gamma = 1/2.19921875
+    return torch.pow(image, gamma)
+
+
+def adobeRGB1998_to_linearRGB(image : Tensor) -> Tensor:
+    """
+    image: Tensor AdobeRGB1998 image (H,W,3) with each channel represented as a float in [0,1]
+    
+    return: Tensor Linear_RGB image (H,W,3) with each channel represented as a float in [0,1]
+    """
+    gamma = 1/2.19921875
+    return torch.pow(image, (1/gamma))
+
+
 def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
     """
-    image: (H,W,3) float tensor in [0,1]
-    lut:   (S,S,S,3)
+    - image: Tensor image (H,W,3) with each channel represented as a float in [0,1]
+    - lut: Tensor (S,S,S,3)
+    image and lut must be in the same color-space
     """
 
     # image shape
@@ -52,12 +74,14 @@ def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
       
     S = lut.shape[0]
 
+    """ TODO
     # from linearRGB to AdobeRGB1998
     gamma = 1/2.19921875
     image_adobe_rgb = torch.pow(image, gamma)
+    """
 
     # grid in [-1,1]
-    grid = torch.clamp(image_adobe_rgb * 2 - 1, -1, 1)
+    grid = torch.clamp(image * 2 - 1, -1, 1)
     # RGB -> BGR for grid_sample coordinate order (x,y,z)
     grid = grid[..., [2,1,0]]
     # add depth dimension
@@ -75,8 +99,10 @@ def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
     # BGR-> RGB
     out = out[..., [2,1,0]]
 
+    """ TODO
     # from AdobeRGB1998 to linearRGB
     out = torch.pow(out, (1/gamma))
+    """
 
     # back to (H,W,3)
     out = out.squeeze(0)

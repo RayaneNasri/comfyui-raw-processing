@@ -44,7 +44,7 @@ def test_gaussian_filter_invalid_img_type(invalid_img):
     Tests the function's type validation for the 'img' argument.
     Passing non-torch.Tensor objects should raise a TypeError or ValueError.
     """
-    with pytest.raises((TypeError, AttributeError, ValueError)):
+    with pytest.raises((TypeError, AttributeError, ValueError)): # type: ignore
         gaussian_filter(invalid_img, (3, 3), 1.0)
 
 
@@ -65,7 +65,7 @@ def test_gaussian_filter_unexpected_tensor_dimensions(shape):
     or empty dimensions, which usually crash the underlying OpenCV C++ backend.
     """
     img = torch.rand(shape)
-    with pytest.raises((ValueError, RuntimeError)):
+    with pytest.raises((ValueError, RuntimeError)): # type: ignore
         gaussian_filter(img, (3, 3), 1.0)
 
 
@@ -88,7 +88,7 @@ def test_gaussian_filter_invalid_ksize_values(ksize):
     Any other combination should trigger an exception before OpenCV processes it.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises((ValueError, RuntimeError)):
+    with pytest.raises((ValueError, RuntimeError)): # type: ignore  
         gaussian_filter(img, ksize, 1.0)
 
 
@@ -110,7 +110,7 @@ def test_gaussian_filter_invalid_ksize_type(invalid_ksize):
     It must be strictly a tuple of exactly two integers.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises((TypeError, ValueError)):
+    with pytest.raises((TypeError, ValueError)): # type: ignore
         gaussian_filter(img, invalid_ksize, 1.0)
 
 
@@ -130,7 +130,7 @@ def test_gaussian_filter_invalid_sigmas(sigmas):
     """
     img = torch.rand((10, 10, 3))
     sigmaX, sigmaY = sigmas
-    with pytest.raises((ValueError, RuntimeError)):
+    with pytest.raises((ValueError, RuntimeError)): # type: ignore
         gaussian_filter(img, (3, 3), sigmaX, sigmaY)
 
 
@@ -141,7 +141,7 @@ def test_gaussian_filter_unsupported_border_wrap():
     The wrapper should actively intercept this and raise a ValueError.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises((ValueError, RuntimeError)):
+    with pytest.raises((ValueError, RuntimeError)): # type: ignore
         gaussian_filter(img, (3, 3), 1.0, strBorderType="BORDER_WRAP")
 
 
@@ -154,10 +154,10 @@ def test_gaussian_filter_invalid_border_type_and_hint(invalid_string):
     for strBorderType and strHint.
     """
     img = torch.rand((10, 10, 3))
-    with pytest.raises((KeyError, ValueError, TypeError)):
+    with pytest.raises((KeyError, ValueError, TypeError)): # type: ignore
         gaussian_filter(img, (3, 3), 1.0, strBorderType=invalid_string)
 
-    with pytest.raises((KeyError, ValueError, TypeError)):
+    with pytest.raises((KeyError, ValueError, TypeError)): # type: ignore
         gaussian_filter(img, (3, 3), 1.0, strHint=invalid_string)
 
 

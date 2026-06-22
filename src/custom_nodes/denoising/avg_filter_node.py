@@ -1,15 +1,15 @@
 import torch
 from algorithms.denoising import avg_filter
 
-class AvgFilterNode:
 
+class AvgFilterNode:
     @classmethod
     def INPUT_TYPES(cls):
-        
+
         tooltip: dict[str, str] = {
             "kheight": "Blurring kernel height",
             "kwidth": "Blurring kernel width",
-            "BorderType": "Border mode used to extrapolate pixels outside of the image, see the modes available in the open-cv documentation"
+            "BorderType": "Border mode used to extrapolate pixels outside of the image, see the modes available in the open-cv documentation",
         }
 
         borderTypes: list[str] = [
@@ -19,7 +19,7 @@ class AvgFilterNode:
             "BORDER_REFLECT_101",
             "BORDER_TRANSPARENT",
             "BORDER_DEFAULT",
-            "BORDER_ISOLATED"
+            "BORDER_ISOLATED",
         ]
 
         return {
@@ -27,10 +27,10 @@ class AvgFilterNode:
                 "image": ("IMAGE",),
                 "kheight": ("INT", {"min": 1, "tooltip": tooltip["kheight"]}),
                 "kwidth": ("INT", {"min": 1, "tooltip": tooltip["kwidth"]}),
-                "borderType": (borderTypes,)
+                "borderType": (borderTypes,),
             }
         }
-    
+
     CATEGORY = "image"
 
     SEARCH_ALIASES = [
@@ -48,18 +48,16 @@ class AvgFilterNode:
     RETURN_NAMES = ("RGB_image",)
     FUNCTION = "execute"
 
-    def execute(self, 
-                image: torch.Tensor, 
-                kheight: int,
-                kwidth: int,
-                borderType: str
-            ) -> tuple :
-        
+    def execute(
+        self, image: torch.Tensor, kheight: int, kwidth: int, borderType: str
+    ) -> tuple:
+
         input_2d = image.squeeze()
         output_2d = avg_filter(input_2d, (kheight, kwidth), borderType)
 
         return (output_2d.unsqueeze(0),)
-    
+
+
 NODE_CLASS_MAPPINGS = {"AvgFilterNode": AvgFilterNode}
 
 NODE_DISPLAY_NAME_MAPPINGS = {"AvgFilterNode": "Average filter denoising"}

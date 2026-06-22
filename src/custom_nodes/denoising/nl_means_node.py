@@ -1,29 +1,38 @@
 import torch
 from algorithms.denoising import nl_means
 
-class NonLocalMeansNode:
 
+class NonLocalMeansNode:
     @classmethod
     def INPUT_TYPES(cls):
 
-        tooltip : dict[str, str] = {
+        tooltip: dict[str, str] = {
             "image": "Image to denoise",
             "h": "Parameter regulating filter strength for luminance component",
             "hColor": "The same as h but for color components",
             "templateWindowSize": "Size in pixels of the template patch that is used to compute weights. Should be odd",
-            "searchWindowSize": "Size in pixels of the window that is used to compute weighted average for given pixel. Should be odd"
+            "searchWindowSize": "Size in pixels of the window that is used to compute weighted average for given pixel. Should be odd",
         }
 
         return {
             "required": {
                 "img": ("IMAGE",),
-                "h": ("FLOAT", {"default": 3., "min": 0., "tooltip": tooltip["h"]}),
-                "hColor": ("FLOAT", {"default": 3., "min": 0., "tooltip": tooltip["hColor"]}),
-                "templateWindowSize": ("INT", {"default": 7, "min": 0, "tooltip": tooltip["templateWindowSize"]}),
-                "searchWindowSize": ("INT", {"default": 21, "min": 0, "tooltip": tooltip["searchWindowSize"]}),
+                "h": ("FLOAT", {"default": 3.0, "min": 0.0, "tooltip": tooltip["h"]}),
+                "hColor": (
+                    "FLOAT",
+                    {"default": 3.0, "min": 0.0, "tooltip": tooltip["hColor"]},
+                ),
+                "templateWindowSize": (
+                    "INT",
+                    {"default": 7, "min": 0, "tooltip": tooltip["templateWindowSize"]},
+                ),
+                "searchWindowSize": (
+                    "INT",
+                    {"default": 21, "min": 0, "tooltip": tooltip["searchWindowSize"]},
+                ),
             }
         }
-    
+
     CATEGORY = "image"
     SEARCH_ALIASES = [
         "non local means denoising",
@@ -40,14 +49,15 @@ class NonLocalMeansNode:
     RETURN_NAMES = ("RGB_image",)
     FUNCTION = "execute"
 
-    def execute(self, 
-                image: torch.Tensor, 
-                h: int, 
-                hColor: int,
-                templateWindowSize: int,
-                searchWindowSize: int
-            ) -> tuple :
-        
+    def execute(
+        self,
+        image: torch.Tensor,
+        h: int,
+        hColor: int,
+        templateWindowSize: int,
+        searchWindowSize: int,
+    ) -> tuple:
+
         input_2d = image.squeeze()
         output_2d = nl_means(input_2d, h, hColor, templateWindowSize, searchWindowSize)
 

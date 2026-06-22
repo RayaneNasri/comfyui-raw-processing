@@ -8,7 +8,21 @@ def malvar_he_cutler_demosaicing(
     dy: int = 0,
 ) -> torch.Tensor:
     """
-    Vectorized implementation of Malvar-He-Cutler demosaicing using PyTorch convolutions.
+    Perform vectorized Malvar-He-Cutler demosaicing using PyTorch convolutions.
+
+    Args:
+        raw_image (torch.Tensor [H, W]): A 2D tensor representing the raw Bayer sensor image.
+        dx (int, optional): The x-coordinate offset for the red pixels in the Bayer pattern.
+            Must be 0 or 1. Defaults to 0.
+        dy (int, optional): The y-coordinate offset for the red pixels in the Bayer pattern.
+            Must be 0 or 1. Defaults to 0.
+
+    Returns:
+        torch.Tensor [H, W, 3]: The fully demosaiced RGB image.
+
+    Raises:
+        ValueError: If `raw_image` is not a 2D tensor of shape (H, W).
+        ValueError: If `dx` or `dy` is not 0 or 1.
     """
     if raw_image.ndim != 2:
         raise ValueError("raw_image must be a 2D tensor of shape (H, W)")

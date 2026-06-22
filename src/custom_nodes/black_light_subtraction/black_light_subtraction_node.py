@@ -1,4 +1,4 @@
-from algorithms.black_light_subtraction.black_light_subtraction import linearize_raw
+from algorithms.black_light_subtraction._black_light_subtraction import linearize_raw
 
 
 class LinearizeRawNode:

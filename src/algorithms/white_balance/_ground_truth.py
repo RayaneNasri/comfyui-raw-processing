@@ -5,25 +5,30 @@ def ground_truth(
     img: torch.Tensor, patch: torch.Tensor, method: str = "max", percentil: float = 0.95
 ) -> torch.Tensor:
     """
-    White balance image using Ground truth algorithm
+    Apply white balance to an image using a Ground Truth patch algorithm.
 
-    Parameters
-    ----------
-    img : torch.Tensor
-        Image to white balance
-    patch : torch.Tensor
-        Patch of "true" white if method = 'max' else Patch of "true" gray
-    method : str
-        The method used 'max' or 'mean'
-    percentil : float
-        Between [0., 1.]
-        Percentil value to consider as channel maximum
-        This argument is ignored if the method argument is set to mean
+    This function calculates scaling factors based on a provided reference patch
+    that represents either "true" white or "true" gray in the scene.
 
-    Returns
-    -------
-    img_wb : torch.Tensor
-        White balanced image
+    Args:
+        img (torch.Tensor): The input image tensor to be white-balanced.
+        patch (torch.Tensor [H, W, 3]): A reference patch from the image representing
+            "true" white (if method='max') or "true" gray (if method='mean').
+        method (str, optional): The method used to compute the white balance scaling
+            factors. Must be either 'max' or 'mean'. Defaults to 'max'.
+        percentil (float, optional): A value between [0.0, 1.0] indicating the
+            percentile to consider as the channel maximum when calculating the max
+            value. This argument is ignored if the method argument is set to 'mean'.
+            Defaults to 0.95.
+
+    Returns:
+        torch.Tensor: The white-balanced image tensor, clipped to the range [0.0, 1.0].
+
+    Raises:
+        ValueError: If the patch is empty (width or height is 0).
+        ValueError: If the patch does not have exactly 3 color channels.
+        ValueError: If the percentile is not between 0.0 and 1.0 (when method='max').
+        ValueError: If the method is not 'max' or 'mean'.
     """
 
     patch_h, patch_w, patch_c = patch.shape

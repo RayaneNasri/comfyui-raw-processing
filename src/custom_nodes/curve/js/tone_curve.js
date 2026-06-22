@@ -120,7 +120,24 @@ app.registerExtension({
             };
 
             this.addCustomWidget(radioWidget);
+
+            const originalComputeSize = this.computeSize.bind(this);
+            this.computeSize = function(out) {
+                // Temporairement retirer les widgets cachés du calcul
+                const allWidgets = this.widgets;
+                this.widgets = allWidgets.filter(w => !w.hidden);
+                
+                const size = originalComputeSize(out);
+                
+                // Restaurer
+                this.widgets = allWidgets;
+                return size;
+            };
+
             this._updateCurveVisibility();
+            
+            const computedSize = this.computeSize();
+            this.setSize([computedSize[0], 450]);
         };
 
         nodeType.prototype._cycleChannel = function () {
@@ -151,6 +168,9 @@ app.registerExtension({
                     widget.computeSize = () => [0, -4]; // hauteur nulle
                 }
             }
+
+            this.setSize(this.computeSize());
+            this.setDirtyCanvas(true, true);
         };
     },
 });

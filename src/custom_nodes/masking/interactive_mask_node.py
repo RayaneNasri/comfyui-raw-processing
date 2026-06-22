@@ -1,48 +1,9 @@
-"""
-node.py — Python backend for InteractiveSegmentationMask
-=========================================================
-Responsibilities
-----------------
-1. Receive an image tensor from the ComfyUI pipeline.
-2. Run the requested segmentation engine (SLIC or SAM) to produce a
-   label map: a 2-D integer array where every pixel carries its segment ID.
-3. Build two auxiliary images and broadcast them to the frontend via
-   ComfyUI's WebSocket server:
-     a. **Overlay image** — the original image with segment boundaries
-        drawn on top (for visual reference).
-     b. **ID-map image**  — an RGB image where each segment is flood-filled
-        with a unique, deterministic colour.  The JS reads this off-screen
-        to resolve hover/click → segment-ID in O(1).
-4. Receive the `selected_coords` JSON string that the JS widget writes
-   after the user clicks segments.
-5. Map every stored (x, y) coordinate back to a segment ID, union the
-   matching pixels across all selected segments, and return a single
-   binary MASK tensor shaped [1, H, W].
-
-Architecture
-------------
-Each logical step lives in its own private method to keep concerns cleanly
-separated and to give you obvious injection points for your real models.
-
-WebSocket communication
------------------------
-Unlike HTTP polling, the backend broadcasts segment data via ComfyUI's
-WebSocket server immediately after segmentation. The frontend listens on
-the custom event channel "interactive_segmask" and updates the node display
-in real-time, providing instant visual feedback.
-
-Batch handling
---------------
-ComfyUI images are [B, H, W, C] float32 tensors in the range [0, 1].
-We always preview / segment only the FIRST frame (index 0) but we safely
-handle the batch dimension throughout.
-"""
-
 import io
 import json
 import logging
 import threading
 import time
+
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -55,43 +16,134 @@ import os
 import urllib.request
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 
-# ComfyUI server import — guarded so the module can be imported in isolation
-# (e.g. during unit tests) without a running ComfyUI instance.
-try:
-    from server import PromptServer  # type: ignore
+from server import PromptServer  # type: ignore
+from aiohttp import web as _aiohttp_web
 
-    _SERVER_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    _SERVER_AVAILABLE = False
+_SERVER_AVAILABLE = True
+
+_sam_choice_event = threading.Event()
+_sam_choice_result: Dict[str, Any] = {}
+
+@PromptServer.instance.routes.post("/artishow/sam_download_choice")
+async def _sam_choice_handler(request):
+    global _sam_choice_result
+    _sam_choice_result = await request.json()
+    _sam_choice_event.set()
+    return _aiohttp_web.json_response({"status": "ok"})
+
 
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-# Colour used to draw segment boundary lines on the overlay image.
-_BOUNDARY_COLOUR: Tuple[int, int, int, int] = (255, 80, 0, 220)  # vivid orange
-
-# Minimum contrast between consecutive ID-map colours (avoids neighbours
-# looking identical at a glance — purely cosmetic, not relied on by logic).
-_ID_MAP_SATURATION: int = 180
-
-# How long (seconds) we cache segment data per node_id before evicting.
+_BOUNDARY_COLOUR: Tuple[int, int, int, int] = (255, 80, 0, 220)
 _CACHE_TTL: int = 600  # 10 minutes
-
-
-# ---------------------------------------------------------------------------
-# In-memory cache for label_maps only (to avoid re-segmenting identical images)
-# ─────────────────────────────────────────────────────────────────────────
-# Keyed by (node_id, image_hash) tuple. Each entry holds:
-#   {
-#     "label_map": np.ndarray  [H, W] int32,
-#     "timestamp": float       time.time() of last write,
-#   }
 
 _label_map_cache: Dict[Tuple[str, int], Dict[str, Any]] = {}
 _cache_lock = threading.Lock()
+
+SAM_MODELS = {
+    "sam_vit_b_01ec64.pth": {
+        "type": "vit_b",
+        "url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
+        "size": "375 MB",
+    },
+    "sam_vit_l_0b3195.pth": {
+        "type": "vit_l",
+        "url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth",
+        "size": "1.25 GB",
+    },
+    "sam_vit_h_4b8939.pth": {
+        "type": "vit_h",
+        "url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth",
+        "size": "2.56 GB",
+    },
+}
+
+
+def _get_checkpoint_dir() -> str:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    checkpoint_dir = os.path.join(base_dir, "models/sams/")
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    return checkpoint_dir
+
+
+def _find_available_sam_models(checkpoint_dir: str) -> List[Dict[str, str]]:
+    """
+    Scan checkpoint_dir and return a list of recognised SAM model files found.
+    Each entry: {"filename": ..., "type": ..., "path": ...}
+    """
+    found = []
+    for filename, meta in SAM_MODELS.items():
+        path = os.path.join(checkpoint_dir, filename)
+        if os.path.isfile(path):
+            found.append({
+                "filename": filename,
+                "type": meta["type"],
+                "path": path,
+            })
+    return found
+
+
+def _prompt_user_download_sam(checkpoint_dir: str) -> Dict[str, str]:
+    """
+    Send a dialog event to the ComfyUI frontend asking the user to choose
+    which SAM model to download. Blocks until the user replies.
+
+    Returns the chosen model dict from SAM_MODELS, or raises RuntimeError
+    if the user cancels or the server is unavailable.
+    """
+    if not _SERVER_AVAILABLE:
+        raise RuntimeError(
+            "No SAM model found and PromptServer unavailable — "
+            "please manually place a SAM checkpoint in: " + checkpoint_dir
+        )
+
+    choices = [
+        {
+            "filename": filename,
+            "label": f"{filename}  ({meta['size']})",
+            "type": meta["type"],
+            "url": meta["url"],
+        }
+        for filename, meta in SAM_MODELS.items()
+    ]
+
+    # Reset avant d'envoyer l'event
+    _sam_choice_event.clear()
+    _sam_choice_result.clear()
+
+    PromptServer.instance.send_sync("sam_model_missing", {
+        "checkpoint_dir": checkpoint_dir,
+        "choices": choices,
+    })
+
+    log.info("Waiting for user SAM model selection …")
+    if not _sam_choice_event.wait(timeout=120):
+        raise RuntimeError("Timed out waiting for user to select a SAM model.")
+
+    if _sam_choice_result.get("cancelled"):
+        raise RuntimeError("User cancelled SAM model download.")
+
+    chosen = _sam_choice_result.get("filename")
+    if chosen not in SAM_MODELS:
+        raise RuntimeError(f"Unknown model selected: {chosen!r}")
+
+    return {"filename": chosen, **SAM_MODELS[chosen]}
+
+def _download_sam_model(filename: str, url: str, checkpoint_dir: str) -> str:
+    """Download a SAM checkpoint and return its local path."""
+    checkpoint_path = os.path.join(checkpoint_dir, filename)
+    log.info("Downloading SAM checkpoint: %s …", url)
+
+    try:
+        urllib.request.urlretrieve(url, checkpoint_path)
+    except Exception as e:
+        # Clean up partial download
+        if os.path.exists(checkpoint_path):
+            os.remove(checkpoint_path)
+        raise RuntimeError(f"Download failed: {e}") from e
+
+    log.info("SAM checkpoint saved to %s", checkpoint_path)
+    return checkpoint_path
 
 
 def _evict_stale_cache() -> None:
@@ -103,11 +155,6 @@ def _evict_stale_cache() -> None:
     for k in stale:
         del _label_map_cache[k]
         log.debug("Evicted stale label_map cache for key=%s", k)
-
-
-# ---------------------------------------------------------------------------
-# WebSocket event broadcasting
-# ---------------------------------------------------------------------------
 
 
 def _broadcast_segment_data(
@@ -155,11 +202,6 @@ def _broadcast_segment_data(
         log.debug("WebSocket broadcast sent for node_id=%s", node_id)
     except Exception as exc:
         log.error("Failed to broadcast segment data via WebSocket: %s", exc)
-
-
-# ---------------------------------------------------------------------------
-# Utility helpers
-# ---------------------------------------------------------------------------
 
 
 def _tensor_to_numpy_uint8(image_tensor: torch.Tensor) -> np.ndarray:
@@ -233,13 +275,6 @@ def _image_tensor_hash(tensor: torch.Tensor) -> int:
     return hash(tuple(sampled.tolist()))
 
 
-# ---------------------------------------------------------------------------
-# Segmentation stubs
-# ---------------------------------------------------------------------------
-# Replace the body of each function with your real implementation.
-# The contract (inputs / outputs) must remain identical.
-
-
 def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     """
     Run SLIC superpixel segmentation on *image_rgb* and return a label map.
@@ -257,29 +292,7 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     label_map : np.ndarray
         int32 array shaped [H, W].  Every pixel carries its segment ID
         in the range [0, N-1] where N is the number of segments found.
-
-    ─────────────────────────────────────────────────────────────────────────
-    INJECT YOUR SLIC CODE HERE
-    ─────────────────────────────────────────────────────────────────────────
-    Example using scikit-image:
-
-        from skimage.segmentation import slic
-        label_map = slic(
-            image_rgb,
-            n_segments=kwargs.get("n_segments", 200),
-            compactness=kwargs.get("compactness", 10),
-            sigma=kwargs.get("sigma", 1),
-            start_label=0,
-        ).astype(np.int32)
-        return label_map
-
-    ─────────────────────────────────────────────────────────────────────────
     """
-    log.info("Executing true SLIC segmentation via skimage.")
-
-    # The placeholder was a 20x20 grid (400 segments).
-    # compactness controls the balance between color proximity and space proximity.
-    # 10.0 is a standard default, making superpixels relatively regular.
     label_map = slic(
         image_rgb,
         n_segments=400,
@@ -288,57 +301,49 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
         enforce_connectivity=True,
     )
 
-    # Ensure the output is a 32-bit integer array, which your ID-Map generator
-    # (Claude's frontend logic) likely expects for color-coding.
     return label_map.astype(np.int32)
 
 
 def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
-    """
-    Exécute le vrai modèle Segment Anything (SAM) de Meta sur *image_rgb* et renvoie une carte de labels (label map).
-    """
-    log.info("Initialisation de la segmentation SAM (Meta)...")
     H, W = image_rgb.shape[:2]
+    checkpoint_dir = _get_checkpoint_dir()
 
-    # 1. Gestion automatique du checkpoint (Téléchargement si nécessaire)
-    # On utilise le modèle ViT-B (base) qui est un excellent compromis vitesse/mémoire pour une Tesla T4
-    model_type = "vit_b"
-    checkpoint_name = "sam_vit_b_01ec64.pth"
-    checkpoint_url = (
-        f"https://dl.fbaipublicfiles.com/segment_anything/{checkpoint_name}"
-    )
+    # 1. Chercher les modèles déjà présents
+    available = _find_available_sam_models(checkpoint_dir)
 
-    # Dossier de stockage ComfyUI standard pour les checkpoints SAM
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    checkpoint_dir = os.path.join(base_dir, "models")
-    os.makedirs(checkpoint_dir, exist_ok=True)
-    checkpoint_path = os.path.join(checkpoint_dir, checkpoint_name)
-
-    if not os.path.exists(checkpoint_path):
-        log.info(
-            f"Téléchargement du checkpoint SAM ({checkpoint_name}) dans {checkpoint_path}..."
-        )
+    if available:
+        # Prendre le premier trouvé (priorité : vit_b > vit_l > vit_h selon l'ordre du dict)
+        chosen = available[0]
+        checkpoint_path = chosen["path"]
+        model_type = chosen["type"]
+        log.info("Using existing SAM model: %s (%s)", chosen["filename"], model_type)
+    else:
+        # 2. Aucun modèle trouvé → dialogue utilisateur
+        log.warning("No SAM model found in %s", checkpoint_dir)
         try:
-            urllib.request.urlretrieve(checkpoint_url, checkpoint_path)
-            log.info("Téléchargement terminé avec succès.")
-        except Exception as e:
-            log.error(f"Échec du téléchargement du checkpoint : {e}")
-            raise e
+            model_info = _prompt_user_download_sam(checkpoint_dir)
+        except RuntimeError as e:
+            log.error("SAM model selection failed: %s", e)
+            raise ValueError(str(e))
 
-    # 2. Configuration du périphérique (Device)
-    # Utilise CUDA si disponible (votre Tesla T4), sinon bascule sur le CPU
+        checkpoint_path = _download_sam_model(
+            filename=model_info["filename"],
+            url=model_info["url"],
+            checkpoint_dir=checkpoint_dir,
+        )
+        model_type = model_info["type"]
+
+    # 3. Charger et exécuter SAM (inchangé)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    log.info(f"SAM s'exécute sur le périphérique : {device}")
 
-    # 3. Chargement du modèle SAM
     try:
         sam = sam_model_registry[model_type](checkpoint=checkpoint_path)
         sam.to(device=device)
 
-        # Récupération des hyperparamètres depuis kwargs ou valeurs par défaut optimales
+        # Retrieval of hyperparameters from kwargs or optimal default values
         points_per_side = kwargs.get(
             "points_per_side", 32
-        )  # Augmenter pour plus de petits segments
+        )  # Increase for more small segments
         pred_iou_thresh = kwargs.get("pred_iou_thresh", 0.88)
         stability_score_thresh = kwargs.get("stability_score_thresh", 0.95)
 
@@ -349,24 +354,13 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
             stability_score_thresh=stability_score_thresh,
             crop_n_layers=1,
             crop_n_points_downscale_factor=2,
-            min_mask_region_area=100,  # Filtre les résidus de bruit de moins de 100 pixels
+            min_mask_region_area=100,  # Filter noise residuals smaller than 100 pixels
         )
     except Exception as e:
-        log.error(f"Erreur lors de l'initialisation de SAM : {e}")
-        raise e
+        log.error(f"Error while initializing SAM: {e}")
+        raise ValueError("Failed to initialize SAM model. Check if the checkpoint is valid.")
 
-    # 4. Génération des masques
-    log.info(
-        "Calcul des masques par SAM en cours (cela peut prendre quelques secondes)..."
-    )
     masks = generator.generate(image_rgb)
-    log.info(f"SAM a détecté {len(masks)} segments potentiels.")
-
-    # 5. Construction de la carte de labels (Label Map)
-    # Astuce cruciale : On trie les masques par zone ('area') décroissante.
-    # De cette façon, les grands masques (fonds, murs) sont dessinés en premier,
-    # et les petits objets (détails au premier plan) sont dessinés par-dessus,
-    # évitant qu'ils soient écrasés ou absorbés.
     masks = sorted(masks, key=lambda x: x["area"], reverse=True)
 
     label_map = np.zeros((H, W), dtype=np.int32)
@@ -375,56 +369,15 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
         boolean_mask = mask_dict["segmentation"]
         label_map[boolean_mask] = idx
 
-    log.info("Carte de labels SAM générée avec succès.")
     return label_map
 
 
-# ---------------------------------------------------------------------------
-# Core node class
-# ---------------------------------------------------------------------------
-
-
 class InteractiveSegmentationMask:
-    """
-    ComfyUI node: Interactive Segmentation Selection Mask
-    ======================================================
-    Workflow
-    --------
-    1. The node receives an IMAGE tensor and widget parameters.
-    2. It computes or retrieves (from cache) a segmentation label map.
-    3. It generates overlay + ID-map images and broadcasts them to the
-       frontend via ComfyUI's WebSocket server.
-    4. On subsequent runs where the user has already clicked segments,
-       `selected_coords` carries a JSON list of {x, y} dicts.  Each
-       coordinate is mapped to a segment ID via the label map, and
-       all matching pixels are OR-ed together into a single binary mask.
-    5. The mask is returned as a [1, H, W] float32 tensor (ComfyUI MASK).
 
-    WebSocket communication
-    ----------------------
-    After segmentation completes, the backend broadcasts the generated images
-    via `PromptServer.send_sync()` on the "interactive_segmask" channel.
-    The frontend listens for these events and updates the node preview
-    automatically, enabling real-time visual feedback without HTTP polling.
-
-    Widget layout visible in the ComfyUI UI
-    ----------------------------------------
-    • image             — incoming IMAGE connection
-    • segmentation_engine — combo: SLIC | SAM
-    • selected_coords   — hidden STRING, managed by JS (not shown to user)
-    """
-
-    # ------------------------------------------------------------------
-    # ComfyUI class-level metadata
-    # ------------------------------------------------------------------
-
-    CATEGORY = "masking/interactive"
+    CATEGORY = "image/masking"
     FUNCTION = "execute"
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
-
-    # This node is NOT pure (its output depends on hidden JS-managed state)
-    # so ComfyUI must always re-execute it even when visible inputs are unchanged.
     OUTPUT_NODE = False
 
     @classmethod
@@ -436,13 +389,9 @@ class InteractiveSegmentationMask:
                     ["SLIC", "SAM"],
                     {"default": "SLIC"},
                 ),
-                # JSON string written by JS, e.g.:
-                # '[{"x": 120, "y": 45}, {"x": 300, "y": 200}]'
-                # An empty string or "[]" means nothing is selected.
                 "selected_coords": ("STRING", {"default": "[]"}),
             },
             "hidden": {
-                # Unique node identifier injected by ComfyUI automatically.
                 "unique_id": "UNIQUE_ID",
             },
         }
@@ -458,10 +407,6 @@ class InteractiveSegmentationMask:
         selected_coords = kwargs.get("selected_coords", "")
         return selected_coords
 
-    # ------------------------------------------------------------------
-    # Main entry-point called by the ComfyUI execution engine
-    # ------------------------------------------------------------------
-
     def execute(
         self,
         image: torch.Tensor,
@@ -473,7 +418,7 @@ class InteractiveSegmentationMask:
         Execute the node.
 
         Parameters
-        ----------
+
         image : torch.Tensor
             Shape [B, H, W, C], dtype float32, range [0, 1].
         segmentation_engine : str
@@ -484,7 +429,7 @@ class InteractiveSegmentationMask:
             ComfyUI node UID — used as cache key.
 
         Returns
-        -------
+
         Tuple containing a single MASK tensor of shape [1, H, W], float32,
         values in {0.0, 1.0}.
         """
@@ -494,12 +439,10 @@ class InteractiveSegmentationMask:
             unique_id,
         )
 
-        # ── 1. Convert tensor to uint8 numpy image ─────────────────────
         image_np = _tensor_to_numpy_uint8(image)  # [H, W, C]
         H, W = image_np.shape[:2]
         image_hash = _image_tensor_hash(image)
 
-        # ── 2. Segmentation (cached if image unchanged) ─────────────────
         label_map = self._get_or_compute_segments(
             image_np=image_np,
             engine=segmentation_engine,
@@ -507,7 +450,6 @@ class InteractiveSegmentationMask:
             image_hash=image_hash,
         )
 
-        # ── 3. Build and cache frontend data ────────────────────────────
         self._update_frontend_cache(
             node_id=unique_id,
             image_np=image_np,
@@ -515,7 +457,6 @@ class InteractiveSegmentationMask:
             image_hash=image_hash,
         )
 
-        # ── 4. Build mask from user selections ──────────────────────────
         mask_tensor = self._build_mask_from_selections(
             label_map=label_map,
             selected_coords_json=selected_coords,
@@ -524,10 +465,7 @@ class InteractiveSegmentationMask:
         )
 
         return (mask_tensor,)
-
-    # ------------------------------------------------------------------
-    # Step 2 — Segmentation
-    # ------------------------------------------------------------------
+    
 
     def _get_or_compute_segments(
         self,
@@ -541,14 +479,14 @@ class InteractiveSegmentationMask:
         re-run the chosen segmentation engine.
 
         Parameters
-        ----------
+  
         image_np : np.ndarray  [H, W, 3] uint8
         engine   : str         "SLIC" | "SAM"
         node_id  : str         Node identifier
         image_hash : int       Cheap hash of the source tensor
 
         Returns
-        -------
+
         label_map : np.ndarray [H, W] int32
         """
         cache_key = (node_id, image_hash)
@@ -589,10 +527,7 @@ class InteractiveSegmentationMask:
             }
 
         return label_map
-
-    # ------------------------------------------------------------------
-    # Step 3 — Frontend image generation & broadcasting via WebSocket
-    # ------------------------------------------------------------------
+    
 
     def _update_frontend_cache(
         self,
@@ -601,46 +536,23 @@ class InteractiveSegmentationMask:
         label_map: np.ndarray,
         image_hash: int,
     ) -> None:
-        """
-        Generate the overlay and ID-map images, base-64 encode them, and
-        broadcast them to the frontend via WebSocket.
-
-        Both images share the same width/height as the source image.
-
-        Overlay image
-        -------------
-        The original image with segment boundaries drawn as coloured lines.
-        Computed with a simple erosion-based boundary detector (no scipy
-        dependency).
-
-        ID-map image
-        ------------
-        A solid-colour fill for every segment using `_deterministic_colour`.
-        Each pixel's colour encodes the segment ID — the JS reads this
-        off-screen to resolve hover/click events without any computation.
-        """
 
         H, W = label_map.shape
         MAX_PREVIEW_SIZE = 512
 
-        # Calcul du ratio de redimensionnement
         scale = min(MAX_PREVIEW_SIZE / W, MAX_PREVIEW_SIZE / H, 1.0)
         new_W, new_H = int(W * scale), int(H * scale)
 
-        # ── Generate overlay ──────────────────────────────────────────────
         overlay_img = self._draw_boundary_overlay(image_np, label_map)
         if scale < 1.0:
             overlay_img = overlay_img.resize((new_W, new_H), Image.Resampling.LANCZOS)
         overlay_b64 = _pil_to_base64_png(overlay_img)
 
-        # ── Generate ID map ──────────────────────────────────────────────
         id_map_img = self._draw_id_map(label_map)
         if scale < 1.0:
-            # CRITIQUE : NEAREST pour ne pas altérer les couleurs uniques des segments
             id_map_img = id_map_img.resize((new_W, new_H), Image.Resampling.NEAREST)
         id_map_b64 = _pil_to_base64_png(id_map_img)
 
-        # ── Broadcast via WebSocket ──────────────────────────────────────
         _broadcast_segment_data(
             node_id=node_id,
             overlay_b64=overlay_b64,
@@ -704,9 +616,6 @@ class InteractiveSegmentationMask:
         id_map_rgb = lut[label_map]
         return _numpy_to_pil(id_map_rgb)
 
-    # ------------------------------------------------------------------
-    # Step 4 — Mask generation from user selections
-    # ------------------------------------------------------------------
 
     def _build_mask_from_selections(
         self,
@@ -732,7 +641,6 @@ class InteractiveSegmentationMask:
         """
         mask = np.zeros((H, W), dtype=np.float32)
 
-        # ── Parse JSON safely ────────────────────────────────────────────
         try:
             coords: List[Dict[str, int]] = json.loads(selected_coords_json or "[]")
         except json.JSONDecodeError as exc:
@@ -748,7 +656,6 @@ class InteractiveSegmentationMask:
             log.debug("No selections — returning empty mask.")
             return torch.from_numpy(mask).unsqueeze(0)  # [1, H, W]
 
-        # ── Resolve coordinates → segment IDs ────────────────────────────
         selected_segment_ids: set = set()
         for coord in coords:
             try:
@@ -771,7 +678,6 @@ class InteractiveSegmentationMask:
             sorted(selected_segment_ids) if selected_segment_ids else "none",
         )
 
-        # ── Build union mask ─────────────────────────────────────────────
         for seg_id in selected_segment_ids:
             mask[label_map == seg_id] = 1.0
 

@@ -182,6 +182,107 @@ api.addEventListener("interactive_segmask", async (event) => {
   await _applySegmentData(node, nodeId, data);
 });
 
+api.addEventListener("sam_model_missing", async ({ detail }) => {
+  const { choices, checkpoint_dir } = detail ?? {};
+  if (!choices?.length) return;
+
+  // ── 1. Déclencher le confirm natif ComfyUI ─────────────────────────────
+  // On l'utilise comme "coquille" : son overlay, ses boutons OK/Annuler,
+  // sa gestion du focus. On injecte nos radios dans son corps ensuite.
+  const confirmPromise = app.extensionManager.dialog.confirm({
+    title: "Télécharger un modèle SAM",
+    message: `Aucun modèle SAM trouvé dans :\n${checkpoint_dir}`,
+    hint: "Le téléchargement peut prendre plusieurs minutes.",
+    type: "default",
+  });
+
+  // ── 2. Injecter les radio buttons dans le dialog qui vient d'apparaître
+  // On attend le prochain tick pour que le DOM soit rendu
+  await new Promise(r => setTimeout(r, 0));
+
+  let selectedFilename = choices[0].filename;
+
+  // Trouver le conteneur du message dans la modale PrimeVue
+  const dialogEl = document.querySelector(".p-dialog-content");
+  if (dialogEl) {
+    // Créer le groupe de radios
+    const radioGroup = document.createElement("div");
+    radioGroup.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    `;
+
+    choices.forEach((choice, i) => {
+      const label = document.createElement("label");
+      label.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--p-content-border-color, #444);
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        background: ${i === 0 ? "var(--p-content-hover-background, #2a2a2a)" : "transparent"};
+        border-color: ${i === 0 ? "var(--p-primary-color, #4CAF50)" : "var(--p-content-border-color, #444)"};
+      `;
+
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "sam_model_choice";
+      radio.value = choice.filename;
+      radio.checked = i === 0;
+      radio.style.accentColor = "var(--p-primary-color, #4CAF50)";
+
+      const textWrapper = document.createElement("div");
+      textWrapper.style.cssText = `display: flex; flex-direction: column; gap: 2px;`;
+
+      const name = document.createElement("span");
+      name.textContent = choice.filename;
+      name.style.cssText = `font-size: 13px; font-weight: 600; color: var(--p-text-color, #eee);`;
+
+      const size = document.createElement("span");
+      size.textContent = choice.label.match(/\(.*\)/)?.[0] ?? "";
+      size.style.cssText = `font-size: 11px; color: var(--p-text-muted-color, #888);`;
+
+      textWrapper.append(name, size);
+      label.append(radio, textWrapper);
+
+      // Mise à jour de la sélection + style au clic
+      label.addEventListener("click", () => {
+        selectedFilename = choice.filename;
+        // Reset tous les labels
+        radioGroup.querySelectorAll("label").forEach(l => {
+          l.style.background = "transparent";
+          l.style.borderColor = "var(--p-content-border-color, #444)";
+        });
+        label.style.background = "var(--p-content-hover-background, #2a2a2a)";
+        label.style.borderColor = "var(--p-primary-color, #4CAF50)";
+        radio.checked = true;
+      });
+
+      radioGroup.appendChild(label);
+    });
+
+    dialogEl.appendChild(radioGroup);
+  }
+
+  // ── 3. Attendre la réponse de l'utilisateur ────────────────────────────
+  const confirmed = await confirmPromise;
+
+  const body = confirmed
+    ? { filename: selectedFilename }
+    : { cancelled: true };
+
+  fetch("/artishow/sam_download_choice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch(err => console.error("[InteractiveSeg] SAM choice POST failed:", err));
+});
+
 // Legacy: Also listen for the "executed" event as a fallback trigger
 // (in case WebSocket delivery is delayed). But we don't fetch data anymore;
 // we just notify that execution happened.

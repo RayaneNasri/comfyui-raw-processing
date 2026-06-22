@@ -1,4 +1,6 @@
 import torch
+import numpy as np
+
 from typing import Callable
 
 
@@ -53,3 +55,18 @@ def validate_image_input(func: Callable) -> Callable:
         return func(img, *args, **kwargs)
 
     return wrapper
+
+
+def _to_uint8_numpy(image: torch.Tensor) -> np.ndarray:
+    """Converts a float tensor image in [0, 1] to a uint8 numpy array.
+
+    Args:
+        image (torch.Tensor): A tensor of shape [H, W, 3] with float values in the range [0, 1]
+
+    Returns:
+        np.ndarray: A numpy array of shape [H, W, 3] with uint8 values in the range [0, 255]
+    """
+
+    img = torch.nan_to_num(image, nan=0.0, posinf=1.0, neginf=0.0)
+    img_uint8 = (img * 255).clamp(0, 255).to(torch.uint8).cpu().numpy()
+    return img_uint8

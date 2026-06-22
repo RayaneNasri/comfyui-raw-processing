@@ -22,6 +22,7 @@ dev = [
 ci = [
     "numpy>=2.4.2",
     "rawpy>=0.26",
+    "opencv-python>=4.8.0",
 ]
 
 [tool.pyright] # Corrected from pyrefly

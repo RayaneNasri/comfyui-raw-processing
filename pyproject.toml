@@ -9,7 +9,7 @@ dependencies = [
     "imageio>=2.37.3",
     "rawpy>=0.26.1",
     "matplotlib>=3.10",
-    "opencv-python>=4.8.0",
+    "opencv-python-headles>=4.8.0",
     "tifffile"
 ]
 
@@ -22,7 +22,6 @@ dev = [
 ci = [
     "numpy>=2.4.2",
     "rawpy>=0.26",
-    "opencv-python-headless>=4.8.0",
 ]
 
 [tool.pyright] # Corrected from pyrefly

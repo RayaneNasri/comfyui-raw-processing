@@ -11,8 +11,17 @@ class ExportNode:
                 "image": ("IMAGE",),
                 "folder": ("STRING", {"default": "./output"}),
                 "filename": ("STRING", {"default": "processed_image"}),
-                "quality": ("INT", {"default": 75, "min": 1, "max": 100, "display": "slider", "step": 1}),
-                "format": (formats,)
+                "quality": (
+                    "INT",
+                    {
+                        "default": 75,
+                        "min": 1,
+                        "max": 100,
+                        "display": "slider",
+                        "step": 1,
+                    },
+                ),
+                "format": (formats,),
             }
         }
 

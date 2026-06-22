@@ -9,7 +9,6 @@ from algorithms._utils import _to_uint8_numpy, validate_image_input
 import os
 
 
-
 def to_jpeg(image: Tensor, path: str, quality: int = 75):
     """
     Exports an sRGB tensor image to a JPEG file.
@@ -24,6 +23,7 @@ def to_jpeg(image: Tensor, path: str, quality: int = 75):
     image_uint8 = img_chw.mul(255).clamp_(0, 255).to(torch.uint8)
 
     write_jpeg(image_uint8, path + ".jpeg", quality=quality)
+
 
 def to_png(image: Tensor, path: str, quality: int = 75):
     """
@@ -66,13 +66,15 @@ def to_webp(image: Tensor, path: str, quality: int = 75):
     img = Image.fromarray(arr)
     img.save(path + ".webp", format="WEBP", quality=int(max(0, min(100, quality))))
 
+
 @validate_image_input
-def export(img: Tensor,
-           format: str,
-           folder: str = "/output",
-           file: str = "image_processed",
-           quality: int = 75)-> None:
-    
+def export(
+    img: Tensor,
+    format: str,
+    folder: str = "/output",
+    file: str = "image_processed",
+    quality: int = 75,
+) -> None:
     """Exports an sRGB tensor image to the format specified
 
     Args:
@@ -87,21 +89,9 @@ def export(img: Tensor,
         os.makedirs(folder, exist_ok=True)
 
     if os.path.isfile(folder):
-        raise ValueError(
-            f"The folder path '{folder}' is a file, not a directory."
-        )
-    
-    formats = {
-        "JPEG": to_jpeg, 
-        "PNG": to_png, 
-        "TIFF": to_tiff, 
-        "WEBP": to_webp
-    }
-    
-    path = folder + '/' + file
+        raise ValueError(f"The folder path '{folder}' is a file, not a directory.")
+
+    formats = {"JPEG": to_jpeg, "PNG": to_png, "TIFF": to_tiff, "WEBP": to_webp}
+
+    path = folder + "/" + file
     formats[format](img, path, quality)
-
-
-    
-
-

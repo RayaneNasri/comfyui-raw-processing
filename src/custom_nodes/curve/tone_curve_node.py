@@ -78,7 +78,6 @@ class ToneCurveNode(CurveNodeBase):
         curve_g = kwargs.get("curve_g", "[]")
         curve_b = kwargs.get("curve_b", "[]")
         preset_name = kwargs.get("preset_name", "")
-        save_preset_as = kwargs.get("save_preset_as", "")
 
         # Presets s'appliquent au master uniquement
         if preset_name.strip():

@@ -24,6 +24,7 @@ _SERVER_AVAILABLE = True
 _sam_choice_event = threading.Event()
 _sam_choice_result: Dict[str, Any] = {}
 
+
 @PromptServer.instance.routes.post("/artishow/sam_download_choice")
 async def _sam_choice_handler(request):
     global _sam_choice_result
@@ -75,11 +76,13 @@ def _find_available_sam_models(checkpoint_dir: str) -> List[Dict[str, str]]:
     for filename, meta in SAM_MODELS.items():
         path = os.path.join(checkpoint_dir, filename)
         if os.path.isfile(path):
-            found.append({
-                "filename": filename,
-                "type": meta["type"],
-                "path": path,
-            })
+            found.append(
+                {
+                    "filename": filename,
+                    "type": meta["type"],
+                    "path": path,
+                }
+            )
     return found
 
 
@@ -111,10 +114,13 @@ def _prompt_user_download_sam(checkpoint_dir: str) -> Dict[str, str]:
     _sam_choice_event.clear()
     _sam_choice_result.clear()
 
-    PromptServer.instance.send_sync("sam_model_missing", {
-        "checkpoint_dir": checkpoint_dir,
-        "choices": choices,
-    })
+    PromptServer.instance.send_sync(
+        "sam_model_missing",
+        {
+            "checkpoint_dir": checkpoint_dir,
+            "choices": choices,
+        },
+    )
 
     log.info("Waiting for user SAM model selection …")
     if not _sam_choice_event.wait(timeout=120):
@@ -128,6 +134,7 @@ def _prompt_user_download_sam(checkpoint_dir: str) -> Dict[str, str]:
         raise RuntimeError(f"Unknown model selected: {chosen!r}")
 
     return {"filename": chosen, **SAM_MODELS[chosen]}
+
 
 def _download_sam_model(filename: str, url: str, checkpoint_dir: str) -> str:
     """Download a SAM checkpoint and return its local path."""
@@ -359,7 +366,9 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
         )
     except Exception as e:
         log.error(f"Error while initializing SAM: {e}")
-        raise ValueError("Failed to initialize SAM model. Check if the checkpoint is valid.")
+        raise ValueError(
+            "Failed to initialize SAM model. Check if the checkpoint is valid."
+        )
 
     masks = generator.generate(image_rgb)
     masks = sorted(masks, key=lambda x: x["area"], reverse=True)
@@ -374,7 +383,6 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
 
 
 class InteractiveSegmentationMask:
-
     CATEGORY = "image/masking"
     FUNCTION = "execute"
     RETURN_TYPES = ("MASK",)
@@ -391,35 +399,68 @@ class InteractiveSegmentationMask:
                     {"default": "SLIC"},
                 ),
                 "selected_coords": ("STRING", {"default": "[]"}),
-
                 # SLIC hyperparameters
-                "slic_n_segments": ("INT", {
-                    "default": 400, "min": 10, "max": 2000, "step": 10,
-                    "display": "slider",
-                }),
-                "slic_compactness": ("FLOAT", {
-                    "default": 5.0, "min": 0.1, "max": 100.0, "step": 0.1,
-                    "display": "slider",
-                }),
-                "slic_sigma": ("FLOAT", {
-                    "default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1,
-                    "display": "slider",
-                }),
-
+                "slic_n_segments": (
+                    "INT",
+                    {
+                        "default": 400,
+                        "min": 10,
+                        "max": 2000,
+                        "step": 10,
+                        "display": "slider",
+                    },
+                ),
+                "slic_compactness": (
+                    "FLOAT",
+                    {
+                        "default": 5.0,
+                        "min": 0.1,
+                        "max": 100.0,
+                        "step": 0.1,
+                        "display": "slider",
+                    },
+                ),
+                "slic_sigma": (
+                    "FLOAT",
+                    {
+                        "default": 1.0,
+                        "min": 0.0,
+                        "max": 10.0,
+                        "step": 0.1,
+                        "display": "slider",
+                    },
+                ),
                 # SAM hyperparameters
-                "sam_points_per_side": ("INT", {
-                    "default": 32, "min": 8, "max": 128, "step": 4,
-                    "display": "slider",
-                }),
-                "sam_pred_iou_thresh": ("FLOAT", {
-                    "default": 0.88, "min": 0.0, "max": 1.0, "step": 0.01,
-                    "display": "slider",
-                }),
-                "sam_stability_score_thresh": ("FLOAT", {
-                    "default": 0.95, "min": 0.0, "max": 1.0, "step": 0.01,
-                    "display": "slider",
-                }),
-
+                "sam_points_per_side": (
+                    "INT",
+                    {
+                        "default": 32,
+                        "min": 8,
+                        "max": 128,
+                        "step": 4,
+                        "display": "slider",
+                    },
+                ),
+                "sam_pred_iou_thresh": (
+                    "FLOAT",
+                    {
+                        "default": 0.88,
+                        "min": 0.0,
+                        "max": 1.0,
+                        "step": 0.01,
+                        "display": "slider",
+                    },
+                ),
+                "sam_stability_score_thresh": (
+                    "FLOAT",
+                    {
+                        "default": 0.95,
+                        "min": 0.0,
+                        "max": 1.0,
+                        "step": 0.01,
+                        "display": "slider",
+                    },
+                ),
             },
             "hidden": {
                 "unique_id": "UNIQUE_ID",
@@ -524,7 +565,6 @@ class InteractiveSegmentationMask:
         )
 
         return (mask_tensor,)
-    
 
     def _get_or_compute_segments(
         self,
@@ -539,7 +579,7 @@ class InteractiveSegmentationMask:
         re-run the chosen segmentation engine.
 
         Parameters
-  
+
         image_np : np.ndarray  [H, W, 3] uint8
         engine   : str         "SLIC" | "SAM"
         node_id  : str         Node identifier
@@ -589,7 +629,6 @@ class InteractiveSegmentationMask:
             }
 
         return label_map
-    
 
     def _update_frontend_cache(
         self,
@@ -677,7 +716,6 @@ class InteractiveSegmentationMask:
         # Vectorised lookup: shape [H, W, 3]
         id_map_rgb = lut[label_map]
         return _numpy_to_pil(id_map_rgb)
-
 
     def _build_mask_from_selections(
         self,

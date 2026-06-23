@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 import torch
-import numpy as np
 
 from .curve_spec import CurveSpec
 

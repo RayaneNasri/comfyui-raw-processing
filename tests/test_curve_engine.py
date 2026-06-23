@@ -6,8 +6,14 @@ import numpy as np
 import pytest
 import torch
 
-from algorithms.curve.curve_engine import _bezier_lut, apply_lut_numpy, apply_lut_torch, build_lut
+from algorithms.curve.curve_engine import (
+    _bezier_lut,
+    apply_lut_numpy,
+    apply_lut_torch,
+    build_lut,
+)
 from algorithms.curve.curve_spec import CurveSpec
+
 
 def make_points(xs, ys) -> list[tuple[float, float]]:
     return list(zip(xs, ys))
@@ -18,7 +24,6 @@ def assert_close(a, b, atol=1e-4, rtol=1e-4, msg=""):
 
 
 class TestBezierLut:
-
     def test_identity_curve_returns_linear_ramp(self):
         """Points sur la diagonale -> LUT ~ rampe linéaire identité."""
         xs = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
@@ -109,7 +114,9 @@ class TestBezierLut:
         try:
             lut = _bezier_lut(xs, ys, 64)
         except (ValueError, AssertionError):
-            pytest.skip("_bezier_lut exige des xs triés en entrée (comportement valide)")
+            pytest.skip(
+                "_bezier_lut exige des xs triés en entrée (comportement valide)"
+            )
         else:
             assert np.all(np.isfinite(lut)), (
                 "xs non triés acceptés silencieusement mais produisent du NaN/inf"
@@ -117,9 +124,10 @@ class TestBezierLut:
 
 
 class TestBuildLut:
-
     def test_default_lut_size(self):
-        spec = CurveSpec(points=make_points([0, 0.25, 0.5, 0.75, 1], [0, 0.25, 0.5, 0.75, 1]))
+        spec = CurveSpec(
+            points=make_points([0, 0.25, 0.5, 0.75, 1], [0, 0.25, 0.5, 0.75, 1])
+        )
         lut = build_lut(spec)
         assert lut.shape == (256,)
 
@@ -138,7 +146,6 @@ class TestBuildLut:
         spec = CurveSpec(points=make_points([0, 0.5, 1], [0, 0.6, 1]))
         lut = build_lut(spec, lut_size=lut_size)
         assert lut.shape == (lut_size,)
-
 
     def test_range_clipping_upper(self):
         """Une courbe dépassant 1.0 doit être clippée à range_max."""
@@ -164,14 +171,15 @@ class TestBuildLut:
         """Cas limite dégénéré : range_min > range_max. Documente qu'une
         exception (ou un comportement défini) est attendu plutôt qu'un
         résultat silencieusement incohérent."""
-        spec = CurveSpec(points=make_points([0, 1], [0, 1]), range_min=0.8, range_max=0.2)
+        spec = CurveSpec(
+            points=make_points([0, 1], [0, 1]), range_min=0.8, range_max=0.2
+        )
         try:
             lut = build_lut(spec, lut_size=32)
         except (ValueError, AssertionError):
             return
         # si pas d'exception, au moins vérifier qu'il n'y a pas de NaN
         assert np.all(np.isfinite(lut))
-
 
     def test_two_points_minimum(self):
         spec = CurveSpec(points=make_points([0, 1], [0.2, 0.8]))
@@ -213,7 +221,6 @@ class TestBuildLut:
 
 
 class TestApplyLutNumpy:
-
     def test_identity_lut_returns_same_image(self):
         lut = np.linspace(0.0, 1.0, 256, dtype=np.float32)
         rng = np.random.default_rng(0)
@@ -324,7 +331,6 @@ class TestApplyLutNumpy:
 
 
 class TestApplyLutTorch:
-
     def test_identity_lut_returns_same_tensor(self):
         lut = np.linspace(0.0, 1.0, 256, dtype=np.float32)
         torch.manual_seed(0)
@@ -403,7 +409,6 @@ class TestApplyLutTorch:
 
 
 class TestEndToEndPipeline:
-
     def test_full_pipeline_numpy(self):
         spec = CurveSpec(points=make_points([0, 0.3, 0.7, 1], [0, 0.1, 0.9, 1]))
         lut = build_lut(spec, lut_size=256)
@@ -423,7 +428,9 @@ class TestEndToEndPipeline:
         assert torch.all(out <= spec.range_max + 1e-6)
 
     def test_numpy_and_torch_pipelines_agree(self):
-        spec = CurveSpec(points=make_points([0, 0.25, 0.5, 0.75, 1], [0, 0.4, 0.5, 0.6, 1]))
+        spec = CurveSpec(
+            points=make_points([0, 0.25, 0.5, 0.75, 1], [0, 0.4, 0.5, 0.6, 1])
+        )
         lut = build_lut(spec, lut_size=256)
         rng = np.random.default_rng(7)
         image_np = rng.random((16, 16, 3)).astype(np.float32)
@@ -436,7 +443,9 @@ class TestEndToEndPipeline:
     def test_default_front_end_points_pipeline(self):
         """Reproduit exactement DEFAULT_POINTS du front-end JS de bout en
         bout : doit donner la fonction identité."""
-        spec = CurveSpec(points=make_points([0, 0.25, 0.5, 0.75, 1], [0, 0.25, 0.5, 0.75, 1]))
+        spec = CurveSpec(
+            points=make_points([0, 0.25, 0.5, 0.75, 1], [0, 0.25, 0.5, 0.75, 1])
+        )
         lut = build_lut(spec, lut_size=256)
         image = np.linspace(0, 1, 100).reshape(10, 10, 1).astype(np.float32)
         image = np.repeat(image, 3, axis=2)

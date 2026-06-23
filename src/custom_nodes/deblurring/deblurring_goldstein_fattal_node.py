@@ -1,4 +1,6 @@
-from algorithms.deblurring._deblurring_goldstein_fattal import deblurring_goldstein_fattal
+from algorithms.deblurring._deblurring_goldstein_fattal import (
+    deblurring_goldstein_fattal,
+)
 
 
 class DeblurringGoldsteinFattalNode:

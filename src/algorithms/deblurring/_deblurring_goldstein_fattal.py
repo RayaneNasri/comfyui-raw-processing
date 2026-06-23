@@ -9,6 +9,7 @@ import scipy.signal
 import time
 import math
 import torch
+
 pi = np.pi
 atan2 = math.atan2
 sin = np.sin
@@ -349,8 +350,8 @@ def Dx_Dy(im):
     dérivateur spécial"""
     d = np.asarray([3, -32, 168, -672, 0, 672, -168, 32, -3]) / 840
     d = d.reshape((1, -1))
-    Dx = scipy.signal.convolve2d(im, d, mode="same", boundary="symm") # type: ignore
-    Dy = scipy.signal.convolve2d(im, d.T, mode="same", boundary="symm") # type: ignore
+    Dx = scipy.signal.convolve2d(im, d, mode="same", boundary="symm")  # type: ignore
+    Dy = scipy.signal.convolve2d(im, d.T, mode="same", boundary="symm")  # type: ignore
     return (Dx, Dy)
 
 

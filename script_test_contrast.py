@@ -67,8 +67,6 @@ def script_test_one_contrast_factor(contrast_name, contrast_factor):
 
     print("Step 6: Color Manipulation...")
     color_img = exp_img
-    #lut = load_cube_lut(PATH + "ON1_All_LUTs/ON1 Nature & Wildlife LUTs/NW-3.cube")
-    #color_img = apply_lut_grid_sample(color_img, lut)
     #color_img = saturation_hsv(color_img, 1.4)
     #color_img = temperature_simple(color_img, 10)
     color_img = temperature_tanner_helland(color_img, 4100)

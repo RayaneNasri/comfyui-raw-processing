@@ -56,8 +56,8 @@ def adobeRGB1998_to_linearRGB(image : Tensor) -> Tensor:
 
 def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
     """
-    - image: Tensor image (H,W,3) with each channel represented as a float in [0,1]
-    - lut: Tensor (S,S,S,3)
+    - image: Tensor rgb image (H,W,3) with each channel represented as a float in [0,1]
+    - lut: Tensor rgb (S,S,S,3)
     image and lut must be in the same color-space
     """
 
@@ -74,7 +74,7 @@ def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
       
     S = lut.shape[0]
 
-    """ TODO
+    """TODO
     # from linearRGB to AdobeRGB1998
     gamma = 1/2.19921875
     image_adobe_rgb = torch.pow(image, gamma)
@@ -97,7 +97,7 @@ def apply_lut_grid_sample(image : Tensor , lut : Tensor) -> Tensor:
     # back to (B,H,W,3)
     out = out.permute(0,2,3,1)
     # BGR-> RGB
-    out = out[..., [2,1,0]]
+    #out = out[..., [2,1,0]]
 
     """ TODO
     # from AdobeRGB1998 to linearRGB

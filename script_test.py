@@ -17,6 +17,8 @@ from algorithms.gamma_correction._gamma_correction import gamma_correction
 from algorithms.export._jpeg_export import export_jpeg
 
 from algorithms.color_manipulation._lut_color_manipulation import load_cube_lut
+from algorithms.color_manipulation._lut_color_manipulation import linearRGB_to_adobeRGB1998
+from algorithms.color_manipulation._lut_color_manipulation import adobeRGB1998_to_linearRGB
 from algorithms.color_manipulation._lut_color_manipulation import apply_lut_grid_sample
 from algorithms.color_manipulation._saturation_hsv import saturation_hsv
 from algorithms.color_manipulation._temperature_simple import temperature_simple
@@ -64,7 +66,9 @@ exp_img = exposure_compensation(wb_img, ev_compensation=1.2)  # +0.5 stops
 print("Step 6: Color Manipulation...")
 color_img = exp_img
 #lut = load_cube_lut(PATH + "ON1_All_LUTs/ON1 Nature & Wildlife LUTs/NW-3.cube")
-#color_img = apply_lut_grid_sample(color_img, lut)
+#adobe_img = linearRGB_to_adobeRGB1998(exp_img)
+#color_img = apply_lut_grid_sample(adobe_img, lut)
+#color_img = adobeRGB1998_to_linearRGB(color_img)
 #color_img = saturation_hsv(color_img, 1.4)
 #color_img = temperature_simple(color_img, 10)
 #color_img = temperature_tanner_helland(color_img, 4100)

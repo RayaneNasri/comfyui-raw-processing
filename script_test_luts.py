@@ -17,6 +17,8 @@ from algorithms.gamma_correction._gamma_correction import gamma_correction
 from algorithms.export._jpeg_export import export_jpeg
 
 from algorithms.color_manipulation._lut_color_manipulation import load_cube_lut
+from algorithms.color_manipulation._lut_color_manipulation import linearRGB_to_adobeRGB1998
+from algorithms.color_manipulation._lut_color_manipulation import adobeRGB1998_to_linearRGB
 from algorithms.color_manipulation._lut_color_manipulation import apply_lut_grid_sample
 from algorithms.color_manipulation._saturation_hsv import saturation_hsv
 
@@ -30,7 +32,7 @@ def script_test_one_lut(name_lut, path_lut):
     # Input file
     raw_file = PATH + "r01cbb7fdt.NEF"
     output_dir = "./outputs"
-    output_file = "processed_image_exp_1-2_" + name_lut + ".jpg"
+    output_file = "AAA-processed_image_exp_1-2_" + name_lut + ".jpg"
 
     # Step 1: Read RAW
     print("Step 1: Reading RAW file...")
@@ -65,7 +67,10 @@ def script_test_one_lut(name_lut, path_lut):
     print("Step 6: Color Manipulation...")
     #color_img = exp_img
     lut = load_cube_lut(PATH + "ON1_All_LUTs/" + path_lut + name_lut + ".cube")
-    color_img = apply_lut_grid_sample(exp_img, lut)
+    lut = lut = lut[...,[2,1,0]]
+    adobe_img = linearRGB_to_adobeRGB1998(exp_img)
+    color_img = apply_lut_grid_sample(adobe_img, lut)
+    color_img = adobeRGB1998_to_linearRGB(color_img)
     #color_img = saturation_hsv(color_img, 1.4)
 
 
@@ -101,7 +106,7 @@ def script_test_all_lut():
                  "ON1 Nature & Wildlife LUTs",
                  "ON1 Portrait LUTs"]
     
-    script_test_ten_luts("ON1 Black & White LUTs/", "BW")
+    #script_test_ten_luts("ON1 Black & White LUTs/", "BW")
     script_test_ten_luts("ON1 Cinematic LUTs/", "Cinematic-")
     script_test_ten_luts("ON1 Landscape LUTs/", "Landscape")
     script_test_ten_luts("ON1 Lifestyle & Commercial LUTs/", "LC")

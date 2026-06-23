@@ -20,7 +20,7 @@ luts = {
     "Reds Oranges Yellows" : RELATIVE_PATH + "Reds_Oranges_Yellows.cube"
 }
 
-class LutColorManipulationNode: 
+class PersonalLutColorManipulationNode: 
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -35,7 +35,25 @@ class LutColorManipulationNode:
                     "default": "Linear RGB"
                 }
                 ),
-                "lut_name": (list(luts.keys()),),
+                "lut_path": ("STRING", {"default": "path/lut.cube"}),
+                "color_space_lut": (
+                [
+                    "Linear RGB",
+                    "Adobe RGB (1998)",
+                ],
+                {
+                    "default": "Linear RGB"
+                }
+                ),
+                "order_color_channels_lut": (
+                [
+                    "RGB",
+                    "BGR",
+                ],
+                {
+                    "default": "RGB"
+                }
+                )
             }
         }
         
@@ -45,28 +63,33 @@ class LutColorManipulationNode:
     FUNCTION = "process"
     CATEGORY = "image/processing"
     
-    def process(self, image: Tensor, color_space_image: str, lut_name: str):
+    def process(self, image: Tensor, color_space_image: str, order_color_channels_lut: str, lut_path: str, color_space_lut: str):
         image = image.squeeze(0)
         
-        lut = load_cube_lut(luts[lut_name])
+        if lut_path.endswith(".cube"):
+            lut = load_cube_lut(lut_path)
         
-        # lut BGR -> RGB
-        lut = lut[...,[2,1,0]]
+        if order_color_channels_lut == "BGR":
+            lut = lut[...,[2,1,0]]
 
-        if color_space_image == "Linear RGB":
+        if color_space_image == "Linear RGB" and color_space_lut == "Adobe RGB (1998)":
             image = linearRGB_to_adobeRGB1998(image)
             res = apply_lut_grid_sample(image, lut)
             res = adobeRGB1998_to_linearRGB(res)
-        else: # color_space_image == "Linear RGB"
+        elif color_space_image == "Adobe RGB (1998)" and color_space_lut == "Linear RGB":
+            image = adobeRGB1998_to_linearRGB(image)
+            res = apply_lut_grid_sample(image, lut)
+            res = linearRGB_to_adobeRGB1998(res)
+        else:
             res = apply_lut_grid_sample(image, lut)
 
         return (res.unsqueeze(0),)
         
 
 NODE_CLASS_MAPPINGS = {
-    "LutColorManipulationNode": LutColorManipulationNode,
+    "PersonalLutColorManipulationNode": PersonalLutColorManipulationNode,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LutColorManipulationNode": "LUT Color Manipulation",
+    "PersonalLutColorManipulationNode": "Personal LUT Color Manipulation",
 }

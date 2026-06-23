@@ -10,7 +10,11 @@ dependencies = [
     "rawpy>=0.26.1",
     "matplotlib>=3.10",
     "opencv-python-headless>=4.8.0",
-    "tifffile"
+    "rawpy>=0.26",
+    "scikit-image>=0.25.0",
+    "segment-anything",
+    "tifffile",
+    "aiohttp",
 ]
 
 [dependency-groups]

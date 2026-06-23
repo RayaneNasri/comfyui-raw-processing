@@ -73,6 +73,8 @@ class PersonalLutColorManipulationNode:
 
         if lut_path.endswith(".cube"):
             lut = load_cube_lut(lut_path)
+        else:
+            raise ValueError("Invalid LUT file format. Only .cube files are supported.")
 
         if order_color_channels_lut == "BGR":
             lut = lut[..., [2, 1, 0]]

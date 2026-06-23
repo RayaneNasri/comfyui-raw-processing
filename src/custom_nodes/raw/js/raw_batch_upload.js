@@ -86,7 +86,19 @@ app.registerExtension({
         fileInput.click();
       });
 
-      
+      this.addWidget("button", "Clear selection", null, () => {
+        fileListWidget.value = "";
+        if (fileListWidget.callback)
+          fileListWidget.callback(fileListWidget.value);
+
+        const newSize = this.computeSize();
+        this.setSize([newSize[0], newSize[1]]);
+        app.graph.setDirtyCanvas(true, true);
+      });
+
+      this.onRemoved = function () {
+        fileInput.remove();
+      };
     };
   },
 });

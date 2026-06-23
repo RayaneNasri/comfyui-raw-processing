@@ -127,9 +127,12 @@ app.registerExtension({
             w.computeSize = engine === "SAM" ? undefined : () => [0, -4];
           }
         }
-        // Recalculer la taille du nœud
-        const size = this.computeSize();
-        this.setSize(size);
+        
+        if (this.__seg) {
+          const visibleWidgetCount = (this.widgets ?? []).filter(w => !w.hidden).length;
+          this.__seg.previewY = visibleWidgetCount * 22 + HEADER_HEIGHT;
+        }
+        
         this.setDirtyCanvas(true, true);
       };
 
@@ -311,7 +314,8 @@ api.addEventListener("sam_model_missing", async ({ detail }) => {
     ? { filename: selectedFilename }
     : { cancelled: true };
 
-  fetch("/artishow/sam_download_choice", {
+  const endpoint = new URL("/artishow/sam_download_choice", api.api_base).href;
+  fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -430,6 +434,8 @@ function _initNodeState(node) {
 
     // Whether we are currently fetching segment data (prevents race).
     _fetching: false,
+
+    _imageEverLoaded: false
   };
 
   // Find the hidden widget and store a direct reference for fast writes.
@@ -495,10 +501,15 @@ function _loadOverlayImage(node, b64) {
         PREVIEW_MAX_HEIGHT / img.naturalHeight,
         1 // never upscale
       );
+
       node.__seg.previewW = Math.round(img.naturalWidth * scale);
       node.__seg.previewH = Math.round(img.naturalHeight * scale);
 
-      _resizeNode(node, node.__seg.previewW, node.__seg.previewH);
+      if (!node.__seg._imageEverLoaded) {
+        node.__seg._imageEverLoaded = true;
+        _resizeNode(node, node.__seg.previewW, node.__seg.previewH);
+      }
+
       resolve();
     };
     img.onerror = () => {

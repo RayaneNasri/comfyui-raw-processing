@@ -14,7 +14,7 @@ app.registerExtension({
       onNodeCreated?.apply(this, arguments);
 
       // Find the multiline string widget we defined in the Python node
-      const fileListWidget = this.widgets.find((w) => w.name === "file_list");
+      const fileListWidget = this.widgets.find((w) => w.name === "images");
 
       const fileInput = document.createElement("input");
       fileInput.type = "file";

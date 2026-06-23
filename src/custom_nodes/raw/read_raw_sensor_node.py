@@ -9,12 +9,30 @@ class ReadRawSensorNode:
     @classmethod
     def INPUT_TYPES(cls):
         input_dir = folder_paths.get_input_directory()
-        all_files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
-        valid_extensions = (".dng", ".cr2", ".cr3", ".arw", ".nef", ".raf", ".orf", ".rw2", ".srw", ".tiff", ".tif")
+        all_files = [
+            f
+            for f in os.listdir(input_dir)
+            if os.path.isfile(os.path.join(input_dir, f))
+        ]
+        valid_extensions = (
+            ".dng",
+            ".cr2",
+            ".cr3",
+            ".arw",
+            ".nef",
+            ".raf",
+            ".orf",
+            ".rw2",
+            ".srw",
+            ".tiff",
+            ".tif",
+        )
         files = sorted(f for f in all_files if f.lower().endswith(valid_extensions))
 
         return {
-            "required": {"image": (files, {})},  # no image_upload — we add our own button via JS
+            "required": {
+                "image": (files, {})
+            },
         }
 
     CATEGORY = "image"

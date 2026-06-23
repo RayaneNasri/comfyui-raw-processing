@@ -1,8 +1,7 @@
 import torch
-from torch import Tensor
 
-from algorithms.color_manipulation._lut_color_manipulation import load_cube_lut
 from algorithms.color_manipulation._lut_color_manipulation import apply_lut_grid_sample
+
 
 def test_dtype_preserved():
     img = torch.rand(3, 3, 3, dtype=torch.float32)
@@ -10,15 +9,11 @@ def test_dtype_preserved():
     out = apply_lut_grid_sample(img, lut)
     assert out.dtype == img.dtype
 
+
 def make_identity_lut(size: int):
     values = torch.linspace(0.0, 1.0, size)
 
-    r, g, b = torch.meshgrid(
-        values,
-        values,
-        values,
-        indexing="ij"
-    )
+    r, g, b = torch.meshgrid(values, values, values, indexing="ij")
 
     return torch.stack((r, g, b), dim=-1)
 
@@ -26,17 +21,9 @@ def make_identity_lut(size: int):
 def make_invert_lut(size: int):
     values = torch.linspace(0.0, 1.0, size)
 
-    r, g, b = torch.meshgrid(
-        values,
-        values,
-        values,
-        indexing="ij"
-    )
+    r, g, b = torch.meshgrid(values, values, values, indexing="ij")
 
-    return torch.stack(
-        (1.0 - r, 1.0 - g, 1.0 - b),
-        dim=-1
-    )
+    return torch.stack((1.0 - r, 1.0 - g, 1.0 - b), dim=-1)
 
 
 def test_shape_preserved():
@@ -115,33 +102,27 @@ def test_output_range():
 
 
 def test_equal_pixels_produce_equal_results():
-    image = torch.tensor([
-        [
-            [0.2, 0.4, 0.8],
-            [0.2, 0.4, 0.8]
-        ]
-    ])
+    image = torch.tensor([[[0.2, 0.4, 0.8], [0.2, 0.4, 0.8]]])
 
     lut = torch.rand((17, 17, 17, 3))
 
     result = apply_lut_grid_sample(image, lut)
 
-    assert torch.allclose(
-        result[0, 0],
-        result[0, 1]
-    )
+    assert torch.allclose(result[0, 0], result[0, 1])
 
 
 def test_identity_lut_corners():
     lut = make_identity_lut(17)
 
-    image = torch.tensor([
-        [[0.0, 0.0, 0.0]],
-        [[1.0, 0.0, 0.0]],
-        [[0.0, 1.0, 0.0]],
-        [[0.0, 0.0, 1.0]],
-        [[1.0, 1.0, 1.0]]
-    ])
+    image = torch.tensor(
+        [
+            [[0.0, 0.0, 0.0]],
+            [[1.0, 0.0, 0.0]],
+            [[0.0, 1.0, 0.0]],
+            [[0.0, 0.0, 1.0]],
+            [[1.0, 1.0, 1.0]],
+        ]
+    )
 
     result = apply_lut_grid_sample(image, lut)
 
@@ -155,12 +136,7 @@ def test_channel_order():
 
     values = torch.linspace(0.0, 1.0, 17)
 
-    r, g, b = torch.meshgrid(
-        values,
-        values,
-        values,
-        indexing="ij"
-    )
+    r, g, b = torch.meshgrid(values, values, values, indexing="ij")
 
     lut[..., 0] = b
     lut[..., 1] = g

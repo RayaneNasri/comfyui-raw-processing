@@ -2,6 +2,7 @@ import torch
 
 from algorithms.color_manipulation._contrast_linear_global import contrast_linear_global
 
+
 def test_shape_preserved():
     image = torch.rand((32, 64, 3))
 
@@ -27,11 +28,7 @@ def test_global_mean_preserved():
 
     mean_after = result.mean()
 
-    assert torch.allclose(
-        mean_before,
-        mean_after,
-        atol=1e-2
-    )
+    assert torch.allclose(mean_before, mean_after, atol=1e-2)
 
 
 def test_zero_contrast():
@@ -41,7 +38,7 @@ def test_zero_contrast():
 
     result = contrast_linear_global(image, 0.0)
 
-    expected = torch.full_like(image, mean)
+    expected = torch.full_like(image, mean.item())
 
     assert torch.allclose(result, expected, atol=1e-5)
 
@@ -71,33 +68,21 @@ def test_decrease_contrast_decreases_variance():
 
 
 def test_two_pixel_example_factor_two():
-    image = torch.tensor([
-        [[0.25, 0.25, 0.25]],
-        [[0.75, 0.75, 0.75]]
-    ])
+    image = torch.tensor([[[0.25, 0.25, 0.25]], [[0.75, 0.75, 0.75]]])
 
     result = contrast_linear_global(image, 2.0)
 
-    expected = torch.tensor([
-        [[0.0, 0.0, 0.0]],
-        [[1.0, 1.0, 1.0]]
-    ])
+    expected = torch.tensor([[[0.0, 0.0, 0.0]], [[1.0, 1.0, 1.0]]])
 
     assert torch.allclose(result, expected, atol=1e-6)
 
 
 def test_two_pixel_example_factor_half():
-    image = torch.tensor([
-        [[0.25, 0.25, 0.25]],
-        [[0.75, 0.75, 0.75]]
-    ])
+    image = torch.tensor([[[0.25, 0.25, 0.25]], [[0.75, 0.75, 0.75]]])
 
     result = contrast_linear_global(image, 0.5)
 
-    expected = torch.tensor([
-        [[0.375, 0.375, 0.375]],
-        [[0.625, 0.625, 0.625]]
-    ])
+    expected = torch.tensor([[[0.375, 0.375, 0.375]], [[0.625, 0.625, 0.625]]])
 
     assert torch.allclose(result, expected, atol=1e-6)
 

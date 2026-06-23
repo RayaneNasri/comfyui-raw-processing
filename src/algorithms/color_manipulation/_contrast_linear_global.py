@@ -1,11 +1,12 @@
 import torch
-from torch import Tensor 
+from torch import Tensor
 
-def contrast_linear_global(rgb_image : Tensor, contrast_factor : float) -> Tensor:
+
+def contrast_linear_global(rgb_image: Tensor, contrast_factor: float) -> Tensor:
     """
     - rgb_image : Tensor RGB image (H,W,3) with each channel represented as a float in [0,1]
     - contrast_factor : float (adviced values : between 0.5 and 2.0)
-    
+
     contrast_factor < 1 -> decrease contrast
     contrast_factor > 1 -> increase contrast
 

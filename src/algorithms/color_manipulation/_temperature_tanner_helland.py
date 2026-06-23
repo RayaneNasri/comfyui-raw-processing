@@ -3,7 +3,7 @@ from torch import Tensor
 import math
 
 
-def kelvin_to_rgb_tanner_helland(temperature_K : float) -> tuple[float, float, float]:
+def kelvin_to_rgb_tanner_helland(temperature_K: float) -> tuple[float, float, float]:
     """
     Converts temperature in Kelvin to RGB.
 
@@ -11,7 +11,7 @@ def kelvin_to_rgb_tanner_helland(temperature_K : float) -> tuple[float, float, f
         (the interesting photographic range, which is 1500 K to 15000 K)
         The white point occurs at 6500-6600 K.
     """
-    
+
     temperature_K = temperature_K / 100
 
     # Red channel
@@ -54,32 +54,33 @@ def kelvin_to_rgb_tanner_helland(temperature_K : float) -> tuple[float, float, f
         if coeff_b > 255:
             coeff_b = 255.0
 
-    return coeff_r, coeff_g, coeff_b 
+    return coeff_r, coeff_g, coeff_b
 
 
-
-def temperature_tanner_helland(rgb_image : Tensor, temperature_K : float) -> Tensor:
+def temperature_tanner_helland(rgb_image: Tensor, temperature_K: float) -> Tensor:
     """
     - rgb_image : Tensor RGB image (H,W,3) with each channel represented as a float in [0,1]
     - temperature_K : temperature in Kelvin, between 1000 K and 40000 K
         (the interesting photographic range, which is 1500 K to 15000 K)
         The white point occurs at 6500-6600 K.
-    
+
     Make the image warmer (low temperature_K) or cooler (high temperature_K)
     """
 
-    # Convert the target temperature in Kelvin to RGB using the tanner Helland algorithm 
+    # Convert the target temperature in Kelvin to RGB using the tanner Helland algorithm
     coeff_r, coeff_g, coeff_b = kelvin_to_rgb_tanner_helland(temperature_K)
 
     # Normalize the coeffs
-    coeff_r /= 255.
-    coeff_g /= 255.
-    coeff_b /= 255.
+    coeff_r /= 255.0
+    coeff_g /= 255.0
+    coeff_b /= 255.0
 
     # Creates broadcastable tensor
-    coeffs = torch.tensor([coeff_r, coeff_g, coeff_b], dtype=rgb_image.dtype, device=rgb_image.device).view(1, 1, 3)
-    
+    coeffs = torch.tensor(
+        [coeff_r, coeff_g, coeff_b], dtype=rgb_image.dtype, device=rgb_image.device
+    ).view(1, 1, 3)
+
     # multiply each pixel by the coeffs on a (H x W x 3) rgb_image
     output = rgb_image * coeffs
 
-    return output.clamp(0.0,1.0)
+    return output.clamp(0.0, 1.0)

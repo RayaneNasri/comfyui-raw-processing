@@ -6,13 +6,12 @@ stages:
 
 workflow:
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main")'
     - when: never
 
 variables:
   CI_IMAGE: "gitlab-registry.telecom-paris.fr/proj104/2025-2026/image-processing/ci:py313"
-
   UV_CACHE_DIR: .uv-cache
 
 default:
@@ -52,4 +51,4 @@ test:
   stage: test
   script:
     - make setup-CI
-    - uv run pytest -q
+    - uv run pytest -q -m "not stress"

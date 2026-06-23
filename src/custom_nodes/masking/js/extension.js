@@ -314,8 +314,7 @@ api.addEventListener("sam_model_missing", async ({ detail }) => {
     ? { filename: selectedFilename }
     : { cancelled: true };
 
-  const endpoint = new URL("/artishow/sam_download_choice", api.api_base).href;
-  fetch(endpoint, {
+  api.fetchApi("/artishow/sam_download_choice", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

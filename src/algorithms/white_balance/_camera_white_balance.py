@@ -2,7 +2,8 @@ import torch
 
 
 def raw_wb_gains_to_rgb(wb_gains: torch.Tensor) -> torch.Tensor:
-    """Convert RAW white-balance gains to RGB gains.
+    """
+    Convert RAW white-balance gains to RGB gains.
 
     Args:
         wb_gains (torch.Tensor): Camera white-balance gains from RAW metadata.
@@ -49,7 +50,8 @@ def camera_white_balance(
     wb_gains: torch.Tensor,
     strength: float = 1.0,
 ) -> torch.Tensor:
-    """Apply camera white balance to an RGB image.
+    """
+    Apply camera white balance to an RGB image.
 
     Args:
         img (torch.Tensor): Input image tensor with shape ``(H, W, 3)``.

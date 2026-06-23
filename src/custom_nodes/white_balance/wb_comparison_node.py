@@ -1,6 +1,6 @@
 import torch
 
-from algorithms.white_balance import camera_white_balance, gw, white_patch_ref
+from algorithms.white_balance import camera_white_balance, gray_world, white_patch_ref
 
 
 class CameraWhiteBalanceNode:
@@ -61,7 +61,7 @@ class CameraWhiteBalanceNode:
         input_3d = image.squeeze()
 
         out_camera = camera_white_balance(input_3d, wb_gains, strength)
-        out_gw = gw(input_3d)
+        out_gw = gray_world(input_3d)
         out_wpr = white_patch_ref(input_3d, compare_percentil)
 
         return (

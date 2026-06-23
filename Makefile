@@ -22,7 +22,7 @@ FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
 
 SOURCE_DIR = src/custom_nodes
 COMFY_TARGET = external/ComfyUI/custom_nodes
-PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
+NODE_ITEMS = $(shell find $(SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name "__init__.py" ! -name "__pycache__")
 
 help:
 	@printf "%b\n" "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
@@ -57,10 +57,7 @@ install-deps: $(VENV_SENTINEL)
 	@if [ -f "external/ComfyUI/manager_requirements.txt" ]; then \
 		uv pip install -r external/ComfyUI/manager_requirements.txt; \
 	fi
-	@if [ -f "project_requirements.txt" ]; then \
-		printf "%b\n" "Installing project dependencies..."; \
-		uv pip install -r project_requirements.txt; \
-	fi
+	@printf "%b\n" "Installing project dependencies..."
 	@uv pip install -e .
 
 install-torch: $(VENV_SENTINEL)
@@ -68,8 +65,27 @@ install-torch: $(VENV_SENTINEL)
 		printf "%b\n" "Detected macOS. Installing PyTorch (MPS supported)..."; \
 		uv pip install torch torchvision torchaudio; \
 	elif [ "$(HAS_NVIDIA)" = "True" ]; then \
-		printf "%b\n" "Detected NVIDIA GPU. Installing PyTorch (CUDA 13.0)..."; \
-		uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		CUDA_VER=$$(nvidia-smi | grep -o 'CUDA Version: [0-9]*' | awk '{print $$3}'); \
+		if [ -z "$$CUDA_VER" ]; then \
+			printf "%b\n" "Detected NVIDIA GPU but could not determine CUDA version. Installing PyTorch (CUDA 13.0)..."; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		elif [ "$$CUDA_VER" -lt 12 ]; then \
+			printf "%b\n" "$(YELLOW)Your CUDA version ($$CUDA_VER) is too old. Defaulting to PyTorch (CUDA 13.0)...$(NC)"; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		elif [ "$$CUDA_VER" -eq 12 ]; then \
+			printf "%b" "$(YELLOW)You have CUDA 12 installed. Do you want to use PyTorch for CUDA 13? [y/N]: $(NC)"; \
+			read -r ans < /dev/tty 2>/dev/null || ans="n"; \
+			if [ "$$ans" = "y" ] || [ "$$ans" = "Y" ]; then \
+				printf "%b\n" "Installing PyTorch (CUDA 13.0)..."; \
+				uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+			else \
+				printf "%b\n" "Installing PyTorch (CUDA 12.4)..."; \
+				uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124; \
+			fi; \
+		else \
+			printf "%b\n" "Detected CUDA $$CUDA_VER. Installing PyTorch (CUDA 13.0)..."; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		fi; \
 	else \
 		printf "%b\n" "$(YELLOW)No NVIDIA GPU detected. Installing PyTorch (CPU version)...$(NC)"; \
 		uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \
@@ -92,24 +108,23 @@ setup-xpu: check-comfyui $(VENV_SENTINEL)
 setup-CI: $(VENV_SENTINEL)
 	@printf "%b\n" "$(BLUE)Setting up environment for CI/CD...$(NC)"
 	@$(MAKE) install-torch
-	@uv pip install -r ci-requirements.txt
+	@uv export --only-group ci --no-emit-project -o .ci-reqs.txt
+	@uv pip install -r .ci-reqs.txt
+	@rm .ci-reqs.txt
 	@printf "%b\n" "$(GREEN)CI/CD setup complete!$(NC)"
 
 link-nodes: remove-link-nodes
-	@printf "%b\n" "$(BLUE)$(BOLD)Linking all nodes files to $(COMFY_TARGET)...$(NC)"
-	@for file in $(PY_FILES); do \
-		FILENAME=$$(basename $$file); \
-		ln -sf $(shell pwd)/$$file $(COMFY_TARGET)/$$FILENAME; \
+	@printf "%b\n" "$(BLUE)$(BOLD)Linking nodes to $(COMFY_TARGET)...$(NC)"
+	@for item in $(NODE_ITEMS); do \
+		BASENAME=$$(basename $$item); \
+		ln -sf $(shell pwd)/$$item $(COMFY_TARGET)/$$BASENAME; \
 	done
 	@printf "%b\n" "$(GREEN)Linking completed$(NC)"
 
 remove-link-nodes: 
 	@printf "%b\n" "$(BLUE)$(BOLD)Cleaning nodes from $(COMFY_TARGET)...$(NC)"
-	@find $(COMFY_TARGET) -maxdepth 1 \( -type l -o -type f \) \
-		-name "*.py" \
-		! -name "__init__.py" \
-		! -name "websocket_image_save.py" \
-		-delete
+	@find $(COMFY_TARGET) -maxdepth 1 -type l -delete
+	@find $(COMFY_TARGET) -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "websocket_image_save.py" -delete
 	@printf "%b\n" "$(GREEN)Nodes cleanup complete.$(NC)"
 
 run: $(VENV_SENTINEL) link-nodes

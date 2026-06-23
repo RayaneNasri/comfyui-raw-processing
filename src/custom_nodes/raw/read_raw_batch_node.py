@@ -37,7 +37,7 @@ class BatchReadRawSensorNode:
 
         return {
             "required": {
-                "file_list": ("STRING", {"multiline": True, "default": ""}),
+                "images": ("STRING", {"multiline": True, "default": ""}),
             },
         }
 
@@ -62,7 +62,7 @@ class BatchReadRawSensorNode:
 
     @staticmethod
     def _parse_filenames(images: str) -> list[str]:
-        filenames = json.loads(images)
+        filenames = [f.strip() for f in images.strip().split('\n') if f.strip()]
         if not isinstance(filenames, list) or not filenames:
             raise ValueError("No images selected for batch loading.")
         return filenames

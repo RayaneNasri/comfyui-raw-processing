@@ -1,13 +1,22 @@
 from algorithms.raw.reader import read_raw_sensor_data
 
+import os
+import folder_paths  # type: ignore
+
 
 class ReadRawSensorNode:
     @classmethod
     def INPUT_TYPES(cls):
+        input_dir = folder_paths.get_input_directory()
+        files = [
+            f
+            for f in os.listdir(input_dir)
+            if os.path.isfile(os.path.join(input_dir, f))
+        ]
+        files = folder_paths.filter_files_content_types(files, ["image"])
+
         return {
-            "required": {
-                "image_path": ("STRING", {"default": "input/image.ARW"}),
-            }
+            "required": {"image": (sorted(files), {"image_upload": True})},
         }
 
     CATEGORY = "image"

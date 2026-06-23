@@ -65,8 +65,27 @@ install-torch: $(VENV_SENTINEL)
 		printf "%b\n" "Detected macOS. Installing PyTorch (MPS supported)..."; \
 		uv pip install torch torchvision torchaudio; \
 	elif [ "$(HAS_NVIDIA)" = "True" ]; then \
-		printf "%b\n" "Detected NVIDIA GPU. Installing PyTorch (CUDA 13.0)..."; \
-		uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		CUDA_VER=$$(nvidia-smi | grep -o 'CUDA Version: [0-9]*' | awk '{print $$3}'); \
+		if [ -z "$$CUDA_VER" ]; then \
+			printf "%b\n" "Detected NVIDIA GPU but could not determine CUDA version. Installing PyTorch (CUDA 13.0)..."; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		elif [ "$$CUDA_VER" -lt 12 ]; then \
+			printf "%b\n" "$(YELLOW)Your CUDA version ($$CUDA_VER) is too old. Defaulting to PyTorch (CUDA 13.0)...$(NC)"; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		elif [ "$$CUDA_VER" -eq 12 ]; then \
+			printf "%b" "$(YELLOW)You have CUDA 12 installed. Do you want to use PyTorch for CUDA 13? [y/N]: $(NC)"; \
+			read -r ans < /dev/tty 2>/dev/null || ans="n"; \
+			if [ "$$ans" = "y" ] || [ "$$ans" = "Y" ]; then \
+				printf "%b\n" "Installing PyTorch (CUDA 13.0)..."; \
+				uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+			else \
+				printf "%b\n" "Installing PyTorch (CUDA 12.4)..."; \
+				uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124; \
+			fi; \
+		else \
+			printf "%b\n" "Detected CUDA $$CUDA_VER. Installing PyTorch (CUDA 13.0)..."; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		fi; \
 	else \
 		printf "%b\n" "$(YELLOW)No NVIDIA GPU detected. Installing PyTorch (CPU version)...$(NC)"; \
 		uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \

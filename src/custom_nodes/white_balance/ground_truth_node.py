@@ -24,7 +24,7 @@ class GroundTruthNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/white-balance"
     SEARCH_ALIASES = [
         "white balance adjustment",
         "color temperature correction",

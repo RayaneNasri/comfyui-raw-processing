@@ -45,7 +45,7 @@ class LutColorManipulationNode:
     RETURN_NAMES = ("image",)
 
     FUNCTION = "process"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/color-manipulation"
 
     def process(self, image: Tensor, color_space_image: str, lut_name: str):
         image = image.squeeze(0)

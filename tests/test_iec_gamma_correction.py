@@ -1,7 +1,7 @@
 import torch
 import pytest
 
-from algorithms.gc.iec_gamma_correction import iec_gamma_correction
+from algorithms.gamma_correction.iec_gamma_correction import iec_gamma_correction
 
 
 def test_iec_gamma_correction_known_values():

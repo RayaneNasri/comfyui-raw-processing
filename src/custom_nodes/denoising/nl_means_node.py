@@ -33,7 +33,7 @@ class NonLocalMeansNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/denoising"
     SEARCH_ALIASES = [
         "non local means denoising",
         "fastNlMeansDenoisingColored",

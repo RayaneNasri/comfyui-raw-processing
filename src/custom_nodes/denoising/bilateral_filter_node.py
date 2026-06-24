@@ -34,7 +34,7 @@ class BilatFilterNode:
             "borderType": (borderTypes,),
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/denoising"
 
     SEARCH_ALIASES = [
         "bilateral filter",

@@ -17,7 +17,7 @@ class MedianFilterNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/denoising"
     SEARCH_ALIASES = [
         "median filter",
         "median blur",

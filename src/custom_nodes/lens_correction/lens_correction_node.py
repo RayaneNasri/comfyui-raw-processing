@@ -88,7 +88,7 @@ class LensCorrectionNode:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "process"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/lens-correction"
     SEARCH_ALIASES = [
         "lens correction",
         "optical correction",
@@ -116,15 +116,12 @@ class LensCorrectionNode:
         # try to load a vignette gain map from DNG metadata once per batch.
         gain_map = try_read_vignette_gain_map(image_path, H, W)
 
-        results = []
-        for i in range(image.shape[0]):
-            frame = image[i]  # (H, W, 3)
-            frame = correct_vignetting(frame, vignette_alpha, vignette_beta, gain_map)
-            frame = correct_distortion(frame, distortion_k1, distortion_k2)
-            frame = correct_chromatic_aberration(frame, ca_red_scale, ca_blue_scale)
-            results.append(frame)
+        frame = image.squeeze()  # (H, W, 3)
+        frame = correct_vignetting(frame, vignette_alpha, vignette_beta, gain_map)
+        frame = correct_distortion(frame, distortion_k1, distortion_k2)
+        frame = correct_chromatic_aberration(frame, ca_red_scale, ca_blue_scale)
 
-        return (torch.stack(results),)
+        return (frame.unsqueeze(0),)
 
 
 NODE_CLASS_MAPPINGS = {

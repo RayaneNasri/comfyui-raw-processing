@@ -28,7 +28,7 @@ class CurveNodeBase(ABC):
     adding to the returned dict.
     """
 
-    CATEGORY = "image/curves"
+    CATEGORY = "image/processing/curve-manipulation"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "execute"

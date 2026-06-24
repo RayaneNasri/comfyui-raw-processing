@@ -22,7 +22,7 @@ class MalvarHeCutlerDemosaicNode:
     ]
 
     FUNCTION = "execute"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/demosaicing"
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("RGB_image",)

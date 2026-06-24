@@ -19,7 +19,7 @@ class ReadRawSensorNode:
             "required": {"image": (sorted(files), {"image_upload": True})},
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/loader"
     SEARCH_ALIASES = [
         "load image",
         "open image",

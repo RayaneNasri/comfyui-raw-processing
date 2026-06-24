@@ -25,12 +25,13 @@ class ExposureCompensationNode:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "process"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/exposure-compensation"
 
     def process(self, image: Tensor, ev_compensation: float):
-
-        res = exposure_compensation(image, ev_compensation)
-        return (res,)
+        
+        input2d = image.squeeze()
+        res = exposure_compensation(input2d, ev_compensation)
+        return (res.unsqueeze(0),)
 
 
 NODE_CLASS_MAPPINGS = {

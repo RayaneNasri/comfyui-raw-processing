@@ -1,4 +1,6 @@
+from aiohttp import web
 from torch import Tensor
+from server import PromptServer  # type: ignore
 from algorithms.color_manipulation._lut_color_manipulation import load_cube_lut
 from algorithms.color_manipulation._lut_color_manipulation import (
     linearRGB_to_adobeRGB1998,
@@ -8,20 +10,43 @@ from algorithms.color_manipulation._lut_color_manipulation import (
 )
 from algorithms.color_manipulation._lut_color_manipulation import apply_lut_grid_sample
 
-RELATIVE_PATH = "files/luts_color_manipulation/ON1_Color_Boost_LUTs/"
+import asyncio
+import os
+import folder_paths  # type: ignore
 
-luts = {
-    "Aqua": RELATIVE_PATH + "Aqua.cube",
-    "Aqua and Orange Dark": RELATIVE_PATH + "Aqua_and_Orange_Dark.cube",
-    "Blues": RELATIVE_PATH + "Blues.cube",
-    "Earth Tone Boost": RELATIVE_PATH + "Earth_Tone_Boost.cube",
-    "Green Blues": RELATIVE_PATH + "Green_Blues.cube",
-    "Green Yellow": RELATIVE_PATH + "Green_Yellow.cube",
-    "Oranges": RELATIVE_PATH + "Oranges.cube",
-    "Purple": RELATIVE_PATH + "Purple.cube",
-    "Reds": RELATIVE_PATH + "Reds.cube",
-    "Reds Oranges Yellows": RELATIVE_PATH + "Reds_Oranges_Yellows.cube",
-}
+_CUBE_DIR = os.path.join(folder_paths.models_dir, "luts")
+os.makedirs(_CUBE_DIR, exist_ok=True)
+
+@PromptServer.instance.routes.post("/personal_lut/upload_cube")
+async def upload_cube(request):
+    reader = await request.multipart()
+    field  = await reader.next()
+
+    if field is None or not field.filename:
+        return web.json_response({"error": "Aucun fichier reçu"}, status=400)
+
+    filename = os.path.basename(field.filename)
+    if not filename.lower().endswith(".cube"):
+        return web.json_response(
+            {"error": "Le fichier doit être un .cube"}, status=400
+        )
+
+    dest     = os.path.join(_CUBE_DIR, filename)
+    tmp_dest = dest + ".part"
+
+    # Write to a temporary file first so a partial upload never leaves a
+    # corrupted .cube in the presets folder.
+    try:
+        with open(tmp_dest, "wb") as f:
+            while chunk := await field.read_chunk():
+                f.write(chunk)
+        os.replace(tmp_dest, dest)  # atomic rename, only on success
+    except (ConnectionResetError, asyncio.CancelledError, OSError):
+        if os.path.isfile(tmp_dest):
+            os.remove(tmp_dest)
+        raise
+
+    return web.json_response({"filename": filename, "path": dest})
 
 
 class PersonalLutColorManipulationNode:
@@ -37,7 +62,9 @@ class PersonalLutColorManipulationNode:
                     ],
                     {"default": "Linear RGB"},
                 ),
-                "lut_path": ("STRING", {"default": "path/lut.cube"}),
+                # This widget is hidden in the UI and driven by the JS file picker.
+                # Its value is the absolute server-side path to the uploaded .cube file.
+                "lut_path": ("STRING", {"default": ""}),
                 "color_space_lut": (
                     [
                         "Linear RGB",
@@ -71,10 +98,19 @@ class PersonalLutColorManipulationNode:
     ):
         image = image.squeeze(0)
 
-        if lut_path.endswith(".cube"):
-            lut = load_cube_lut(lut_path)
-        else:
+        if not lut_path:
+            raise ValueError(
+                "Aucun fichier .cube sélectionné. "
+                "Utilisez le bouton « Ouvrir un fichier .cube… » dans le node."
+            )
+
+        if not lut_path.endswith(".cube"):
             raise ValueError("Invalid LUT file format. Only .cube files are supported.")
+
+        if not os.path.isfile(lut_path):
+            raise FileNotFoundError(f"Fichier LUT introuvable : {lut_path}")
+
+        lut = load_cube_lut(lut_path)
 
         if order_color_channels_lut == "BGR":
             lut = lut[..., [2, 1, 0]]
@@ -102,3 +138,5 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "PersonalLutColorManipulationNode": "Personal LUT Color Manipulation",
 }
+
+WEB_DIRECTORY = "./web"

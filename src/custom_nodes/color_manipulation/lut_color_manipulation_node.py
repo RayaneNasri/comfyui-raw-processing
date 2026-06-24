@@ -8,7 +8,7 @@ from algorithms.color_manipulation._lut_color_manipulation import (
 )
 from algorithms.color_manipulation._lut_color_manipulation import apply_lut_grid_sample
 
-RELATIVE_PATH = "files/luts_color_manipulation/ON1_Color_Boost_LUTs/"
+RELATIVE_PATH = "resources/lut_presets/"
 
 luts = {
     "Aqua": RELATIVE_PATH + "Aqua.cube",

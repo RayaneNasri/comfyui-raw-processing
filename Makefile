@@ -1,4 +1,4 @@
-.PHONY: help status update clean run run-cpu run-gpu install-deps install-torch setup setup-xpu
+.PHONY: help status update clean run run-cpu run-gpu install-deps install-torch setup setup-xpu link-nodes remove-link-nodes link-presets remove-link-presets
 
 BLUE := \033[0;34m
 CYAN := \033[0;36m
@@ -23,6 +23,13 @@ FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
 SOURCE_DIR = src/custom_nodes
 COMFY_TARGET = external/ComfyUI/custom_nodes
 NODE_ITEMS = $(shell find $(SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name "__init__.py" ! -name "__pycache__")
+
+COMFY_MODELS_DIR = external/ComfyUI/models
+
+DCP_PRESETS_SOURCE_DIR = resources/dcp_presets
+LUT_PRESETS_SOURCE_DIR = resources/lut_presets
+DCP_PRESETS_TARGET      = $(COMFY_MODELS_DIR)/dcp
+LUT_PRESETS_TARGET      = $(COMFY_MODELS_DIR)/lut
 
 help:
 	@printf "%b\n" "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
@@ -127,7 +134,27 @@ remove-link-nodes:
 	@find $(COMFY_TARGET) -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "websocket_image_save.py" -delete
 	@printf "%b\n" "$(GREEN)Nodes cleanup complete.$(NC)"
 
-run: $(VENV_SENTINEL) link-nodes
+link-presets: remove-link-presets
+	@printf "%b\n" "$(BLUE)$(BOLD)Linking presets to $(COMFY_MODELS_DIR)...$(NC)"
+	@mkdir -p $(DCP_PRESETS_TARGET) $(LUT_PRESETS_TARGET)
+	@find $(DCP_PRESETS_SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name ".*" -print0 2>/dev/null | \
+		while IFS= read -r -d '' item; do \
+			ln -sf "$(shell pwd)/$$item" "$(DCP_PRESETS_TARGET)/$$(basename "$$item")"; \
+		done
+	@find $(LUT_PRESETS_SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name ".*" -print0 2>/dev/null | \
+		while IFS= read -r -d '' item; do \
+			ln -sf "$(shell pwd)/$$item" "$(LUT_PRESETS_TARGET)/$$(basename "$$item")"; \
+		done
+	@printf "%b\n" "$(GREEN)Presets linking completed$(NC)"
+
+remove-link-presets:
+	@printf "%b\n" "$(BLUE)$(BOLD)Cleaning preset links from $(COMFY_MODELS_DIR)...$(NC)"
+	@mkdir -p $(DCP_PRESETS_TARGET) $(LUT_PRESETS_TARGET)
+	@find $(DCP_PRESETS_TARGET) -maxdepth 1 -type l -delete
+	@find $(LUT_PRESETS_TARGET) -maxdepth 1 -type l -delete
+	@printf "%b\n" "$(GREEN)Presets cleanup complete.$(NC)"
+
+run: $(VENV_SENTINEL) link-nodes link-presets
 	@printf "%b\n" "$(BLUE)$(BOLD)Launching ComfyUI...$(NC)"
 	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		printf "%b\n" "$(GREEN)GPU acceleration detected$(NC)"; \
@@ -137,11 +164,11 @@ run: $(VENV_SENTINEL) link-nodes
 		uv run external/ComfyUI/main.py --cpu $(COMFY_FLAGS) $(FLAGS); \
 	fi
 
-run-cpu: $(VENV_SENTINEL) link-nodes
+run-cpu: $(VENV_SENTINEL) link-nodes link-presets
 	@printf "%b\n" "$(BLUE)Launching ComfyUI (CPU Forced)...$(NC)"
 	uv run external/ComfyUI/main.py --cpu $(COMFY_FLAGS) $(FLAGS)
 
-run-gpu: $(VENV_SENTINEL) link-nodes
+run-gpu: $(VENV_SENTINEL) link-nodes link-presets
 	@printf "%b\n" "$(BLUE)Launching ComfyUI (GPU Forced)...$(NC)"
 	@if ! uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		printf "%b\n" "$(RED)GPU not available!$(NC)"; exit 1; \
@@ -191,7 +218,7 @@ update: $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@printf "%b\n" "$(GREEN)$(BOLD)Update complete!$(NC)"
 
-clean: remove-link-nodes
+clean: remove-link-nodes remove-link-presets
 	@printf "%b\n" "$(YELLOW)Cleaning environment...$(NC)"
 	@rm -rf .venv
 	@find . -type d -name "__pycache__" -exec rm -rf {} +

@@ -131,7 +131,7 @@ link-nodes: remove-link-nodes
 remove-link-nodes: 
 	@printf "%b\n" "$(BLUE)$(BOLD)Cleaning nodes from $(COMFY_TARGET)...$(NC)"
 	@find $(COMFY_TARGET) -maxdepth 1 -type l -delete
-	@find $(COMFY_TARGET) -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "websocket_image_save.py" -delete
+	@find $(COMFY_TARGET) -maxdepth 1 -type f -name "*.py" -delete
 	@printf "%b\n" "$(GREEN)Nodes cleanup complete.$(NC)"
 
 link-presets: remove-link-presets

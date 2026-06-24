@@ -15,30 +15,17 @@ def bilateral_filter(
     strBorderType: str = "BORDER_DEFAULT",
 ) -> torch.Tensor:
     """
-    Simple wrapper for open-cv function bilateralFilter
+    Simple wrapper for open-cv function bilateralFilter.
 
-    Parameters
-    ----------
-    img : torch.Tensor
-        Input image
-    d : int
-        Diameter of each pixel neighborhood that is used during filtering.
-        If it is non-positive, it is computed from sigmaSpace.
-    sigmaColor : float
-        Filter sigma in the color space. A larger value of the parameter means that
-        farther colors within the pixel neighborhood will be mixed together,
-        resulting in larger areas of semi-equal color.
-    sigmaSpace : float
-        Filter sigma in the coordinate space. A larger value of the parameter means that
-        farther pixels will influence each other as long as their colors are close enough.
-    strBorderType : str
-        Pixel extrapolation method, see the modes available in the open-cv documentation.
-        BORDER_WRAP is not supported.
+    Args:
+        img (torch.Tensor): Input image.
+        d (int): Diameter of each pixel neighborhood that is used during filtering. If it is non-positive, it is computed from sigmaSpace.
+        sigmaColor (float): Filter sigma in the color space. A larger value of the parameter means that farther colors within the pixel neighborhood will be mixed together, resulting in larger areas of semi-equal color.
+        sigmaSpace (float): Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough.
+        strBorderType (str): Pixel extrapolation method, see the modes available in the open-cv documentation. BORDER_WRAP is not supported.
 
-    Returns
-    -------
-    img_wb : torch.Tensor
-        Filtred Image
+    Returns:
+        torch.Tensor: Filtered image.
     """
 
     # d validation --

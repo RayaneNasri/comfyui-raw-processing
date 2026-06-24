@@ -8,13 +8,9 @@ def correct_chromatic_aberration(
     blue_scale: float,
 ) -> torch.Tensor:
     """
-    Correct lateral chromatic aberration by scaling R and B channels around
-    the image centre to align them with the G channel.
+    Correct lateral chromatic aberration by scaling R and B channels around the image centre to align them with the G channel.
 
-    Lateral CA appears because the lens refracts different wavelengths by
-    slightly different amounts, causing colour fringing at high-contrast edges.
-    The fix is a small per-channel magnification/minification implemented via
-    an affine grid_sample, which is GPU-compatible and differentiable.
+    Lateral chromatic aberration (CA) appears because the lens refracts different wavelengths by slightly different amounts, causing colour fringing at high-contrast edges. The fix is a small per-channel magnification/minification implemented via an affine grid_sample, which is GPU-compatible and differentiable.
 
     Convention:
         red_scale > 1.0  → R channel is magnified (zoomed in).
@@ -22,12 +18,12 @@ def correct_chromatic_aberration(
         G channel is always left unchanged.
 
     Args:
-        image:      (H, W, 3) linear RGB tensor in [0, 1].
-        red_scale:  Isotropic scale factor for the R channel.  1.0 → no change.
-        blue_scale: Isotropic scale factor for the B channel.  1.0 → no change.
+        image (torch.Tensor): Linear RGB image tensor of shape (H, W, 3) in the range [0, 1].
+        red_scale (float): Isotropic scale factor for the R channel. 1.0 indicates no change.
+        blue_scale (float): Isotropic scale factor for the B channel. 1.0 indicates no change.
 
     Returns:
-        (H, W, 3) corrected image clamped to [0, 1].
+        torch.Tensor: Corrected image of shape (H, W, 3), clamped to [0, 1].
     """
     result = image.clone()
 

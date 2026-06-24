@@ -11,21 +11,15 @@ def avg_filter(
     img: torch.Tensor, ksize: tuple[int, int], strBorderType: str = "BORDER_DEFAULT"
 ) -> torch.Tensor:
     """
-    Simple wrapper for open-cv function blur
+    Simple wrapper for open-cv function blur.
 
-    Parameters
-    ----------
-    img : torch.Tensor
-        Input image
-    ksize : tuple
-        Blurring kernel size
-    strBorderType : str
-        Border mode used to extrapolate pixels outside of the image, see the modes available in the open-cv documentation
+    Args:
+        img (torch.Tensor): Input image.
+        ksize (tuple): Blurring kernel size.
+        strBorderType (str): Border mode used to extrapolate pixels outside of the image, see the modes available in the open-cv documentation.
 
-    Returns
-    -------
-    img_wb : torch.Tensor
-        Filtred Image
+    Returns:
+        torch.Tensor: Filtered image.
     """
     # ksize validation --
     if not isinstance(ksize, tuple):

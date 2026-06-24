@@ -10,19 +10,14 @@ from algorithms._utils import validate_image_input
 @validate_image_input
 def median_filter(img: torch.Tensor, ksize: int) -> torch.Tensor:
     """
-    Simple wrapper for open-cv function medianBlur
+    Simple wrapper for open-cv function medianBlur.
 
-    Parameters
-    ----------
-    img : torch.Tensor
-        Input image
-    ksize : int
-        Aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
+    Args:
+        img (torch.Tensor): Input image.
+        ksize (int): Aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
 
-    Returns
-    -------
-    img_wb : torch.Tensor
-        Filtred Image
+    Returns:
+        torch.Tensor: Filtered image.
     """
     # ksize validation --
     if not isinstance(ksize, int):

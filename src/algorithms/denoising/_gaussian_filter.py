@@ -16,29 +16,18 @@ def gaussian_filter(
     strHint: str = "ALGO_HINT_DEFAULT",
 ) -> torch.Tensor:
     """
-    Simple wrapper for open-cv function GaussianBlur
+    Simple wrapper for open-cv function GaussianBlur.
 
-    Parameters
-    ----------
-    img : torch.Tensor
-        Input image
-    ksize : tuple
-        Gaussian kernel size
-        ksize.width and ksize.height can differ but they both must be positive and odd
-        Or, they can be zero's and then they are computed from sigma
-    sigmaX : float
-        Gaussian kernel standard deviation in X direction.
-    sigmaY : float
-        Gaussian kernel standard deviation in Y direction; if sigmaY is zero, it is set to be equal to sigmaX, if both sigmas are zeros, they are computed from ksize.width and ksize.height, respectively (see getGaussianKernel for details); to fully control the result regardless of possible future modifications of all this semantics, it is recommended to specify all of ksize, sigmaX, and sigmaY.
-    strBorderType : str
-        Pixel extrapolation method, see the modes available in the open-cv documentation. BORDER_WRAP is not supported.
-    strHint : str
-        Implementation modfication flags. See AlgorithmHint in the open-cv documentation
+    Args:
+        img (torch.Tensor): Input image.
+        ksize (tuple): Gaussian kernel size. ksize.width and ksize.height can differ but they both must be positive and odd. Or, they can be zero's and then they are computed from sigma.
+        sigmaX (float): Gaussian kernel standard deviation in X direction.
+        sigmaY (float): Gaussian kernel standard deviation in Y direction; if sigmaY is zero, it is set to be equal to sigmaX, if both sigmas are zeros, they are computed from ksize.width and ksize.height, respectively (see getGaussianKernel for details); to fully control the result regardless of possible future modifications of all this semantics, it is recommended to specify all of ksize, sigmaX, and sigmaY.
+        strBorderType (str): Pixel extrapolation method, see the modes available in the open-cv documentation. BORDER_WRAP is not supported.
+        strHint (str): Implementation modification flags. See AlgorithmHint in the open-cv documentation.
 
-    Returns
-    -------
-    img_wb : torch.Tensor
-        Filtred Image
+    Returns:
+        torch.Tensor: Filtered image.
     """
     # ksize validation --
     if not isinstance(ksize, tuple):

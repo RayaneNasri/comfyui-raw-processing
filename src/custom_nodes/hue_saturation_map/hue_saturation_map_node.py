@@ -2,15 +2,15 @@ from aiohttp import web
 from algorithms.hue_saturation_map._hue_saturation_map import apply_hue_sat_map
 from algorithms.tools._lut_tools import read_hue_sat_lut_from_dcp
 from torch import Tensor
-from server import PromptServer # type: ignore
+from server import PromptServer  # type: ignore
 
 import asyncio
 import torch
 import os
-import folder_paths # type: ignore
+import folder_paths  # type: ignore
 import json
 
-_NODE_DIR     = os.path.dirname(os.path.abspath(__file__))
+_NODE_DIR = os.path.dirname(os.path.abspath(__file__))
 _ALIASES_FILE = os.path.join(_NODE_DIR, "resources", "dcp_aliases.json")
 
 _DCP_DIR = os.path.join(folder_paths.models_dir, "dcp")
@@ -19,11 +19,13 @@ os.makedirs(_DCP_DIR, exist_ok=True)
 if "dcp" not in folder_paths.folder_names_and_paths:
     folder_paths.folder_names_and_paths["dcp"] = ([_DCP_DIR], {".dcp"})
 
+
 def _load_aliases() -> dict[str, list[str]]:
     if not os.path.isfile(_ALIASES_FILE):
         return {}
     with open(_ALIASES_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def _build_alias_map(aliases: dict[str, list[str]]) -> dict[str, str]:
     result: dict[str, str] = {}
@@ -33,8 +35,10 @@ def _build_alias_map(aliases: dict[str, list[str]]) -> dict[str, str]:
             result[alias] = canonical
     return result
 
-_ALIASES:   dict[str, list[str]] = _load_aliases()
-_ALIAS_MAP: dict[str, str]       = _build_alias_map(_ALIASES)
+
+_ALIASES: dict[str, list[str]] = _load_aliases()
+_ALIAS_MAP: dict[str, str] = _build_alias_map(_ALIASES)
+
 
 def _available_stems() -> list[str]:
     try:
@@ -43,35 +47,40 @@ def _available_stems() -> list[str]:
         files = []
     return sorted(os.path.splitext(f)[0] for f in files) if files else []
 
+
 def _display_labels(stems: list[str]) -> list[str]:
     labels = []
     for stem in stems:
         aliases = _ALIASES.get(stem, [])
         if aliases:
-            shown  = ", ".join(aliases[:2])
+            shown = ", ".join(aliases[:2])
             suffix = f"  (+{len(aliases) - 2} autres)" if len(aliases) > 2 else ""
             labels.append(f"{stem}  ({shown}{suffix})")
         else:
             labels.append(stem)
     return labels
 
-_STEMS:         list[str]      = _available_stems()
-_LABELS:        list[str]      = _display_labels(_STEMS)
+
+_STEMS: list[str] = _available_stems()
+_LABELS: list[str] = _display_labels(_STEMS)
 _LABEL_TO_STEM: dict[str, str] = dict(zip(_LABELS, _STEMS))
+
 
 @PromptServer.instance.routes.get("/hue_sat_map/dcp_presets")
 async def get_dcp_presets(request):
-    return web.json_response({
-        "presets": [
-            {"label": label, "stem": stem}
-            for label, stem in _LABEL_TO_STEM.items()
-        ]
-    })
+    return web.json_response(
+        {
+            "presets": [
+                {"label": label, "stem": stem} for label, stem in _LABEL_TO_STEM.items()
+            ]
+        }
+    )
+
 
 @PromptServer.instance.routes.post("/hue_sat_map/upload_dcp")
 async def upload_dcp(request):
     reader = await request.multipart()
-    field  = await reader.next()
+    field = await reader.next()
 
     if field is None or not field.filename:
         return web.json_response({"error": "Aucun fichier reçu"}, status=400)
@@ -80,7 +89,7 @@ async def upload_dcp(request):
     if not filename.lower().endswith(".dcp"):
         return web.json_response({"error": "Le fichier doit être un .dcp"}, status=400)
 
-    dest     = os.path.join(_DCP_DIR, filename)
+    dest = os.path.join(_DCP_DIR, filename)
     tmp_dest = dest + ".part"
 
     # On écrit d'abord dans un fichier temporaire : si la connexion est
@@ -92,7 +101,9 @@ async def upload_dcp(request):
         with open(tmp_dest, "wb") as f:
             while chunk := await field.read_chunk():
                 f.write(chunk)
-        os.replace(tmp_dest, dest)  # rename atomique, uniquement si l'upload est complet
+        os.replace(
+            tmp_dest, dest
+        )  # rename atomique, uniquement si l'upload est complet
     except (ConnectionResetError, asyncio.CancelledError, OSError):
         if os.path.isfile(tmp_dest):
             os.remove(tmp_dest)
@@ -102,6 +113,7 @@ async def upload_dcp(request):
     folder_paths.folder_names_and_paths["dcp"] = ([_DCP_DIR], {".dcp"})
 
     return web.json_response({"filename": filename})
+
 
 def _resolve_dcp_path(mode: str, value: str) -> str:
     """
@@ -116,10 +128,10 @@ def _resolve_dcp_path(mode: str, value: str) -> str:
 
     if not path or not os.path.isfile(path):
         raise FileNotFoundError(
-            f"Fichier DCP introuvable : {value}\n"
-            f"Dossier : {_DCP_DIR}"
+            f"Fichier DCP introuvable : {value}\nDossier : {_DCP_DIR}"
         )
     return path
+
 
 def resolve_dcp_path_for_model(model_name: str) -> str | None:
     canonical = _ALIAS_MAP.get(model_name)
@@ -135,7 +147,7 @@ class HueSaturationMapNode:
         return {
             "required": {
                 "rgb_image": ("IMAGE",),
-                "wb_gains":  ("WB_GAIN",),
+                "wb_gains": ("WB_GAIN",),
                 # Valeur opaque gérée entièrement par le widget JS :
                 # format   "preset:<label>"  ou  "custom:<filename>"
                 "dcp_selection": ("STRING", {"default": ""}),
@@ -147,12 +159,12 @@ class HueSaturationMapNode:
     CATEGORY = "image/processing"
 
     def process(
-        self, 
-        rgb_image: Tensor, 
-        wb_gains: Tensor, 
+        self,
+        rgb_image: Tensor,
+        wb_gains: Tensor,
         dcp_selection: str,
     ) -> tuple[Tensor]:
-        
+
         if ":" not in dcp_selection:
             raise ValueError(
                 f"dcp_selection mal formé : {dcp_selection!r}\n"
@@ -164,7 +176,7 @@ class HueSaturationMapNode:
             raise ValueError(f"Mode inconnu : {mode!r}")
 
         dcp_path = _resolve_dcp_path(mode, value)
-        res      = read_hue_sat_lut_from_dcp(dcp_path)
+        res = read_hue_sat_lut_from_dcp(dcp_path)
 
         if res is None:
             raise ValueError(f"Impossible de lire le fichier DCP : {dcp_path}")

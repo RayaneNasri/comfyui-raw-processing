@@ -21,11 +21,11 @@ def temperature_simple(rgb_image: Tensor, adjustment_value: float) -> Tensor:
     # Converts adjustment_value to the same dtype and device than values of rgb_image
     adjustment_value = torch.as_tensor(
         adjustment_value, dtype=rgb_image.dtype, device=rgb_image.device
-    )
+    ).item()
 
-    # Creates a vector [+adj, 0, -adj]
-    adjustment = torch.stack(
-        (adjustment_value, torch.zeros_like(adjustment_value), -adjustment_value)
+    adjustment = torch.tensor(
+        [adjustment_value, 0.0, -adjustment_value],
+        dtype=torch.float32,  # Optional: specify your desired dtype
     )
 
     # broadcasts the adjustement on a (H x W x 3) rgb_image

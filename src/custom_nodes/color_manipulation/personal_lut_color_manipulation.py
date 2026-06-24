@@ -17,21 +17,20 @@ import folder_paths  # type: ignore
 _CUBE_DIR = os.path.join(folder_paths.models_dir, "luts")
 os.makedirs(_CUBE_DIR, exist_ok=True)
 
+
 @PromptServer.instance.routes.post("/personal_lut/upload_cube")
 async def upload_cube(request):
     reader = await request.multipart()
-    field  = await reader.next()
+    field = await reader.next()
 
     if field is None or not field.filename:
         return web.json_response({"error": "Aucun fichier reçu"}, status=400)
 
     filename = os.path.basename(field.filename)
     if not filename.lower().endswith(".cube"):
-        return web.json_response(
-            {"error": "Le fichier doit être un .cube"}, status=400
-        )
+        return web.json_response({"error": "Le fichier doit être un .cube"}, status=400)
 
-    dest     = os.path.join(_CUBE_DIR, filename)
+    dest = os.path.join(_CUBE_DIR, filename)
     tmp_dest = dest + ".part"
 
     # Write to a temporary file first so a partial upload never leaves a

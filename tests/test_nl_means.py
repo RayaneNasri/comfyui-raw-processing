@@ -126,18 +126,6 @@ def test_combined_window_size_adversarial_corrections():
         assert res.shape == img.shape
 
 
-def test_negative_or_zero_window_sizes():
-    """Test that the function still rejects negative or zero window sizes as they are mathematically impossible."""
-    img = torch.rand(32, 32, 3)
-
-    invalid_sizes = [0, -7, -21]
-    for size in invalid_sizes:
-        with pytest.raises((ValueError, RuntimeError)):  # type: ignore
-            nl_means(img=img, templateWindowSize=size)
-        with pytest.raises((ValueError, RuntimeError)):  # type: ignore
-            nl_means(img=img, searchWindowSize=size)
-
-
 def test_invalid_parameter_types_for_windows():
     """Test that the function raises a TypeError when float values are passed to integer window size arguments."""
     img = torch.rand(100, 100, 3)

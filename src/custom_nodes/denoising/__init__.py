@@ -1,0 +1,37 @@
+from .avg_filter_node import (
+    NODE_CLASS_MAPPINGS as _AVG_NODES,
+    NODE_DISPLAY_NAME_MAPPINGS as _AVG_NAMES,
+)
+from .bilateral_filter_node import (
+    NODE_CLASS_MAPPINGS as _BILATERAL_NODES,
+    NODE_DISPLAY_NAME_MAPPINGS as _BILATERAL_NAMES,
+)
+from .gaussian_filter_node import (
+    NODE_CLASS_MAPPINGS as _GAUSSIAN_NODES,
+    NODE_DISPLAY_NAME_MAPPINGS as _GAUSSIAN_NAMES,
+)
+from .median_filter_node import (
+    NODE_CLASS_MAPPINGS as _MEDIAN_NODES,
+    NODE_DISPLAY_NAME_MAPPINGS as _MEDIAN_NAMES,
+)
+from .nl_means_node import (
+    NODE_CLASS_MAPPINGS as _NL_MEANS_NODES,
+    NODE_DISPLAY_NAME_MAPPINGS as _NL_MEANS_NAMES,
+)
+
+NODE_CLASS_MAPPINGS = {
+    **_AVG_NODES,
+    **_BILATERAL_NODES,
+    **_GAUSSIAN_NODES,
+    **_MEDIAN_NODES,
+    **_NL_MEANS_NODES,
+}
+NODE_DISPLAY_NAME_MAPPINGS = {
+    **_AVG_NAMES,
+    **_BILATERAL_NAMES,
+    **_GAUSSIAN_NAMES,
+    **_MEDIAN_NAMES,
+    **_NL_MEANS_NAMES,
+}
+
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

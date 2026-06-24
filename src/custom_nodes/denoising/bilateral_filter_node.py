@@ -7,12 +7,12 @@ class BilatFilterNode:
     def INPUT_TYPES(cls):
 
         tooltip: dict[str, str] = {
-            "d": "Diameter of each pixel neighborhood that is used during filtering.\
-                If it is non-positive, it is computed from sigmaSpace.",
-            "sigmaColor": "Filter sigma in the color space. \
-                A larger value of the parameter means that farther colors within the pixel neighborhood will be mixed together, resulting in larger areas of semi-equal color.",
-            "sigmaSpace": "Filter sigma in the coordinate space.\
-                A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough.",
+            "d": "Diameter of each pixel neighborhood that is used during filtering. "
+                 "If it is non-positive, it is computed from sigmaSpace.",
+            "sigmaColor": "Filter sigma in the color space. "
+                          "A larger value of the parameter means that farther colors within the pixel neighborhood will be mixed together, resulting in larger areas of semi-equal color.",
+            "sigmaSpace": "Filter sigma in the coordinate space. "
+                          "A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough.",
             "BorderType": "Border mode used to extrapolate pixels outside of the image, see the modes available in the open-cv documentation",
         }
 
@@ -27,11 +27,15 @@ class BilatFilterNode:
         ]
 
         return {
-            "image": ("IMAGE",),
-            "d": ("INT", {"tooltip": tooltip["d"]}),
-            "sigmaColor": ("FLOAT", {"min": 0.0, "tooltip": tooltip["sigmaColor"]}),
-            "sigmaSpace": ("FLOAT", {"min": 0.0, "tooltip": tooltip["sigmaSpace"]}),
-            "borderType": (borderTypes,),
+            # 1. Utilisation d'accolades {} ici pour définir un dictionnaire
+            "required": {
+                # 2. Utilisation systématique des deux-points (:) pour associer la clé à sa configuration
+                "image": ("IMAGE",),
+                "d": ("INT", {"default": 9, "tooltip": tooltip["d"]}),
+                "sigmaColor": ("FLOAT", {"default": 75.0, "min": 0.0, "tooltip": tooltip["sigmaColor"]}),
+                "sigmaSpace": ("FLOAT", {"default": 75.0, "min": 0.0, "tooltip": tooltip["sigmaSpace"]}),
+                "borderType": (borderTypes,)
+            }
         }
 
     CATEGORY = "image/processing/denoising"

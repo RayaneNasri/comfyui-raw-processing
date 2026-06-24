@@ -826,6 +826,17 @@ def centrer_le_noyau(K):
 
 
 def deblurring_goldstein_fattal(RGB_image: torch.Tensor):
+    """
+    Remove blur from an image using the Goldstein-Fattal deconvolution method.
+
+    The image is decomposed into luminance and chrominance channels, deconvolution is applied to the luminance channel via TV regularization, and the channels are recombined. Input and output images are in the range [0, 1].
+
+    Args:
+        RGB_image (torch.Tensor): Input RGB image tensor. Expected range [0, 1], can be on CPU or GPU.
+
+    Returns:
+        torch.Tensor: Deblurred RGB image tensor in the range [0, 1], on the same device as the input.
+    """
     on_gpu = RGB_image.is_cuda
 
     RGB_image *= 255
@@ -835,7 +846,7 @@ def deblurring_goldstein_fattal(RGB_image: torch.Tensor):
         RGB_image_numpy = RGB_image.numpy()
 
     image, Cr, Cb = RGBtoYCrCb(RGB_image_numpy)
-    kernel, allkernels = estime_noyau(image)
+    kernel, _ = estime_noyau(image)
     kernel_centered = centrer_le_noyau(kernel)
     image_deconv = TVdeconv(image, kernel_centered, 1000 / 255)
     image_deconv.clip(min=0, max=255, out=image_deconv)  # couper les vlaeurs hors 0,255

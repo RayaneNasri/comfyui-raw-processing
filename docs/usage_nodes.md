@@ -949,13 +949,13 @@ Color adjustments allow users to customize the colors in an image. They can use 
 Enhance blue or red by simply adding the adjustement value for the red channel and removing it for the blue channel : not very realistic, but simple and fast.
 
 **Status:** Automatic with one parameter
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 **Outputs:** 1
 
 #### ComfyUI Interface
 
 **Node Name:** `Temperature Simple`  
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 
 TODO: add image
 
@@ -1002,13 +1002,13 @@ TODO: add image
 Give a warmer/cooler look to the image. Given a temperature in Kelvin (representing a type of light, warm or cool), estimates an RGB equivalent (algorithm based on empirical values), and apply it to the image.
 
 **Status:** Automatic with one parameter 
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 **Outputs:** 1
 
 #### ComfyUI Interface
 
 **Node Name:** `Temperature Tanner-Helland`  
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 
 TODO: add image
 
@@ -1055,13 +1055,13 @@ TODO: add image
 Use a Look-Up Table (LUT) to apply a preset style to the image. The LUT is choosen in a list, and is a .cube file, the LUT color space being AdobeRGB1998 or LinearRGB.
 
 **Status:** Automatic with two parameters
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 **Outputs:** 1
 
 ##### ComfyUI Interface
 
 **Node Name:** `LUT Color Manipulation`
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 
 TODO: add image
 
@@ -1123,13 +1123,13 @@ TODO: add image
 Use a Look-Up Table (LUT) to apply a preset style to the image. The LUT is provided by the user via a .cube file, the LUT color space being AdobeRGB1998 or LinearRGB.
 
 **Status:** Automatic with four parameters
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 **Outputs:** 1
 
 ##### ComfyUI Interface
 
 **Node Name:** `Personal LUT Color Manipulation`
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 
 TODO: add image
 
@@ -1195,13 +1195,13 @@ TODO: add image
 Change the saturation by multiplying the saturation channel (in the hsv color-space) by the adjustement_value.
 
 **Status:** Automatic with one parameter 
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 **Outputs:** 1
 
 #### ComfyUI Interface
 
 **Node Name:** `Saturation HSV`  
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 
 TODO: add image
 
@@ -1247,13 +1247,13 @@ TODO: add image
 Change the contrast of an image, linearly and globally: multiplies deviations from the global mean of the rgb_image by contrast_factor and keeps mean fixed (before clamp).
 
 **Status:** Automatic with one parameter 
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 **Outputs:** 1
 
 #### ComfyUI Interface
 
 **Node Name:** `Contrast Linear Global`  
-**Category:** image/processing **TODO**
+**Category:** image/processing/color-manipulation
 
 TODO: add image
 
@@ -1402,13 +1402,13 @@ srgb_image = gamma_correction(
 Reduce blur in an image, using the Goldstein Fattal Method: https://www.ipol.im/pub/art/2018/211/ (can take several minutes)
 
 **Status:** Default, always available  
-**Category:** image **TODO**
+**Category:** image/processing/deblurring
 **Outputs:** 1
 
 #### ComfyUI Interface
 
 **Node Name:** `Deblurring Goldstein-Fattal`  
-**Category:** image **TODO**
+**Category:** image/processing/deblurring
 
 
 #### Input Parameters

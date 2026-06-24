@@ -30,9 +30,7 @@ class ReadRawSensorNode:
         files = sorted(f for f in all_files if f.lower().endswith(valid_extensions))
 
         return {
-            "required": {
-                "image": (files, {})
-            },
+            "required": {"image": (files, {})},
         }
 
     CATEGORY = "image"

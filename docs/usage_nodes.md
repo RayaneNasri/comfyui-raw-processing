@@ -24,11 +24,12 @@ Comprehensive documentation of all Image Signal Processing (ISP) custom nodes fo
    - [Saturation HSV](#saturation-hsv)
    - [Contrast Linear Global](#contrast-linear-global)
 8. [Gamma Correction](#gamma-correction)
-9. [JPEG Export Node](#jpeg-export-node)
-10. [Complete Pipeline Examples](#complete-pipeline-examples)
-11. [Python API Usage (Without ComfyUI)](#python-api-usage-without-comfyui)
-12. [Best Practices](#best-practices)
-13. [Appendix](#appendix)
+9. [Deblurring Goldstein-Fattal](#deblurring-goldstein-fattal)
+10. [JPEG Export Node](#jpeg-export-node)
+11. [Complete Pipeline Examples](#complete-pipeline-examples)
+12. [Python API Usage (Without ComfyUI)](#python-api-usage-without-comfyui)
+13. [Best Practices](#best-practices)
+14. [Appendix](#appendix)
 
 ---
 
@@ -79,6 +80,7 @@ The pipeline strictly enforces these data types at each stage. Using incompatibl
 - **Exposure:** Adjusting brightness using EV (Exposure Value) scale.
 - **Color Manipulation:** Customize the image colours
 - **Gamma Correction:** Applying perceptual brightness mapping (typically sRGB with γ=2.2).
+- **Deblurring:** reduce blur in an image
 
 ---
 
@@ -1137,7 +1139,7 @@ TODO: add image
 |-------|------|-------|-------------|
 | **image** | Tensor - LinearRGB or AdobeRGB1998 - shape : (H, W, 3) - Dtype : float32 | [0, 1] | Image on which to apply the LUT |
 | **color_space_image** | String | Choosen in a list: "Linear RGB" or "Adobe RGB (1998)" | the color-space of the image | 
-| **lut_path** (**Ouvrir un fichier .cube**) | String | - | A path to a LUT in a .cube file | **TODO : change this to the real value in the node**
+| **lut_path** (**Ouvrir un fichier .cube**) | String | - | A path to a LUT in a .cube file |
 | **color_space_lut** | String | Choosen in a list: "Linear RGB" or "Adobe RGB (1998)" | the color-space of the lut | 
 | **order_color_channels_lut** | String | Choosen in a list: "RGB" or "BGR" | the order of the color channels of the LUT | 
 
@@ -1390,6 +1392,53 @@ srgb_image = gamma_correction(
     alpha=1.0
 )
 ```
+
+---
+
+## Deblurring Goldstein-Fattal
+
+**Description**
+
+Reduce blur in an image, using the Goldstein Fattal Method: https://www.ipol.im/pub/art/2018/211/ (can take several minutes)
+
+**Status:** Default, always available  
+**Category:** image **TODO**
+**Outputs:** 1
+
+#### ComfyUI Interface
+
+**Node Name:** `Deblurring Goldstein-Fattal`  
+**Category:** image **TODO**
+
+
+#### Input Parameters
+
+| Input | Type | Range | Default |
+|-------|-------|-------|-------|
+| **RGB_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] | — |
+
+#### Output Schema
+
+| Output | Type | Range |
+|--------|-------|-------|
+| **RGB_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] |
+
+#### Algorithm Details
+
+1. Change the color space of the image from RGB to YCrCb
+2. Apply the Goldstein-Fattal Algorithm: https://www.ipol.im/pub/art/2018/211/
+    - Estimating the modulus of the Fourier transform of the kernel from the image
+    - Finding an estimate of the kernel from the modulus of its Fourier transform, then iterating to retain only the best one
+    - Deconvolution using the estimated convolution kernel
+3. Return to the initial color-space: RGB
+
+#### ComfyUI Usage
+
+**When to use:**
+- Deblur an image without AI
+
+**When NOT to use:**
+- Fast deblurring
 
 ---
 

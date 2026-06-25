@@ -14,7 +14,9 @@ from skimage.segmentation import slic
 
 import os
 import urllib.request
-from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
+
+from segment_anything import sam_model_registry, SamAutomaticMaskGenerator as SamMaskGenerator
+from mobile_sam import sam_model_registry as mobile_sam_registry, SamAutomaticMaskGenerator as MobileSamMaskGenerator
 
 from server import PromptServer  # type: ignore
 from aiohttp import web as _aiohttp_web
@@ -42,6 +44,11 @@ _label_map_cache: Dict[Tuple, Dict[str, Any]] = {}
 _cache_lock = threading.Lock()
 
 SAM_MODELS = {
+    "mobile_sam.pt": {
+        "type": "mobile_sam",
+        "url": "https://github.com/ChaoningZhang/MobileSAM/raw/master/weights/mobile_sam.pt",
+        "size": "39 MB",
+    },
     "sam_vit_b_01ec64.pth": {
         "type": "vit_b",
         "url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth",
@@ -345,7 +352,13 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     try:
-        sam = sam_model_registry[model_type](checkpoint=checkpoint_path)
+        if model_type == "mobile_sam":
+            sam = mobile_sam_registry["vit_t"](checkpoint=checkpoint_path)
+            MaskGenerator = MobileSamMaskGenerator
+        else:
+            sam = sam_model_registry[model_type](checkpoint=checkpoint_path)
+            MaskGenerator = SamMaskGenerator
+
         sam.to(device=device)
 
         # Retrieval of hyperparameters from kwargs or optimal default values
@@ -355,7 +368,7 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
         pred_iou_thresh = kwargs.get("pred_iou_thresh", 0.88)
         stability_score_thresh = kwargs.get("stability_score_thresh", 0.95)
 
-        generator = SamAutomaticMaskGenerator(
+        generator = MaskGenerator(
             model=sam,
             points_per_side=points_per_side,
             pred_iou_thresh=pred_iou_thresh,
@@ -364,6 +377,7 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
             crop_n_points_downscale_factor=2,
             min_mask_region_area=100,  # Filter noise residuals smaller than 100 pixels
         )
+
     except Exception as e:
         log.error(f"Error while initializing SAM: {e}")
         raise ValueError(

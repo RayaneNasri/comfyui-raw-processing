@@ -53,7 +53,7 @@ class BatchReadRawSensorNode:
     ]
 
     RETURN_TYPES = (
-        "IMAGE",
+        "IMAGES",
         "PATTERN",
         "BLACK_LEVEL",
         "WHITE_LEVEL",

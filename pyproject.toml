@@ -15,7 +15,8 @@ dependencies = [
     "segment-anything",
     "tifffile",
     "aiohttp",
-    "scipy>=1.18.0"
+    "scipy>=1.18.0",
+    "exifread",
 ]
 
 [dependency-groups]

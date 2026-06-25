@@ -1,5 +1,6 @@
 import torch
 
+
 def rgb_to_yuv(rgb_image: torch.Tensor) -> torch.Tensor:
     """Converts an RGB image tensor to YUV color space."""
     assert rgb_image.ndim == 3, "not a 3D image tensor"

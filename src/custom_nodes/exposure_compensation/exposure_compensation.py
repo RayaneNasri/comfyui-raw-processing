@@ -28,7 +28,7 @@ class ExposureCompensationNode:
     CATEGORY = "image/processing/exposure-compensation"
 
     def process(self, image: Tensor, ev_compensation: float):
-        
+
         input2d = image.squeeze()
         res = exposure_compensation(input2d, ev_compensation)
         return (res.unsqueeze(0),)

@@ -5,7 +5,6 @@ from torch import Tensor
 from server import PromptServer  # type: ignore
 
 import asyncio
-import torch
 import os
 import folder_paths  # type: ignore
 import json
@@ -158,7 +157,6 @@ class HueSaturationMapNode:
     FUNCTION = "process"
     CATEGORY = "image/processing/hue-saturation-map"
 
-
     def process(
         self,
         rgb_image: Tensor,
@@ -206,7 +204,6 @@ class HueSaturationMapNode:
             calib_illum_1,
             calib_illum_2,
         )
-
 
         return (frame.unsqueeze(0),)
 

@@ -1,3 +1,6 @@
-from .deblurring_goldstein_fattal_node import NODE_DISPLAY_NAME_MAPPINGS, NODE_CLASS_MAPPINGS
+from .deblurring_goldstein_fattal_node import (
+    NODE_DISPLAY_NAME_MAPPINGS,
+    NODE_CLASS_MAPPINGS,
+)
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

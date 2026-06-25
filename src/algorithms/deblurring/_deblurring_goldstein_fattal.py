@@ -55,7 +55,7 @@ def viewimage(im, normalize=True, z=1, order=0, titre="", displayfilename=False)
     else:
         imin = imin.clip(0, 255) / 255
     imin = (imin * 255).astype(np.uint8)
-    filename = tempfile.mktemp(titre + ".png")
+    filename = tempfile.mktemp(titre + ".png")  # type: ignore
     if displayfilename:
         print(filename)
     plt.imsave(filename, imin, cmap="gray")

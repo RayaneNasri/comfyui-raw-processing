@@ -1,4 +1,3 @@
-import os
 import json
 
 import torch
@@ -95,7 +94,7 @@ class BatchReadRawSensorNode:
             iso = tags["Image ISOSpeedRatings"].values[0]
         elif "EXIF ISOSpeedRatings" in tags:
             iso = tags["EXIF ISOSpeedRatings"].values[0]
-        exif_data["iso"] = float(iso) if iso else None
+        exif_data["iso"] = float(iso) if iso else None  # type: ignore
 
         return exif_data
 

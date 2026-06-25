@@ -16,18 +16,18 @@ def nl_means(
     searchWindowSize: int = 21,
 ) -> torch.Tensor:
     """
-        Simple wrapper for open-cv function fastNlMeansDenoisingColored.
+    Simple wrapper for open-cv function fastNlMeansDenoisingColored.
 
-        Args:
-            img (torch.Tensor): Image to denoise.
-            h (float, optional): Parameter regulating filter strength for luminance component. Defaults to 3.
-            hColor (float, optional): Parameter regulating filter strength for color components. Defaults to 3.
-            templateWindowSize (int, optional): Size in pixels of the template patch used to compute weights. Must be odd. Defaults to 7.
-            searchWindowSize (int, optional): Size in pixels of the search window used to compute weighted average for a given pixel. Must be odd. Defaults to 21.
+    Args:
+        img (torch.Tensor): Image to denoise.
+        h (float, optional): Parameter regulating filter strength for luminance component. Defaults to 3.
+        hColor (float, optional): Parameter regulating filter strength for color components. Defaults to 3.
+        templateWindowSize (int, optional): Size in pixels of the template patch used to compute weights. Must be odd. Defaults to 7.
+        searchWindowSize (int, optional): Size in pixels of the search window used to compute weighted average for a given pixel. Must be odd. Defaults to 21.
 
-        Returns:
-            torch.Tensor: Denoised image.
-        """
+    Returns:
+        torch.Tensor: Denoised image.
+    """
     if not isinstance(h, (int, float)):
         raise TypeError("h must be a number (float or int)")
     if not isinstance(hColor, (int, float)):
@@ -86,4 +86,6 @@ def nl_means(
         templateWindowSize=templateWindowSize,
         searchWindowSize=searchWindowSize,
     )
-    return torch.from_numpy(cv2.cvtColor(out, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0)
+    return torch.from_numpy(
+        cv2.cvtColor(out, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
+    )

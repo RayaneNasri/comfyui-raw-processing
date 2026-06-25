@@ -1,5 +1,4 @@
 from algorithms.color_space_conversion.rgb_to_yuv import rgb_to_yuv
-from custom_nodes.deblurring.deblurring_goldstein_fattal_node import DeblurringGoldsteinFattalNode
 
 
 class RGBToYUVNode:
@@ -28,5 +27,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "RGBToYUVNode": "RGB to YUV", 
+    "RGBToYUVNode": "RGB to YUV",
 }

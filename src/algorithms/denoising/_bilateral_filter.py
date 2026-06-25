@@ -83,4 +83,6 @@ def bilateral_filter(
     src = cv2.cvtColor(src.cpu().numpy().astype(np.uint8), cv2.COLOR_RGB2BGR)
     out = cv2.bilateralFilter(src, d, sigmaColor, sigmaSpace, borderType=borderType)
 
-    return torch.from_numpy(cv2.cvtColor(out, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0)
+    return torch.from_numpy(
+        cv2.cvtColor(out, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
+    )

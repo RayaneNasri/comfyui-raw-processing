@@ -1,5 +1,6 @@
 import torch
 
+
 def iec_gamma_correction(img: torch.Tensor) -> torch.Tensor:
     """
     Apply IEC gamma correction to convert linear RGB values to sRGB.

@@ -345,3 +345,44 @@
     - Implemented read_image_node and deblurring_goldstein_fattal_node for ComfyUI and tested it
   * Ghiles :
   * Rayane :
+
+## 22/06/2026
+
+  * All :
+    - Meeting with Quentin Bammey (22/06/2026)
+  * Amayas :
+  * Charlotte :
+    - Added tests and little modifications in the documentation for temperature_simple, temperature_tanner_helland, saturation_hsv and contrast_linear_global
+    - Changed the node and implementation of apply_lut to take into account the color_spaces (linearRGB or adobeRGB1998) of the image and of the lut
+  * Ghiles :
+  * Rayane :
+
+## 23/06/2026
+
+  * Amayas :
+  * Charlotte :
+    - lut in RGB or BGR: changed the node and implementation of apply_lut to take into account the order of the color channels of the lut (RGB or BGR) + separation of the node for personal/non-personal lut
+    - formatting, linting, type checking and then merging of feature/color-manipulation
+    - formatting, linting, type checking and then merging of feature/deblurring
+  * Ghiles :
+  * Rayane :
+
+## 24/06/2026
+
+  * All :
+    - Meeting with Quentin Bammey (24/06/2026)
+  * Amayas :
+  * Charlotte :
+    - Implemented ComfyUI node for contrast_linear_global
+    - Documentation for all the ComfyUI nodes I made
+  * Ghiles :
+  * Rayane :
+
+## 25/06/2026
+
+  * All :
+    - Meeting with Quentin Bammey: Final Presentation (25/06/2026)
+  * Amayas :
+  * Charlotte :
+  * Ghiles :
+  * Rayane :

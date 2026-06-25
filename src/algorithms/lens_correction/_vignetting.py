@@ -10,23 +10,16 @@ def correct_vignetting(
     """
     Apply vignetting correction to a linear RGB image.
 
-    If a pre-computed gain map is provided it is used directly. Otherwise a radial polynomial model is evaluated:
-
-        gain(r²) = 1 + alpha * r² + beta * r⁴
-
-    where r² is the squared distance from the image centre, normalised so that
-    the farthest corner has r² = 1.  Positive alpha/beta brighten the edges
-    relative to the centre, correcting the typical lens fall-off.
+    If a pre-computed gain map is provided it is used directly. Otherwise a radial polynomial model is evaluated: gain(r²) = 1 + alpha * r² + beta * r⁴, where r² is the squared distance from the image centre, normalised so that the farthest corner has r² = 1. Positive alpha/beta brighten the edges relative to the centre, correcting the typical lens fall-off.
 
     Args:
-        image:    (H, W, 3) linear RGB tensor in [0, 1].
-        alpha:    Quadratic gain coefficient.  0 → no correction.
-        beta:     Quartic gain coefficient.  0 → no correction.
-        gain_map: Optional (H, W, 3) tensor of per-pixel multiplicative gains.
-                  When provided, alpha and beta are ignored.
+        image (torch.Tensor): Linear RGB image tensor of shape (H, W, 3) in the range [0, 1].
+        alpha (float): Quadratic gain coefficient. 0 indicates no correction.
+        beta (float): Quartic gain coefficient. 0 indicates no correction.
+        gain_map (torch.Tensor | None, optional): Per-pixel multiplicative gain map of shape (H, W, 3). When provided, alpha and beta are ignored.
 
     Returns:
-        (H, W, 3) corrected image clamped to [0, 1].
+        torch.Tensor: Corrected image of shape (H, W, 3), clamped to [0, 1].
     """
     if gain_map is not None:
         return torch.clamp(image * gain_map, 0.0, 1.0)

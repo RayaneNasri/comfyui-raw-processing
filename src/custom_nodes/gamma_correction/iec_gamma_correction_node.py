@@ -1,5 +1,5 @@
 import torch
-from algorithms.gc.iec_gamma_correction import iec_gamma_correction
+from algorithms.gamma_correction.iec_gamma_correction import iec_gamma_correction
 
 
 class IECGammaCorrectionNode:
@@ -11,7 +11,7 @@ class IECGammaCorrectionNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/gamma-correction"
     SEARCH_ALIASES = [
         "gamma correction adjustment",
         "luminance curve tweak",

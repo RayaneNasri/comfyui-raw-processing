@@ -85,7 +85,7 @@ class PersonalLutColorManipulationNode:
     RETURN_NAMES = ("image",)
 
     FUNCTION = "process"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/color-manipulation"
 
     def process(
         self,

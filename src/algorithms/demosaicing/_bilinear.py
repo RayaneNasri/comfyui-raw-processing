@@ -23,12 +23,9 @@ def bilinear_demosaicing(
     Perform vectorized bilinear demosaicing using normalized convolution.
 
     Args:
-        rgb_image (torch.Tensor [H, W, 3]): Sparse RGB image tensor where missing color
-            values in the Bayer pattern are represented by zeros.
-        dx (int, optional): The x-coordinate offset for the red pixels in the Bayer pattern.
-            Defaults to 0.
-        dy (int, optional): The y-coordinate offset for the red pixels in the Bayer pattern.
-            Defaults to 0.
+        rgb_image (torch.Tensor [H, W, 3]): Sparse RGB image tensor where missing color values in the Bayer pattern are represented by zeros.
+        dx (int, optional): The x-coordinate offset for the red pixels in the Bayer pattern. Defaults to 0.
+        dy (int, optional): The y-coordinate offset for the red pixels in the Bayer pattern. Defaults to 0.
 
     Returns:
         torch.Tensor [H, W, 3]: The fully demosaiced RGB image.

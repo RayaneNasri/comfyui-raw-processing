@@ -10,11 +10,18 @@ import numpy as np
 import torch
 from PIL import Image, ImageDraw
 
+import folder_paths  # type: ignore
+
+
 from skimage.segmentation import slic
 
 import os
 import urllib.request
-from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
+
+from segment_anything import (
+    sam_model_registry,
+    SamAutomaticMaskGenerator as SamMaskGenerator,
+)
 
 from server import PromptServer  # type: ignore
 from aiohttp import web as _aiohttp_web
@@ -61,8 +68,7 @@ SAM_MODELS = {
 
 
 def _get_checkpoint_dir() -> str:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    checkpoint_dir = os.path.join(base_dir, "models/sams/")
+    checkpoint_dir = os.path.join(folder_paths.models_dir, "sams")
     os.makedirs(checkpoint_dir, exist_ok=True)
     return checkpoint_dir
 
@@ -314,6 +320,20 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
 
 def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     H, W = image_rgb.shape[:2]
+
+    MAX_DIM = 2000
+    if H > MAX_DIM or W > MAX_DIM:
+        scale = MAX_DIM / max(H, W)
+        new_H, new_W = int(H * scale), int(W * scale)
+        log.info(
+            "Downsampling image from %dx%d to %dx%d before SAM", W, H, new_W, new_H
+        )
+        pil_img = Image.fromarray(image_rgb)
+        pil_img = pil_img.resize((new_W, new_H), Image.Resampling.LANCZOS)
+        image_rgb_sam = np.array(pil_img)
+    else:
+        image_rgb_sam = image_rgb
+
     checkpoint_dir = _get_checkpoint_dir()
 
     # 1. Chercher les modèles déjà présents
@@ -348,21 +368,18 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
         sam = sam_model_registry[model_type](checkpoint=checkpoint_path)
         sam.to(device=device)
 
-        # Retrieval of hyperparameters from kwargs or optimal default values
-        points_per_side = kwargs.get(
-            "points_per_side", 32
-        )  # Increase for more small segments
+        points_per_side = kwargs.get("points_per_side", 32)
         pred_iou_thresh = kwargs.get("pred_iou_thresh", 0.88)
         stability_score_thresh = kwargs.get("stability_score_thresh", 0.95)
 
-        generator = SamAutomaticMaskGenerator(
+        generator = SamMaskGenerator(
             model=sam,
             points_per_side=points_per_side,
             pred_iou_thresh=pred_iou_thresh,
             stability_score_thresh=stability_score_thresh,
             crop_n_layers=1,
             crop_n_points_downscale_factor=2,
-            min_mask_region_area=100,  # Filter noise residuals smaller than 100 pixels
+            min_mask_region_area=100,
         )
     except Exception as e:
         log.error(f"Error while initializing SAM: {e}")
@@ -370,13 +387,17 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
             "Failed to initialize SAM model. Check if the checkpoint is valid."
         )
 
-    masks = generator.generate(image_rgb)
+    masks = generator.generate(image_rgb_sam)
     masks = sorted(masks, key=lambda x: x["area"], reverse=True)
 
     label_map = np.zeros((H, W), dtype=np.int32)
 
     for idx, mask_dict in enumerate(masks, start=1):
         boolean_mask = mask_dict["segmentation"]
+        if boolean_mask.shape != (H, W):
+            mask_pil = Image.fromarray(boolean_mask.astype(np.uint8) * 255)
+            mask_pil = mask_pil.resize((W, H), Image.Resampling.NEAREST)
+            boolean_mask = np.array(mask_pil).astype(bool)
         label_map[boolean_mask] = idx
 
     return label_map

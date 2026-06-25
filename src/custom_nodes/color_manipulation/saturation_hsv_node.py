@@ -25,7 +25,7 @@ class SaturationHSVNode:
     RETURN_NAMES = ("rgb_image",)
 
     FUNCTION = "process"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/color-manipulation"
 
     def process(self, rgb_image: Tensor, adjustement: float):
         rgb_image = rgb_image.squeeze(0)

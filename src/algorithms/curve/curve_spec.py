@@ -34,9 +34,9 @@ class CurveSpec:
         if isinstance(data, str):
             data = json.loads(data)
         if isinstance(data, list):
-            return cls(points=[tuple(p) for p in data])  # type: ignore
+            return cls(points=[(float(p[0]), float(p[1])) for p in data])
         return cls(
-            points=[tuple(p) for p in data["points"]],  # type: ignore
+            points=[(float(p[0]), float(p[1])) for p in data["points"]],
             domain_min=data.get("domain_min", 0.0),
             domain_max=data.get("domain_max", 1.0),
             range_min=data.get("range_min", 0.0),

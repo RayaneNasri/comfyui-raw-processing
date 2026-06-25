@@ -1,0 +1,841 @@
+{
+  "id": "1a36bbb8-c830-432a-a9d6-feaccb6735d4",
+  "revision": 0,
+  "last_node_id": 19,
+  "last_link_id": 25,
+  "nodes": [
+    {
+      "id": 6,
+      "type": "ImageCompositeMasked",
+      "pos": [
+        1312.9930901867838,
+        -450.472261851364
+      ],
+      "size": [
+        296.5625,
+        146
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "destination",
+          "type": "IMAGE",
+          "link": 24
+        },
+        {
+          "name": "source",
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCompositeMasked"
+      },
+      "widgets_values": [
+        0,
+        0,
+        false
+      ]
+    },
+    {
+      "id": 8,
+      "type": "ExposureCompensationNode",
+      "pos": [
+        -350.80087180369645,
+        223.07974313094854
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ExposureCompensationNode"
+      },
+      "widgets_values": [
+        0.4
+      ]
+    },
+    {
+      "id": 9,
+      "type": "LinearizeRawNode",
+      "pos": [
+        -394.3358553532564,
+        86.6070393749677
+      ],
+      "size": [
+        195.0005859375,
+        86
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "raw_img",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "name": "cfa_pattern",
+          "type": "PATTERN",
+          "link": 9
+        },
+        {
+          "name": "black_levels",
+          "type": "BLACK_LEVEL",
+          "link": 10
+        },
+        {
+          "name": "white_level",
+          "type": "WHITE_LEVEL",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "bayer_img",
+          "type": "IMAGE",
+          "links": [
+            13
+          ]
+        },
+        {
+          "name": "cfa_pattern",
+          "type": "PATTERN",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LinearizeRawNode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 10,
+      "type": "LensCorrectionNode",
+      "pos": [
+        -40.97857147904067,
+        234.892263374334
+      ],
+      "size": [
+        270,
+        202
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LensCorrectionNode"
+      },
+      "widgets_values": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        ""
+      ]
+    },
+    {
+      "id": 11,
+      "type": "BilinearDemosaicNode",
+      "pos": [
+        -171.47009843531572,
+        98.08729868651845
+      ],
+      "size": [
+        178.683203125,
+        46
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "bayer_img",
+          "type": "IMAGE",
+          "link": 13
+        },
+        {
+          "name": "cfa_pattern",
+          "type": "PATTERN",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RGB_image",
+          "type": "IMAGE",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BilinearDemosaicNode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 13,
+      "type": "WhitePatchReferenceNode",
+      "pos": [
+        -581.1309546979242,
+        506.32535728264145
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RGB_image",
+          "type": "IMAGE",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WhitePatchReferenceNode"
+      },
+      "widgets_values": [
+        0.98
+      ]
+    },
+    {
+      "id": 16,
+      "type": "TemperatureTannerHellandNode",
+      "pos": [
+        -270.78303674916566,
+        741.8132144008937
+      ],
+      "size": [
+        289.9185546875,
+        82
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "rgb_image",
+          "type": "IMAGE",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "rgb_image",
+          "type": "IMAGE",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TemperatureTannerHellandNode"
+      },
+      "widgets_values": [
+        6600,
+        true
+      ]
+    },
+    {
+      "id": 17,
+      "type": "GammaCorrectionNode",
+      "pos": [
+        175.04643021932347,
+        -412.88915674851853
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RGB_image",
+          "type": "IMAGE",
+          "links": [
+            23,
+            24,
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GammaCorrectionNode"
+      },
+      "widgets_values": [
+        3.4,
+        1
+      ]
+    },
+    {
+      "id": 12,
+      "type": "ReadRawSensorNode",
+      "pos": [
+        -689.0622714324807,
+        65.26044331154365
+      ],
+      "size": [
+        270,
+        374
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "raw_img",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        },
+        {
+          "name": "cfa_pattern",
+          "type": "PATTERN",
+          "links": [
+            9
+          ]
+        },
+        {
+          "name": "black_levels",
+          "type": "BLACK_LEVEL",
+          "links": [
+            10
+          ]
+        },
+        {
+          "name": "white_level",
+          "type": "WHITE_LEVEL",
+          "links": [
+            11
+          ]
+        },
+        {
+          "name": "wb_gains",
+          "type": "WB_GAIN",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ReadRawSensorNode"
+      },
+      "widgets_values": [
+        "FEA06578.ARW",
+        "image"
+      ]
+    },
+    {
+      "id": 14,
+      "type": "HueSaturationMapNode",
+      "pos": [
+        -374.4787797017802,
+        331.3739873407419
+      ],
+      "size": [
+        315.1626953125,
+        126
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "rgb_image",
+          "type": "IMAGE",
+          "link": 16
+        },
+        {
+          "name": "wb_gains",
+          "type": "WB_GAIN",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HueSaturationMapNode"
+      },
+      "widgets_values": [
+        "custom:SONY ILCE-7M2.dcp",
+        "Fichier custom",
+        "CANON EOS 250D",
+        null,
+        "SONY ILCE-7M2.dcp"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "PreviewImage",
+      "pos": [
+        1728.4477549407572,
+        -586.8140060743191
+      ],
+      "size": [
+        893.8413103461107,
+        633.9464789272969
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 15,
+      "type": "PersonalLutColorManipulationNode",
+      "pos": [
+        -286.65812551833386,
+        505.12270681313805
+      ],
+      "size": [
+        317.2759765625,
+        154
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PersonalLutColorManipulationNode"
+      },
+      "widgets_values": [
+        "Linear RGB",
+        "/home/onyxia/work/image-processing/external/ComfyUI/models/luts/Aqua.cube",
+        "Adobe RGB (1998)",
+        "BGR",
+        null,
+        "Aqua.cube"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "ToneCurveNode",
+      "pos": [
+        70.42061723554372,
+        483.20133698330505
+      ],
+      "size": [
+        246.68127378334134,
+        483.6360277623945
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ToneCurveNode"
+      },
+      "widgets_values": [
+        256,
+        "[[0,0],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.5,0.5],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "",
+        "",
+        "master"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "InteractiveSegmentationMask",
+      "pos": [
+        806.1825022250367,
+        -1002.4978245909313
+      ],
+      "size": [
+        416,
+        482
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InteractiveSegmentationMask"
+      },
+      "widgets_values": [
+        "SAM",
+        "[]",
+        400,
+        5,
+        1,
+        32,
+        0.88,
+        0.95
+      ]
+    },
+    {
+      "id": 3,
+      "type": "ToneCurveNode",
+      "pos": [
+        808.0803722229521,
+        -334.34649423392364
+      ],
+      "size": [
+        290.7261685655434,
+        455.0547858925865
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ToneCurveNode"
+      },
+      "widgets_values": [
+        256,
+        "[[0,0],[0.16020969028688828,0.38260467822961897],[0.4833382278063309,0.6132769195310716],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "",
+        "",
+        "master"
+      ]
+    }
+  ],
+  "links": [
+    [
+      3,
+      2,
+      0,
+      6,
+      2,
+      "MASK"
+    ],
+    [
+      5,
+      3,
+      0,
+      6,
+      1,
+      "IMAGE"
+    ],
+    [
+      6,
+      6,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      11,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      12,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      12,
+      1,
+      9,
+      1,
+      "PATTERN"
+    ],
+    [
+      10,
+      12,
+      2,
+      9,
+      2,
+      "BLACK_LEVEL"
+    ],
+    [
+      11,
+      12,
+      3,
+      9,
+      3,
+      "WHITE_LEVEL"
+    ],
+    [
+      12,
+      8,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      13,
+      9,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      14,
+      9,
+      1,
+      11,
+      1,
+      "PATTERN"
+    ],
+    [
+      15,
+      14,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      16,
+      10,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      17,
+      12,
+      4,
+      14,
+      1,
+      "WB_GAIN"
+    ],
+    [
+      18,
+      13,
+      0,
+      15,
+      0,
+      "IMAGE"
+    ],
+    [
+      19,
+      15,
+      0,
+      16,
+      0,
+      "IMAGE"
+    ],
+    [
+      20,
+      19,
+      0,
+      17,
+      0,
+      "IMAGE"
+    ],
+    [
+      22,
+      16,
+      0,
+      19,
+      0,
+      "IMAGE"
+    ],
+    [
+      23,
+      17,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      24,
+      17,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      17,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "workflowRendererVersion": "LG",
+    "ds": {
+      "scale": 0.5448472432075488,
+      "offset": [
+        1096.3039735466346,
+        936.2729992579049
+      ]
+    },
+    "frontendVersion": "1.38.13"
+  },
+  "version": 0.4
+}

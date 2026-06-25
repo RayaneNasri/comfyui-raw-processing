@@ -44,7 +44,7 @@ class GaussianFilerNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/denoising"
 
     SEARCH_ALIASES = [
         "gaussian filter",

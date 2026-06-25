@@ -16,10 +16,10 @@ class ToneCurveNode(CurveNodeBase):
     each per-channel curve is applied independently on top.
     """
 
-    CATEGORY = "image/curves"
+    CATEGORY = "image/processing/curve-manipulation"
 
     @classmethod
-    def INPUT_TYPES(cls):
+    def INPUT_TYPES(cls) -> dict:
         return {
             "required": {
                 "image": ("IMAGE",),

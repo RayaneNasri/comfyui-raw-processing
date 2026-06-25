@@ -25,7 +25,7 @@ class GammaCorrectionNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/gamma-correction"
     SEARCH_ALIASES = [
         "gamma correction adjustment",
         "luminance curve tweak",

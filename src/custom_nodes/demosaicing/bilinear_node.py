@@ -11,7 +11,7 @@ class BilinearDemosaicNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/demosaicing"
     SEARCH_ALIASES = [
         "bilinear demosaicing",
         "debayer image",

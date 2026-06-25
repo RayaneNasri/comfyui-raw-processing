@@ -28,7 +28,7 @@ class TemperatureTannerHellandNode:
     RETURN_NAMES = ("rgb_image",)
 
     FUNCTION = "process"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/color-manipulation"
 
     def process(
         self, rgb_image: Tensor, temperature_Kelvin: float, apply_changes: bool

@@ -13,20 +13,17 @@ def correct_distortion(
     """
     Correct radial and tangential lens distortion using the Brown-Conrady model.
 
-    The camera intrinsics are assumed: principal point at the image centre and
-    focal length equal to max(H, W).  These are reasonable defaults when the
-    true intrinsics are unknown.  The correction is applied via `cv2.undistort`.
+    The camera intrinsics are assumed: principal point at the image centre and focal length equal to max(H, W). These are reasonable defaults when the true intrinsics are unknown. The correction is applied via `cv2.undistort`.
 
     Args:
-        image: (H, W, 3) linear RGB tensor in [0, 1].
-        k1:    First radial distortion coefficient.
-               Negative → barrel distortion (wide-angle), positive → pincushion.
-        k2:    Second radial distortion coefficient (higher-order term).
-        p1:    First tangential distortion coefficient.  Usually near zero.
-        p2:    Second tangential distortion coefficient.  Usually near zero.
+        image (torch.Tensor): Linear RGB image tensor of shape (H, W, 3) in the range [0, 1].
+        k1 (float): First radial distortion coefficient. Negative indicates barrel distortion (wide-angle), positive indicates pincushion distortion.
+        k2 (float): Second radial distortion coefficient (higher-order term).
+        p1 (float, optional): First tangential distortion coefficient. Usually near zero. Defaults to 0.0.
+        p2 (float, optional): Second tangential distortion coefficient. Usually near zero. Defaults to 0.0.
 
     Returns:
-        (H, W, 3) corrected image clamped to [0, 1].
+        torch.Tensor: Corrected image of shape (H, W, 3), clamped to [0, 1].
     """
     if k1 == 0.0 and k2 == 0.0 and p1 == 0.0 and p2 == 0.0:
         return image

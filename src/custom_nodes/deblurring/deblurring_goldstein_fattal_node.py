@@ -13,7 +13,7 @@ class DeblurringGoldsteinFattalNode:
         }
 
     FUNCTION = "process"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/deblurring"
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("RGB_image",)

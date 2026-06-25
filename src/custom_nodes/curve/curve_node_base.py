@@ -28,7 +28,7 @@ class CurveNodeBase(ABC):
     adding to the returned dict.
     """
 
-    CATEGORY = "image/curves"
+    CATEGORY = "image/processing/curve-manipulation"
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "execute"
@@ -79,7 +79,7 @@ class CurveNodeBase(ABC):
             return self._default_spec(**kwargs)
 
         if isinstance(data, list):
-            return CurveSpec(points=[tuple(p) for p in data])  # type: ignore
+            return CurveSpec(points=[(float(x), float(y)) for x, y in data])
 
         return CurveSpec.from_json(data)
 

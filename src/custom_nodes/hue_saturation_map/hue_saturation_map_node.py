@@ -5,7 +5,6 @@ from torch import Tensor
 from server import PromptServer  # type: ignore
 
 import asyncio
-import torch
 import os
 import folder_paths  # type: ignore
 import json
@@ -156,7 +155,7 @@ class HueSaturationMapNode:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "process"
-    CATEGORY = "image/processing"
+    CATEGORY = "image/processing/hue-saturation-map"
 
     def process(
         self,
@@ -174,8 +173,9 @@ class HueSaturationMapNode:
         mode, _, value = dcp_selection.partition(":")
         if mode not in ("preset", "custom"):
             raise ValueError(f"Mode inconnu : {mode!r}")
-
         dcp_path = _resolve_dcp_path(mode, value)
+
+        input2d = rgb_image.squeeze()
         res = read_hue_sat_lut_from_dcp(dcp_path)
 
         if res is None:
@@ -192,23 +192,20 @@ class HueSaturationMapNode:
             calib_illum_2,
         ) = res
 
-        results = []
-        for i in range(rgb_image.shape[0]):
-            frame = apply_hue_sat_map(
-                rgb_image[i],
-                wb_gains,
-                indoor_color_matrix,
-                daylight_color_matrix,
-                forward_matrix_1,
-                forward_matrix_2,
-                low_temp_lut,
-                high_temp_lut,
-                calib_illum_1,
-                calib_illum_2,
-            )
-            results.append(frame)
+        frame = apply_hue_sat_map(
+            input2d,
+            wb_gains,
+            indoor_color_matrix,
+            daylight_color_matrix,
+            forward_matrix_1,
+            forward_matrix_2,
+            low_temp_lut,
+            high_temp_lut,
+            calib_illum_1,
+            calib_illum_2,
+        )
 
-        return (torch.stack(results),)
+        return (frame.unsqueeze(0),)
 
 
 NODE_CLASS_MAPPINGS = {

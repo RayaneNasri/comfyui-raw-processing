@@ -1,0 +1,324 @@
+{
+  "id": "2040ef4f-14cd-44ec-b441-20c0d46f8c31",
+  "revision": 0,
+  "last_node_id": 7,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        464.8455192760997,
+        -320.4213521231325
+      ],
+      "size": [
+        353.85546875,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "henry-desro-V5asA4gCgJA-unsplash.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "ToneCurveNode",
+      "pos": [
+        1250.49576594347,
+        -617.8020981176265
+      ],
+      "size": [
+        220.96371913551047,
+        456.7404841580433
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ToneCurveNode"
+      },
+      "widgets_values": [
+        256,
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.47669085985785753,0.18893248106026428],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "",
+        "",
+        "r"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "ToneCurveNode",
+      "pos": [
+        1502.1345495860326,
+        -423.2320458089996
+      ],
+      "size": [
+        220.00533189143744,
+        461.77490389799334
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ToneCurveNode"
+      },
+      "widgets_values": [
+        256,
+        "[[0,0],[0.5,0.5],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.2700804399343635,0.15754286221521718],[0.6839189592694462,0.8196846126144851],[1,1]]",
+        "",
+        "",
+        "b"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        1771.8732397789774,
+        -898.4557559813956
+      ],
+      "size": [
+        650.3064282636569,
+        599.8339440468241
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 7,
+      "type": "PreviewImage",
+      "pos": [
+        2460.327178928293,
+        -887.1436729938728
+      ],
+      "size": [
+        658.4799293743367,
+        569.6873641561971
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 6,
+      "type": "PreviewImage",
+      "pos": [
+        3162.8888946453517,
+        -931.3687015520004
+      ],
+      "size": [
+        645.5549059632226,
+        646.8122392578025
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 2,
+      "type": "ToneCurveNode",
+      "pos": [
+        1011.3969810938277,
+        -895.941830428848
+      ],
+      "size": [
+        210,
+        450
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ToneCurveNode"
+      },
+      "widgets_values": [
+        256,
+        "[[0,0],[0.21564081358871126,0.13784838520331666],[0.5,0.5],[0.7042348786516917,0.8051687026739573],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "[[0,0],[0.25,0.25],[0.5,0.5],[0.75,0.75],[1,1]]",
+        "",
+        "",
+        "master"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      1,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      2,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      3,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "workflowRendererVersion": "LG",
+    "ds": {
+      "scale": 0.6507380692654114,
+      "offset": [
+        -724.5916310744457,
+        1310.362629386716
+      ]
+    },
+    "frontendVersion": "1.38.13"
+  },
+  "version": 0.4
+}

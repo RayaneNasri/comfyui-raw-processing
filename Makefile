@@ -137,12 +137,12 @@ remove-link-nodes:
 link-presets: remove-link-presets
 	@printf "%b\n" "$(BLUE)$(BOLD)Linking presets to $(COMFY_MODELS_DIR)...$(NC)"
 	@mkdir -p $(DCP_PRESETS_TARGET) $(LUT_PRESETS_TARGET)
-	@find $(DCP_PRESETS_SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name ".*" -print0 2>/dev/null | \
-		while IFS= read -r -d '' item; do \
+	@find $(DCP_PRESETS_SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name ".*" 2>/dev/null | \
+		while IFS= read -r item; do \
 			ln -sf "$(shell pwd)/$$item" "$(DCP_PRESETS_TARGET)/$$(basename "$$item")"; \
 		done
-	@find $(LUT_PRESETS_SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name ".*" -print0 2>/dev/null | \
-		while IFS= read -r -d '' item; do \
+	@find $(LUT_PRESETS_SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name ".*" 2>/dev/null | \
+		while IFS= read -r item; do \
 			ln -sf "$(shell pwd)/$$item" "$(LUT_PRESETS_TARGET)/$$(basename "$$item")"; \
 		done
 	@printf "%b\n" "$(GREEN)Presets linking completed$(NC)"

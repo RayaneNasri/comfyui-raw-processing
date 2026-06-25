@@ -31,7 +31,7 @@ class AvgFilterNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/denoising"
 
     SEARCH_ALIASES = [
         "average filter",

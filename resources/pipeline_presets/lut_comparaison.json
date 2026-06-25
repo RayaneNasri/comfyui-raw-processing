@@ -1,0 +1,404 @@
+{
+  "id": "74af3ef0-887e-45d0-81ad-675b379e8e83",
+  "revision": 0,
+  "last_node_id": 26,
+  "last_link_id": 48,
+  "nodes": [
+    {
+      "id": 13,
+      "type": "LoadImage",
+      "pos": [
+        -133.68691485735263,
+        -203.1561069197172
+      ],
+      "size": [
+        353.85546875,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            40,
+            42,
+            44,
+            46
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "anthony-ermitano-E-0L7UrVlc4-unsplash.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "PersonalLutColorManipulationNode",
+      "pos": [
+        433.3864160182698,
+        174.17759304665353
+      ],
+      "size": [
+        317.2759765625,
+        154
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 46
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            47
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PersonalLutColorManipulationNode"
+      },
+      "widgets_values": [
+        "Linear RGB",
+        "/home/onyxia/work/image-processing/external/ComfyUI/models/luts/Fade to Green.cube",
+        "Adobe RGB (1998)",
+        "BGR",
+        null,
+        "Fade to Green.cube"
+      ]
+    },
+    {
+      "id": 18,
+      "type": "PreviewImage",
+      "pos": [
+        1983.3988932621246,
+        -304.9917659287325
+      ],
+      "size": [
+        325.2082867725794,
+        611.2967022521141
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 48
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 21,
+      "type": "PreviewImage",
+      "pos": [
+        1625.041321372999,
+        -300.1216844463283
+      ],
+      "size": [
+        319.21443092863296,
+        615.5726425397098
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 47
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 20,
+      "type": "PreviewImage",
+      "pos": [
+        1280.1599056621146,
+        -315.9307842191287
+      ],
+      "size": [
+        309.6554964066154,
+        631.540102177897
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 45
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 19,
+      "type": "PreviewImage",
+      "pos": [
+        940.1889771895487,
+        -312.8725751739667
+      ],
+      "size": [
+        303.54854894297114,
+        638.0186363919743
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 43
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 26,
+      "type": "PersonalLutColorManipulationNode",
+      "pos": [
+        411.07505504659713,
+        -43.82535252281025
+      ],
+      "size": [
+        317.2759765625,
+        154
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 44
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            45
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PersonalLutColorManipulationNode"
+      },
+      "widgets_values": [
+        "Linear RGB",
+        "/home/onyxia/work/image-processing/external/ComfyUI/models/luts/Berlin Sky.cube",
+        "Adobe RGB (1998)",
+        "BGR",
+        null,
+        "Berlin Sky.cube"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "PersonalLutColorManipulationNode",
+      "pos": [
+        485.99556043832075,
+        -277.9034640349345
+      ],
+      "size": [
+        317.2759765625,
+        154
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 42
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            43
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PersonalLutColorManipulationNode"
+      },
+      "widgets_values": [
+        "Linear RGB",
+        "/home/onyxia/work/image-processing/external/ComfyUI/models/luts/Cinematic-5.cube",
+        "Adobe RGB (1998)",
+        "BGR",
+        null,
+        "Cinematic-5.cube"
+      ]
+    },
+    {
+      "id": 23,
+      "type": "PersonalLutColorManipulationNode",
+      "pos": [
+        466.946215420228,
+        -535.6485495104505
+      ],
+      "size": [
+        317.2759765625,
+        154
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            48
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PersonalLutColorManipulationNode"
+      },
+      "widgets_values": [
+        "Linear RGB",
+        "/home/onyxia/work/image-processing/external/ComfyUI/models/luts/LC4.cube",
+        "Adobe RGB (1998)",
+        "BGR",
+        null,
+        "LC4.cube"
+      ]
+    }
+  ],
+  "links": [
+    [
+      40,
+      13,
+      0,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      42,
+      13,
+      0,
+      24,
+      0,
+      "IMAGE"
+    ],
+    [
+      43,
+      24,
+      0,
+      19,
+      0,
+      "IMAGE"
+    ],
+    [
+      44,
+      13,
+      0,
+      26,
+      0,
+      "IMAGE"
+    ],
+    [
+      45,
+      26,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      46,
+      13,
+      0,
+      25,
+      0,
+      "IMAGE"
+    ],
+    [
+      47,
+      25,
+      0,
+      21,
+      0,
+      "IMAGE"
+    ],
+    [
+      48,
+      23,
+      0,
+      18,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "workflowRendererVersion": "LG",
+    "ds": {
+      "scale": 0.7491437393548164,
+      "offset": [
+        65.74964123998024,
+        676.1291232495396
+      ]
+    },
+    "frontendVersion": "1.38.13"
+  },
+  "version": 0.4
+}

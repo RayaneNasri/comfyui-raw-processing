@@ -321,6 +321,18 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
 
 def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     H, W = image_rgb.shape[:2]
+
+    MAX_DIM = 3000
+    if H > MAX_DIM or W > MAX_DIM:
+        scale = MAX_DIM / max(H, W)
+        new_H, new_W = int(H * scale), int(W * scale)
+        log.info("Downsampling image from %dx%d to %dx%d before SAM", W, H, new_W, new_H)
+        pil_img = Image.fromarray(image_rgb)
+        pil_img = pil_img.resize((new_W, new_H), Image.Resampling.LANCZOS)
+        image_rgb_sam = np.array(pil_img)
+    else:
+        image_rgb_sam = image_rgb
+
     checkpoint_dir = _get_checkpoint_dir()
 
     # 1. Chercher les modèles déjà présents
@@ -384,13 +396,17 @@ def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
             "Failed to initialize SAM model. Check if the checkpoint is valid."
         )
 
-    masks = generator.generate(image_rgb)
+    masks = generator.generate(image_rgb_sam)
     masks = sorted(masks, key=lambda x: x["area"], reverse=True)
 
     label_map = np.zeros((H, W), dtype=np.int32)
 
     for idx, mask_dict in enumerate(masks, start=1):
         boolean_mask = mask_dict["segmentation"]
+        if boolean_mask.shape != (H, W):
+            mask_pil = Image.fromarray(boolean_mask.astype(np.uint8) * 255)
+            mask_pil = mask_pil.resize((W, H), Image.Resampling.NEAREST)
+            boolean_mask = np.array(mask_pil).astype(bool)
         label_map[boolean_mask] = idx
 
     return label_map

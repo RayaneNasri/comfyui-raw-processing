@@ -957,7 +957,7 @@ Enhance blue or red by simply adding the adjustement value for the red channel a
 **Node Name:** `Temperature Simple`  
 **Category:** image/processing/color-manipulation
 
-TODO: add image
+![alt text](assets/temperature_simple_node.png)
 
 #### Input Parameters
 
@@ -1010,7 +1010,7 @@ Give a warmer/cooler look to the image. Given a temperature in Kelvin (represent
 **Node Name:** `Temperature Tanner-Helland`  
 **Category:** image/processing/color-manipulation
 
-TODO: add image
+![alt text](assets/temperature_tanner_helland_node.png)
 
 #### Input Parameters
 
@@ -1063,7 +1063,7 @@ Use a Look-Up Table (LUT) to apply a preset style to the image. The LUT is choos
 **Node Name:** `LUT Color Manipulation`
 **Category:** image/processing/color-manipulation
 
-TODO: add image
+![alt text](assets/lut_color_manipulation_node.png)
 
 ##### Input Parameters
 
@@ -1131,7 +1131,7 @@ Use a Look-Up Table (LUT) to apply a preset style to the image. The LUT is provi
 **Node Name:** `Personal LUT Color Manipulation`
 **Category:** image/processing/color-manipulation
 
-TODO: add image
+![alt text](assets/personal_lut_color_manipulation_node.png)
 
 ##### Input Parameters
 
@@ -1203,7 +1203,7 @@ Change the saturation by multiplying the saturation channel (in the hsv color-sp
 **Node Name:** `Saturation HSV`  
 **Category:** image/processing/color-manipulation
 
-TODO: add image
+![alt text](assets/saturation_hsv_node.png)
 
 #### Input Parameters
 
@@ -1254,8 +1254,6 @@ Change the contrast of an image, linearly and globally: multiplies deviations fr
 
 **Node Name:** `Contrast Linear Global`  
 **Category:** image/processing/color-manipulation
-
-TODO: add image
 
 #### Input Parameters
 
@@ -1410,6 +1408,7 @@ Reduce blur in an image, using the Goldstein Fattal Method: https://www.ipol.im/
 **Node Name:** `Deblurring Goldstein-Fattal`  
 **Category:** image/processing/deblurring
 
+![alt text](assets/deblurring_goldstein_fattal_node.png)
 
 #### Input Parameters
 

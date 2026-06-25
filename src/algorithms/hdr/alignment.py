@@ -15,6 +15,7 @@ from .utils import (
     compute_tiles_distance_l1,
     compute_distance,
     sub_pixel_minimum,
+    gather_search_windows,
 )
 # from ..visualization.vis import addMotionField
 
@@ -443,20 +444,25 @@ def align_on_a_level(
 
     # each area has a side of length (tileSize + 2 * searchRadius)
     search_window = tile_size + 2 * search_radius
-    search_areas = get_tiles(padded_alt, window_size=search_window, step=1)
 
     # Only keep those corresponding to the area around the reference tile location + [u0, v0]
     base_i = (torch.arange(h, device=device) * (tile_size // 2)).view(h, 1).expand(h, w)
     base_j = (torch.arange(w, device=device) * (tile_size // 2)).view(1, w).expand(h, w)
 
-    max_i = search_areas.shape[0] - 1
-    max_j = search_areas.shape[1] - 1
+    # Bounds for the top-left corner of a search_window-sized patch inside padded_alt
+    max_i = padded_alt.shape[0] - search_window
+    max_j = padded_alt.shape[1] - search_window
 
     ind_i = torch.clamp(base_i + u0, 0, max_i)
     ind_j = torch.clamp(base_j + v0, 0, max_j)
 
-    # PyTorch advanced indexing cleanly extracts the needed (h, w, window, window) tensor
-    extracted_search_areas = search_areas[ind_i, ind_j]
+    # Gather only the (h, w) search windows that are actually needed, instead of
+    # densely unfolding every pixel position of the (potentially huge) padded
+    # alternate image — this avoids materializing an (H, W, window, window)
+    # tensor that can reach hundreds of GB at full sensor resolution.
+    extracted_search_areas = gather_search_windows(
+        padded_alt, ind_i, ind_j, search_window
+    )
 
     # The upsampled alignment grid can be larger than the ref tile grid when image
     # dimensions are not exact multiples of the tile stride.  Clamp h and w to the

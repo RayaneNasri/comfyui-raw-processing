@@ -28,7 +28,7 @@ import torch
 # package being importable yet (errors surface at execution time instead).
 # ---------------------------------------------------------------------------
 from algorithms.hdr.alignment import select_reference, align_burst
-from algorithms.hdr.merging import merge_burst
+from algorithms.hdr.merging import merge_burst, validate_consistent_cfa_pattern
 from algorithms.hdr.finishing import finish
 
 logger = logging.getLogger(__name__)
@@ -250,8 +250,8 @@ class HDRPlusAlignMerge:
 
     CATEGORY = "HDR+"
     FUNCTION = "run"
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("merged_bayer",)
+    RETURN_TYPES = ("IMAGE", "PATTERN")
+    RETURN_NAMES = ("merged_bayer", "cfa_pattern")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -259,6 +259,7 @@ class HDRPlusAlignMerge:
             "required": {
                 # ── From BatchReadRawSensorNode ───────────────────────────
                 "burst_images": ("IMAGES",),  # (B, H, W, 1) float32
+                "cfa_patterns": ("PATTERN",),  # (B, 2, 2) — one CFA pattern per frame
                 "black_levels": ("BLACK_LEVEL",),  # (B, 4)        float32
                 "white_levels": ("WHITE_LEVEL",),  # (B, 1)        float32
                 "exif_tags": ("EXIF_TAGS",),  # list[dict]
@@ -393,6 +394,7 @@ class HDRPlusAlignMerge:
     def run(
         self,
         burst_images,
+        cfa_patterns: torch.Tensor,
         black_levels: torch.Tensor,
         white_levels: torch.Tensor,
         exif_tags: list[dict],
@@ -416,6 +418,12 @@ class HDRPlusAlignMerge:
                 "HDR+ algorithm package not found. "
                 "Ensure algorithms/hdr/ is on the Python path."
             )
+
+        # ── Validate the burst agrees on a single CFA layout ──────────────
+        # Alignment and merging assume one consistent sensor layout across the
+        # whole burst; this is true for any normal burst from one camera, so a
+        # mismatch usually signals a loader bug or a mixed-source burst.
+        validate_consistent_cfa_pattern(cfa_patterns)
 
         # ── Unpack burst into list[Tensor(H, W)] ─────────────────────────
         images = _unpack_burst(burst_images)
@@ -473,6 +481,11 @@ class HDRPlusAlignMerge:
         aligned_tiles, padding = align_burst(images, ref_idx, alignment_params, options)
         logger.debug("HDRPlusAlignMerge: alignment done, padding=%s", padding)
 
+        # The merged Bayer output inherits the reference frame's CFA layout —
+        # alignment/merging only shift and denoise content, they never change
+        # the underlying mosaic pattern.
+        ref_cfa_pattern = cfa_patterns[ref_idx]
+
         # ── Merging ───────────────────────────────────────────────────────
         merged_bayer = merge_burst(
             images,
@@ -484,6 +497,7 @@ class HDRPlusAlignMerge:
             white_level_scalar,
             merging_params,
             options,
+            ref_cfa_pattern,
         )
         logger.debug(
             "HDRPlusAlignMerge: merged shape=%s  dtype=%s  range=[%.1f, %.1f]",
@@ -493,7 +507,7 @@ class HDRPlusAlignMerge:
             merged_bayer.max().item(),
         )
 
-        return (merged_bayer,)
+        return (merged_bayer, ref_cfa_pattern)
 
 
 # ===========================================================================

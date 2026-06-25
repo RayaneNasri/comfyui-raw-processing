@@ -5,6 +5,106 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+# Standard libraw/rawpy color index -> name mapping (color_desc is usually b"RGBG").
+# raw_pattern is a 2x2 array of these indices giving the color at each of the
+# 4 sub-pixel positions (row, col) within one CFA block.
+_DEFAULT_COLOR_DESC = "RGBG"
+
+
+def cfa_pattern_to_bayer_offsets(
+    cfa_pattern: "torch.Tensor | list | tuple",
+    color_desc: str = _DEFAULT_COLOR_DESC,
+) -> list[tuple[int, int]]:
+    """
+    Convert a 2x2 CFA pattern (as produced by rawpy's `raw_pattern`, indexed via
+    `color_desc`) into the [(row_offset, col_offset), ...] list expected by
+    merge_hdrplus, ordered as [R, Gr, Gb, B] — i.e. the (0,0), (1,0), (0,1), (1,1)
+    Bayer quadrants reinterpreted according to the *actual* sensor layout instead
+    of assuming RGGB.
+
+    Args:
+        cfa_pattern: 2x2 array-like of small ints (0..3), one per sub-pixel
+            position, indexing into `color_desc`. This matches rawpy's
+            `raw_pattern` convention used by `read_raw_sensor_data`.
+        color_desc: string mapping each index in `cfa_pattern` to a color
+            letter. Defaults to rawpy's typical "RGBG" (two green channels,
+            Gr and Gb, kept distinct).
+
+    Returns:
+        List of 4 (row, col) offsets in [R, Gr, Gb, B] order, matching the
+        channel order merge_hdrplus iterates over.
+    """
+    if isinstance(cfa_pattern, torch.Tensor):
+        pattern = cfa_pattern.detach().cpu().tolist()
+    else:
+        pattern = cfa_pattern
+
+    # pattern[row][col] -> color index into color_desc
+    positions: dict[str, tuple[int, int]] = {}
+    green_positions: list[tuple[int, int]] = []
+
+    for row in range(2):
+        for col in range(2):
+            color_idx = int(pattern[row][col])
+            color = color_desc[color_idx]
+            if color == "G":
+                green_positions.append((row, col))
+            else:
+                positions[color] = (row, col)
+
+    if "R" not in positions or "B" not in positions or len(green_positions) != 2:
+        raise ValueError(
+            f"Unsupported or malformed CFA pattern {pattern} with color_desc "
+            f"'{color_desc}'. Expected exactly one R, one B, and two G positions."
+        )
+
+    # Disambiguate Gr (green sharing a column with R) vs Gb (green sharing a
+    # column with B) — matches the convention of the original hard-coded RGGB
+    # offsets [(0,0)->R, (1,0)->Gr, (0,1)->Gb, (1,1)->B], where (1,0) shares
+    # its column with R at (0,0), and (0,1) shares its column with B at (1,1).
+    r_col = positions["R"][1]
+    gr = next((p for p in green_positions if p[1] == r_col), green_positions[0])
+    gb = next((p for p in green_positions if p != gr), green_positions[1])
+
+    return [positions["R"], gr, gb, positions["B"]]
+
+
+def validate_consistent_cfa_pattern(
+    cfa_patterns: "torch.Tensor | list",
+) -> None:
+    """
+    Raise a clear error if frames in the burst disagree on their CFA pattern.
+    Alignment and merging assume a single, consistent Bayer layout across the
+    whole burst (standard for a burst captured by one camera); a mismatch
+    usually means corrupted metadata or frames from different sources.
+    """
+    if isinstance(cfa_patterns, torch.Tensor):
+        if cfa_patterns.ndim < 2:
+            return  # single pattern, nothing to compare
+        first = cfa_patterns[0]
+        mismatched = [
+            i
+            for i in range(1, cfa_patterns.shape[0])
+            if not torch.equal(cfa_patterns[i], first)
+        ]
+    else:
+        first = cfa_patterns[0]
+        to_list = lambda p: p.tolist() if isinstance(p, torch.Tensor) else p
+        first_list = to_list(first)
+        mismatched = [
+            i
+            for i in range(1, len(cfa_patterns))
+            if to_list(cfa_patterns[i]) != first_list
+        ]
+
+    if mismatched:
+        raise ValueError(
+            "Burst frames disagree on CFA pattern at index(es) "
+            f"{mismatched}. All frames in a burst must share the same sensor "
+            "layout — check the loader output or remove mismatched frames."
+        )
+
+
 def merge_burst(
     images: list[torch.Tensor] | torch.Tensor,
     reference_index: int,
@@ -15,10 +115,15 @@ def merge_burst(
     white_level: float | int,
     params: dict[str, Any],
     options: dict[str, Any],
+    cfa_pattern: "torch.Tensor | list | tuple | None" = None,
 ) -> torch.Tensor:
     """
     Merges previously aligned tiles of a burst, and returns a single temporally denoised image.
     Stripped of all file I/O, raw demosaicking, and intermediate visual dumps.
+
+    Args:
+        cfa_pattern: 2x2 CFA pattern of the burst (rawpy `raw_pattern` convention).
+            If None, defaults to standard RGGB offsets for backward compatibility.
     """
 
     # Extract the reference image tensor
@@ -34,6 +139,7 @@ def merge_burst(
         white_level,
         params.get("tuning", {}),
         options,
+        cfa_pattern,
     )
 
     return merged_image
@@ -442,10 +548,16 @@ def merge_hdrplus(
     white_level: int | float,
     params: dict[str, Any],
     options: dict[str, Any],
+    cfa_pattern: "torch.Tensor | list | tuple | None" = None,
 ) -> torch.Tensor:
     """
     Implements the Fourier Tile-based Merging as described in Section 4 of the IPOL article.
     Processes each of the 4 Bayer channels (R, Gr, Gb, B) separately.
+
+    Args:
+        cfa_pattern: 2x2 CFA pattern of the sensor (rawpy `raw_pattern` convention,
+            i.e. a 2x2 array of color indices into "RGBG"). If None, assumes the
+            standard RGGB layout: [(0,0)->R, (1,0)->Gr, (0,1)->Gb, (1,1)->B].
     """
     device = reference_image.device
     dtype = reference_image.dtype
@@ -465,9 +577,19 @@ def merge_hdrplus(
         tags, black_level, white_level, params, options
     )
 
-    # Work separately on each channel of the Bayer image
-    # The zip creates offsets for: (0,0)->R, (1,0)->Gr, (0,1)->Gb, (1,1)->B
-    bayer_offsets = [(0, 0), (1, 0), (0, 1), (1, 1)]
+    # Work separately on each channel of the Bayer image.
+    # Offsets are ordered [R, Gr, Gb, B] and derived from the sensor's actual CFA
+    # pattern when provided, instead of always assuming RGGB.
+    if cfa_pattern is not None:
+        bayer_offsets = cfa_pattern_to_bayer_offsets(cfa_pattern)
+        logger.debug(f"Using CFA-derived Bayer offsets: {bayer_offsets}")
+    else:
+        logger.warning(
+            "No CFA pattern provided to merge_hdrplus; assuming standard RGGB "
+            "layout. Pass the burst's actual CFA pattern if the sensor uses a "
+            "different layout (BGGR, GRBG, GBRG)."
+        )
+        bayer_offsets = [(0, 0), (1, 0), (0, 1), (1, 1)]
 
     for c, (di, dj) in enumerate(bayer_offsets):
         # Extract the specific channel from the reference image

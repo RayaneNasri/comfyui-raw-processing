@@ -63,6 +63,48 @@ def downsample(image: torch.Tensor, kernel: str = "gaussian", factor: int = 2):
     return out
 
 
+def gather_search_windows(
+    padded_image: torch.Tensor,
+    top_i: torch.Tensor,
+    top_j: torch.Tensor,
+    window_size: int,
+) -> torch.Tensor:
+    """
+    Gather a (window_size x window_size) patch from `padded_image` at each
+    (top_i, top_j) top-left corner, without materializing a dense unfold over
+    every pixel position of the (possibly huge) input image.
+
+    This replaces the memory-heavy pattern of calling
+    `get_tiles(padded_image, window_size, step=1)` (which allocates a tensor
+    of shape (H, W, window_size, window_size) — i.e. one window per pixel of
+    the *entire* image) followed by indexing a handful of needed positions
+    out of it. Only the (h, w, window_size, window_size) windows that are
+    actually needed (one per tile of the alignment grid) are ever allocated.
+
+    Args:
+        padded_image: 2D tensor (Hp, Wp), already padded so that every
+            requested window fits inside bounds.
+        top_i: (h, w) tensor of row indices for the top-left corner of each window.
+        top_j: (h, w) tensor of column indices for the top-left corner of each window.
+        window_size: side length of the square window to extract.
+
+    Returns:
+        Tensor of shape (h, w, window_size, window_size).
+    """
+    h, w = top_i.shape
+    device = padded_image.device
+
+    offsets = torch.arange(window_size, device=device)
+
+    rows = top_i.unsqueeze(-1) + offsets.view(1, 1, -1)  # (h, w, window_size)
+    cols = top_j.unsqueeze(-1) + offsets.view(1, 1, -1)  # (h, w, window_size)
+
+    rows = rows.unsqueeze(-1).expand(h, w, window_size, window_size)
+    cols = cols.unsqueeze(-2).expand(h, w, window_size, window_size)
+
+    return padded_image[rows, cols]
+
+
 def get_aligned_tiles(
     image: torch.Tensor, tile_size: int, motion_vectors: torch.Tensor
 ) -> torch.Tensor:

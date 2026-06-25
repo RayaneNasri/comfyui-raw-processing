@@ -289,7 +289,9 @@
     - Merged the `fix/memory-usage` branch that fixes the memory performance into `dev`.
   * Charlotte :
   * Ghiles :
+    - Researched about classical methods for masking and segmentation of images.
   * Rayane :
+    - Bibliography research about masking with deep learning algorithms
 
 ## Session 13/05/2026
 
@@ -299,7 +301,9 @@
     - research on contrast algorithms
     - implementing contrast_linear_global and testing it with several contrast_factors
   * Ghiles :
+    - Fixed a bug in the makefile where it it wasn't removing the nodes of other branches in the submodule of ComfyUI, which was causing problems when switching branches.
   * Rayane :
+    - Continue research about masking with deep learning algorithms
 
 ## Between 13/05/2026 and 27/05/2026
 
@@ -310,8 +314,9 @@
     - Implementation of contrast_clahe (with kornia and with cv2), but the result does not look good on RGB images (it is initially designed for grayscale images)...
     - Preparation of the presentation for the audit P2P
   * Ghiles :
+    - Implemented a first version of a bezier curve editor, it is not really user-friendly yet, but it is a first step, i let amayas take care of it.
   * Rayane :
-
+    Nothing worth mentioning.
 ## Session 27/05/2026
 
   * All :
@@ -325,8 +330,11 @@
   * Charlotte :
     - Deblurring : corrected some errors on the main function of the Goldstein-Fattal algorithm, and tested it on an image
   * Ghiles :
+    - Didn't work a lot because of the exams.
+    - Refined a node for the curve editor.
+    - Searched up how to do final color space conversion.
   * Rayane :
-
+    Nothing worth mentioning because of the exams.
 ## Session 10/06/2026
 
   * Amayas :
@@ -335,16 +343,28 @@
   * Charlotte :
     - Memory check in color manipulation algorithms with Amayas
   * Ghiles :
+    - Read a paper about HDR with Rayane Nasri , took more time that expected to understand:
+      - the different HDR techniques : aligning the images, merging them and applying tone mapping
+      - the different tone mapping algorithms : global and local tone mapping
+      - Looked around in the internet to find datasets of images for HDR, but didn't find any that was really useful for our project since HDR requires multiple images of the same scene with different exposures, and most datasets only have one image per scene.
   * Rayane :
+    - Read a paper about HDR with Ghiles Maloum
 
 ## Session 15/06/2026
 
+  * All :
+    - Meeting with Quentin Bammey (15/06/2026)
   * Amayas :
   * Charlotte :
     - Implemented read_image
     - Implemented read_image_node and deblurring_goldstein_fattal_node for ComfyUI and tested it
   * Ghiles :
+    - Implemented a mock version of a classic HDR algorithm in normal python instead of ComfyUI; i basically used numpy and OpenCV to implement the different steps of the HDR algorithm, and then tested it on a few images.
+      - The results were okayish, but not so great because i didn't have a lot of images with different exposures.
+      - A problem was that it took a lot of time to process the images, mainly because of the alignment step, and also because it's done in numpy and OpenCV instead of PyTorch, which is much faster.
+    - After the meeting with Quentin Bammey, he suggested to look into HDR+ algorithm and gave us an IPOl link of it. After searching with Rayane, we found the github repo of his code and we will try to understand it and implement it in ComfyUI.
   * Rayane :
+    - Familiarize with the github repo of the HDR paper's author with Ghiles Maloum
 
 ## 22/06/2026
 
@@ -355,7 +375,12 @@
     - Added tests and little modifications in the documentation for temperature_simple, temperature_tanner_helland, saturation_hsv and contrast_linear_global
     - Changed the node and implementation of apply_lut to take into account the color_spaces (linearRGB or adobeRGB1998) of the image and of the lut
   * Ghiles :
+    - Started implementing the HDR+ algorithm in matplotlib and numpy before doing it in comfyui.
+    - I basically followed the same code as the github repo of the HDR+ paper's author, i just rewrote it in a more readable way and also took into consideration the newer packages because the repo was from 5 years ago.
+    - The results were quite convincing, but it's still slow to ship.
   * Rayane :
+    - Merging denoising branch into dev and fixing the related issues
+    - Implement a ComfyUI node for exportation of images in different formats (png, jpg, tiff, etc.) and with different compression levels
 
 ## 23/06/2026
 
@@ -365,7 +390,12 @@
     - formatting, linting, type checking and then merging of feature/color-manipulation
     - formatting, linting, type checking and then merging of feature/deblurring
   * Ghiles :
+    - Reimplemented the multiple files of the HDR+ function by function in pytorch because there was no easy way to do it directly (the code in the github repo is poorly written)
+    - Adding some documentation on some part of the code where it wasn't done.
   * Rayane :
+    - Help Charlotte to merge the feature/deblurring branch into dev and fix the related conflicts
+    - Standardize the input and output of the nodes
+    - Cleaning the code and repo
 
 ## 24/06/2026
 
@@ -376,13 +406,15 @@
     - Implemented ComfyUI node for contrast_linear_global
     - Documentation for all the ComfyUI nodes I made
   * Ghiles :
+    - After testing the code of yesterday, i found out that it required large amounts of VRAM to run, so basically it wasn't easy to just make the equivalent numpy + numba ==> pytorch, so i started to look with Rayane for a better way to optimize it. After speding hours in debugging and nitpicking the code, we couldn't just run. We decided that it was better to focus on finalizing other things in the project, so we ditched HDR+ for now and we will come back to it later if we have time.  
   * Rayane :
-
+    - Join Ghiles to help him with the HDR+ algorithm in ComfyUI
+    - Writing the documentation and put it in the same format for all nodes
+    
 ## 25/06/2026
 
   * All :
     - Meeting with Quentin Bammey: Final Presentation (25/06/2026)
-  * Amayas :
-  * Charlotte :
-  * Ghiles :
-  * Rayane :
+    - Cleaning up the rest of the code
+    - Preparing pipelines to showcase tomorrow
+    - Structuring and preparing the final presentation for tomorrow

@@ -117,4 +117,4 @@ def gaussian_filter(
         src, ksize, sigmaX, sigmaY=sigmaY, borderType=borderType, hint=hint
     )
 
-    return torch.from_numpy(cv2.cvtColor(out, cv2.COLOR_BGR2RGB).astype(float) / 255.0)
+    return torch.from_numpy(cv2.cvtColor(out, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0)

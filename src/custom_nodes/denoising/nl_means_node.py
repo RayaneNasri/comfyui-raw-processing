@@ -16,7 +16,7 @@ class NonLocalMeansNode:
 
         return {
             "required": {
-                "img": ("IMAGE",),
+                "image": ("IMAGE",),
                 "h": ("FLOAT", {"default": 3.0, "min": 0.0, "tooltip": tooltip["h"]}),
                 "hColor": (
                     "FLOAT",

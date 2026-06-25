@@ -9,7 +9,7 @@ This project is licensed under GNU GPL v3 - see the [LICENSE](LICENSE) file for 
 
 ## Prerequisites
 
-- Git with submodule support
+- Git with submodule and [Git LFS](https://git-lfs.com/) support
 - `uv` package manager: https://github.com/astral-sh/uv
 - Python `>= 3.13`
 

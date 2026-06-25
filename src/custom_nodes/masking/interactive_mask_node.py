@@ -10,12 +10,18 @@ import numpy as np
 import torch
 from PIL import Image, ImageDraw
 
+import folder_paths  # type: ignore
+
+
 from skimage.segmentation import slic
 
 import os
 import urllib.request
 
-from segment_anything import sam_model_registry, SamAutomaticMaskGenerator as SamMaskGenerator
+from segment_anything import (
+    sam_model_registry,
+    SamAutomaticMaskGenerator as SamMaskGenerator,
+)
 
 from server import PromptServer  # type: ignore
 from aiohttp import web as _aiohttp_web
@@ -62,8 +68,7 @@ SAM_MODELS = {
 
 
 def _get_checkpoint_dir() -> str:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    checkpoint_dir = os.path.join(base_dir, "models/sams/")
+    checkpoint_dir = os.path.join(folder_paths.models_dir, "sams")
     os.makedirs(checkpoint_dir, exist_ok=True)
     return checkpoint_dir
 
@@ -316,11 +321,13 @@ def _run_slic_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
 def _run_sam_segmentation(image_rgb: np.ndarray, **kwargs) -> np.ndarray:
     H, W = image_rgb.shape[:2]
 
-    MAX_DIM = 3000
+    MAX_DIM = 2000
     if H > MAX_DIM or W > MAX_DIM:
         scale = MAX_DIM / max(H, W)
         new_H, new_W = int(H * scale), int(W * scale)
-        log.info("Downsampling image from %dx%d to %dx%d before SAM", W, H, new_W, new_H)
+        log.info(
+            "Downsampling image from %dx%d to %dx%d before SAM", W, H, new_W, new_H
+        )
         pil_img = Image.fromarray(image_rgb)
         pil_img = pil_img.resize((new_W, new_H), Image.Resampling.LANCZOS)
         image_rgb_sam = np.array(pil_img)

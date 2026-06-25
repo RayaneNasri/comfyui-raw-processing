@@ -19,7 +19,7 @@ class ToneCurveNode(CurveNodeBase):
     CATEGORY = "image/processing/curve-manipulation"
 
     @classmethod
-    def INPUT_TYPES(cls):
+    def INPUT_TYPES(cls) -> dict:
         return {
             "required": {
                 "image": ("IMAGE",),

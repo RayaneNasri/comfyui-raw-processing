@@ -310,6 +310,8 @@
   * All :
     - Meeting with Quentin Bammey (22/05/2026)
   * Amayas :
+    - Worked on correcting problems related with Bezier curves to implement the tone curve node.
+    - Worked on implementing SLIC and SAM algorithms for segmenting images.
   * Charlotte :
     - Implementation of contrast_clahe (with kornia and with cv2), but the result does not look good on RGB images (it is initially designed for grayscale images)...
     - Preparation of the presentation for the audit P2P
@@ -327,6 +329,8 @@
   * All :
     - Meeting with Quentin Bammey (29/05/2026)
   * Amayas :
+    - Worked on front-end implementation for masking node.
+    - Implemented the final segmentation node.
   * Charlotte :
     - Deblurring : corrected some errors on the main function of the Goldstein-Fattal algorithm, and tested it on an image
   * Ghiles :
@@ -355,6 +359,7 @@
   * All :
     - Meeting with Quentin Bammey (15/06/2026)
   * Amayas :
+    - Did research on batch RAW reading to read multiple images at the same time.
   * Charlotte :
     - Implemented read_image
     - Implemented read_image_node and deblurring_goldstein_fattal_node for ComfyUI and tested it
@@ -371,6 +376,8 @@
   * All :
     - Meeting with Quentin Bammey (22/06/2026)
   * Amayas :
+    - Worked on correcting problems related to nodes UIs to merge them.
+    - Wrote unit tests for curve editing
   * Charlotte :
     - Added tests and little modifications in the documentation for temperature_simple, temperature_tanner_helland, saturation_hsv and contrast_linear_global
     - Changed the node and implementation of apply_lut to take into account the color_spaces (linearRGB or adobeRGB1998) of the image and of the lut
@@ -385,6 +392,8 @@
 ## 23/06/2026
 
   * Amayas :
+    - Merged some of the unremaining nodes in independant branches.
+    - Improved nodes UI : added a user interface based .dcp file reading for the LUT application node and the HueSatMap node.
   * Charlotte :
     - lut in RGB or BGR: changed the node and implementation of apply_lut to take into account the order of the color channels of the lut (RGB or BGR) + separation of the node for personal/non-personal lut
     - formatting, linting, type checking and then merging of feature/color-manipulation
@@ -402,6 +411,10 @@
   * All :
     - Meeting with Quentin Bammey (24/06/2026)
   * Amayas :
+    - Continued merging remaining branches into dev for the release.
+    - Corrected bugs and improved UI for nodes.
+    - Resolved last bugs related to resource consumption for SAM segmentation algorithm.
+    - Added pipeline presets, LUT presets and DCP presets to the project.
   * Charlotte :
     - Implemented ComfyUI node for contrast_linear_global
     - Documentation for all the ComfyUI nodes I made

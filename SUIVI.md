@@ -154,6 +154,7 @@
   * Ghiles :
     - Talked with Quentin Bammey about making a more intuitive editor for tone curve and started looking up how to do it.
   * Rayane :
+    - Start research about denoising deep learning algorithms
 
 ## Between 27/03/2026 and 03/04/2026
   * Amayas :
@@ -165,7 +166,7 @@
     - Found a repository that implements an editor for color manipulation.
     - Dove deeper into the code of this repository to understand how it works and how comfyui nodes are communicating with the javascript code of the editor.
   * Rayane :
-
+      Research about denoising deep learning algorithms
 ## Session 03/04/2026
   * All :
     - Meeting with Quentin Bammey (03/04/2026)
@@ -178,6 +179,7 @@
   * Ghiles :
     - Implemented a first version of a curve editor with polynomial interpolation. It is not really user-friendly yet, but it is a first step.
   * Rayane :
+      - Continue research about denoising deep learning algorithms
 
 ## Between 03/04/2026 and 10/04/2026
 
@@ -192,6 +194,7 @@
   * Ghiles :
     - Researched about lens correction especially vignetting. I found some papers about these topics and I will try to implement them in the next weeks.
   * Rayane :
+    - Start working on masking feature to process differently multiple parts of an image
 
 ## Session 10/04/2026
 
@@ -203,6 +206,7 @@
     - Talked with Quentin Bammey about the lens correction phase and he gave additional phases for it like chromatic aberration correction and geometric distortion correction. I will try to implement these different corrections in the next weeks.
     - Started on a first version of vignetting (but no node yet in ComfyUI).
   * Rayane :
+    - Discuss the masking feature with Quentin Bammey
 
 ## Between 10/04/2026 and 15/04/2026
 
@@ -215,6 +219,8 @@
     - Implemented geometric distortion correction
     - Made a node that aggregates the different lens corrections.
   * Rayane :
+    - Start implementation of the masking feature
+    - Working on the merge of `feature/noise-reduction` branch
 
 ## Session 15/04/2026
 
@@ -236,7 +242,6 @@
   * Ghiles :
     - Spent a bit of time looking what causes the pipepline to be slow and trying to optimize it.
     - I had some clues but didn't have time to try and implement them.
-  * Rayane :
 
 ## Session 21/04/2026
 
@@ -245,7 +250,6 @@
   * Charlotte :
   * Ghiles :
     - Mainly nothing worth mentioning because of the exams.
-  * Rayane :
 
 ## Between 21/04/2026 and 05/05/2026
 
@@ -259,6 +263,7 @@
   * Ghiles :
     - Continued improving the curve editor, mainly changing the interpolation method to  have a better control of the curve.
   * Rayane :
+    - Making denoising nodes more robust by implementing a better error handler 
 
 ## Session 05/05/2026
 
@@ -271,7 +276,9 @@
   * Ghiles :
     - Looked into bezier curves and started sketching a bezier curve editor, i will try to implement it in the next weeks.
   * Rayane :
-
+    - Continue work on denoising nodes
+    - Help Amayas optimizing code
+    
 ## Between 05/05/2026 and 13/05/2026
 
   * Amayas :
@@ -280,6 +287,102 @@
     - Refactored the code to use only in-place operations for updating tensors.
     - Ran memory and time profilers and noticed a decent gain on memory usage, now the pipeline uses on average 3 or 4 Gb of RAM.
     - Merged the `fix/memory-usage` branch that fixes the memory performance into `dev`.
+  * Charlotte :
+  * Ghiles :
+  * Rayane :
+
+## Session 13/05/2026
+
+  * Amayas :
+  * Charlotte :
+    - changing code in color-manipulation algorithms and nodes to have the initial squeeze and final unsqueeze of the batch (of images coming from ComfyUI) in the nodes, and not in the algorithms.
+    - research on contrast algorithms
+    - implementing contrast_linear_global and testing it with several contrast_factors
+  * Ghiles :
+  * Rayane :
+
+## Between 13/05/2026 and 27/05/2026
+
+  * All :
+    - Meeting with Quentin Bammey (22/05/2026)
+  * Amayas :
+  * Charlotte :
+    - Implementation of contrast_clahe (with kornia and with cv2), but the result does not look good on RGB images (it is initially designed for grayscale images)...
+    - Preparation of the presentation for the audit P2P
+  * Ghiles :
+  * Rayane :
+
+## Session 27/05/2026
+
+  * All :
+    - Audit P2P
+
+## Between 27/05/2026 and 10/06/2026
+
+  * All :
+    - Meeting with Quentin Bammey (29/05/2026)
+  * Amayas :
+  * Charlotte :
+    - Deblurring : corrected some errors on the main function of the Goldstein-Fattal algorithm, and tested it on an image
+  * Ghiles :
+  * Rayane :
+
+## Session 10/06/2026
+
+  * Amayas :
+    - Helped Charlotte for the memory check in color manipulation algorithms
+    - Poster
+  * Charlotte :
+    - Memory check in color manipulation algorithms with Amayas
+  * Ghiles :
+  * Rayane :
+
+## Session 15/06/2026
+
+  * Amayas :
+  * Charlotte :
+    - Implemented read_image
+    - Implemented read_image_node and deblurring_goldstein_fattal_node for ComfyUI and tested it
+  * Ghiles :
+  * Rayane :
+
+## 22/06/2026
+
+  * All :
+    - Meeting with Quentin Bammey (22/06/2026)
+  * Amayas :
+  * Charlotte :
+    - Added tests and little modifications in the documentation for temperature_simple, temperature_tanner_helland, saturation_hsv and contrast_linear_global
+    - Changed the node and implementation of apply_lut to take into account the color_spaces (linearRGB or adobeRGB1998) of the image and of the lut
+  * Ghiles :
+  * Rayane :
+
+## 23/06/2026
+
+  * Amayas :
+  * Charlotte :
+    - lut in RGB or BGR: changed the node and implementation of apply_lut to take into account the order of the color channels of the lut (RGB or BGR) + separation of the node for personal/non-personal lut
+    - formatting, linting, type checking and then merging of feature/color-manipulation
+    - formatting, linting, type checking and then merging of feature/deblurring
+  * Ghiles :
+  * Rayane :
+
+## 24/06/2026
+
+  * All :
+    - Meeting with Quentin Bammey (24/06/2026)
+  * Amayas :
+  * Charlotte :
+    - Implemented ComfyUI node for contrast_linear_global
+    - Documentation for all the ComfyUI nodes I made
+  * Ghiles :
+  * Rayane :
+
+## 25/06/2026
+
+  * All :
+    - Meeting with Quentin Bammey: Final Presentation (25/06/2026)
+  * Amayas :
   * Charlotte :
   * Ghiles :
   * Rayane :

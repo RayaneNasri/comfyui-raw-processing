@@ -21,13 +21,13 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "black>=26.1.0",
     "pyrefly>=0.52.0",
-    "pytest>=8.0.0",
-    "ruff>=0.15.2",
 ]
 ci = [
     "numpy>=2.4.2",
     "rawpy>=0.26",
+    "pytest>=9.0.2"
 ]
 
 [tool.pyright] # Corrected from pyrefly

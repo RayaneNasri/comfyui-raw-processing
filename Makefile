@@ -1,4 +1,4 @@
-.PHONY: help status update clean run run-cpu run-gpu install-deps install-torch setup setup-xpu
+.PHONY: help status update clean run run-cpu run-gpu install-deps install-torch setup setup-xpu link-nodes remove-link-nodes link-presets remove-link-presets
 
 BLUE := \033[0;34m
 CYAN := \033[0;36m
@@ -22,7 +22,14 @@ FILTERED_COMFY_REQ := .venv/comfyui_requirements.no_torch.txt
 
 SOURCE_DIR = src/custom_nodes
 COMFY_TARGET = external/ComfyUI/custom_nodes
-PY_FILES = $(shell find $(SOURCE_DIR) -type f -name "*.py" ! -name "__init__.py")
+NODE_ITEMS = $(shell find $(SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name "__init__.py" ! -name "__pycache__")
+
+COMFY_MODELS_DIR = external/ComfyUI/models
+
+DCP_PRESETS_SOURCE_DIR = resources/dcp_presets
+LUT_PRESETS_SOURCE_DIR = resources/lut_presets
+DCP_PRESETS_TARGET      = $(COMFY_MODELS_DIR)/dcp
+LUT_PRESETS_TARGET      = $(COMFY_MODELS_DIR)/lut
 
 help:
 	@printf "%b\n" "$(CYAN)$(BOLD)============ ComfyUI Project Manager ============$(NC)"
@@ -65,8 +72,27 @@ install-torch: $(VENV_SENTINEL)
 		printf "%b\n" "Detected macOS. Installing PyTorch (MPS supported)..."; \
 		uv pip install torch torchvision torchaudio; \
 	elif [ "$(HAS_NVIDIA)" = "True" ]; then \
-		printf "%b\n" "Detected NVIDIA GPU. Installing PyTorch (CUDA 13.0)..."; \
-		uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		CUDA_VER=$$(nvidia-smi | grep -o 'CUDA Version: [0-9]*' | awk '{print $$3}'); \
+		if [ -z "$$CUDA_VER" ]; then \
+			printf "%b\n" "Detected NVIDIA GPU but could not determine CUDA version. Installing PyTorch (CUDA 13.0)..."; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		elif [ "$$CUDA_VER" -lt 12 ]; then \
+			printf "%b\n" "$(YELLOW)Your CUDA version ($$CUDA_VER) is too old. Defaulting to PyTorch (CUDA 13.0)...$(NC)"; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		elif [ "$$CUDA_VER" -eq 12 ]; then \
+			printf "%b" "$(YELLOW)You have CUDA 12 installed. Do you want to use PyTorch for CUDA 13? [y/N]: $(NC)"; \
+			read -r ans < /dev/tty 2>/dev/null || ans="n"; \
+			if [ "$$ans" = "y" ] || [ "$$ans" = "Y" ]; then \
+				printf "%b\n" "Installing PyTorch (CUDA 13.0)..."; \
+				uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+			else \
+				printf "%b\n" "Installing PyTorch (CUDA 12.4)..."; \
+				uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124; \
+			fi; \
+		else \
+			printf "%b\n" "Detected CUDA $$CUDA_VER. Installing PyTorch (CUDA 13.0)..."; \
+			uv pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu130; \
+		fi; \
 	else \
 		printf "%b\n" "$(YELLOW)No NVIDIA GPU detected. Installing PyTorch (CPU version)...$(NC)"; \
 		uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu; \
@@ -95,23 +121,40 @@ setup-CI: $(VENV_SENTINEL)
 	@printf "%b\n" "$(GREEN)CI/CD setup complete!$(NC)"
 
 link-nodes: remove-link-nodes
-	@printf "%b\n" "$(BLUE)$(BOLD)Linking all nodes files to $(COMFY_TARGET)...$(NC)"
-	@for file in $(PY_FILES); do \
-		FILENAME=$$(basename $$file); \
-		ln -sf $(shell pwd)/$$file $(COMFY_TARGET)/$$FILENAME; \
+	@printf "%b\n" "$(BLUE)$(BOLD)Linking nodes to $(COMFY_TARGET)...$(NC)"
+	@for item in $(NODE_ITEMS); do \
+		BASENAME=$$(basename $$item); \
+		ln -sf $(shell pwd)/$$item $(COMFY_TARGET)/$$BASENAME; \
 	done
 	@printf "%b\n" "$(GREEN)Linking completed$(NC)"
 
 remove-link-nodes: 
 	@printf "%b\n" "$(BLUE)$(BOLD)Cleaning nodes from $(COMFY_TARGET)...$(NC)"
-	@find $(COMFY_TARGET) -maxdepth 1 \( -type l -o -type f \) \
-		-name "*.py" \
-		! -name "__init__.py" \
-		! -name "websocket_image_save.py" \
-		-delete
+	@find $(COMFY_TARGET) -maxdepth 1 -type l -delete
+	@find $(COMFY_TARGET) -maxdepth 1 -type f -name "*.py" -delete
 	@printf "%b\n" "$(GREEN)Nodes cleanup complete.$(NC)"
 
-run: $(VENV_SENTINEL) link-nodes
+link-presets: remove-link-presets
+	@printf "%b\n" "$(BLUE)$(BOLD)Linking presets to $(COMFY_MODELS_DIR)...$(NC)"
+	@mkdir -p $(DCP_PRESETS_TARGET) $(LUT_PRESETS_TARGET)
+	@find $(DCP_PRESETS_SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name ".*" 2>/dev/null | \
+		while IFS= read -r item; do \
+			ln -sf "$(shell pwd)/$$item" "$(DCP_PRESETS_TARGET)/$$(basename "$$item")"; \
+		done
+	@find $(LUT_PRESETS_SOURCE_DIR) -mindepth 1 -maxdepth 1 ! -name ".*" 2>/dev/null | \
+		while IFS= read -r item; do \
+			ln -sf "$(shell pwd)/$$item" "$(LUT_PRESETS_TARGET)/$$(basename "$$item")"; \
+		done
+	@printf "%b\n" "$(GREEN)Presets linking completed$(NC)"
+
+remove-link-presets:
+	@printf "%b\n" "$(BLUE)$(BOLD)Cleaning preset links from $(COMFY_MODELS_DIR)...$(NC)"
+	@mkdir -p $(DCP_PRESETS_TARGET) $(LUT_PRESETS_TARGET)
+	@find $(DCP_PRESETS_TARGET) -maxdepth 1 -type l -delete
+	@find $(LUT_PRESETS_TARGET) -maxdepth 1 -type l -delete
+	@printf "%b\n" "$(GREEN)Presets cleanup complete.$(NC)"
+
+run: $(VENV_SENTINEL) link-nodes link-presets
 	@printf "%b\n" "$(BLUE)$(BOLD)Launching ComfyUI...$(NC)"
 	@if uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		printf "%b\n" "$(GREEN)GPU acceleration detected$(NC)"; \
@@ -121,11 +164,11 @@ run: $(VENV_SENTINEL) link-nodes
 		uv run external/ComfyUI/main.py --cpu $(COMFY_FLAGS) $(FLAGS); \
 	fi
 
-run-cpu: $(VENV_SENTINEL) link-nodes
+run-cpu: $(VENV_SENTINEL) link-nodes link-presets
 	@printf "%b\n" "$(BLUE)Launching ComfyUI (CPU Forced)...$(NC)"
 	uv run external/ComfyUI/main.py --cpu $(COMFY_FLAGS) $(FLAGS)
 
-run-gpu: $(VENV_SENTINEL) link-nodes
+run-gpu: $(VENV_SENTINEL) link-nodes link-presets
 	@printf "%b\n" "$(BLUE)Launching ComfyUI (GPU Forced)...$(NC)"
 	@if ! uv run python -c "import torch; exit(0 if torch.cuda.is_available() or torch.backends.mps.is_available() else 1)" 2>/dev/null; then \
 		printf "%b\n" "$(RED)GPU not available!$(NC)"; exit 1; \
@@ -175,7 +218,7 @@ update: $(VENV_SENTINEL)
 	@$(MAKE) install-deps
 	@printf "%b\n" "$(GREEN)$(BOLD)Update complete!$(NC)"
 
-clean: remove-link-nodes
+clean: remove-link-nodes remove-link-presets
 	@printf "%b\n" "$(YELLOW)Cleaning environment...$(NC)"
 	@rm -rf .venv
 	@find . -type d -name "__pycache__" -exec rm -rf {} +

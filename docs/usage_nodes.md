@@ -17,12 +17,19 @@ Comprehensive documentation of all Image Signal Processing (ISP) custom nodes fo
    - [Ground Truth White Balance](#ground-truth-white-balance)
    - [White Balance Comparison](#white-balance-comparison)
 6. [Exposure Compensation](#exposure-compensation)
-7. [Gamma Correction](#gamma-correction)
-8. [JPEG Export Node](#jpeg-export-node)
-9. [Complete Pipeline Examples](#complete-pipeline-examples)
-10. [Python API Usage (Without ComfyUI)](#python-api-usage-without-comfyui)
-11. [Best Practices](#best-practices)
-13. [Appendix](#appendix)
+7. [Color Manipulation Nodes](#color-manipulation-nodes)
+   - [Temperature Simple](#temperature-simple)
+   - [Temperature Tanner-Helland](#temperature-tanner-helland)
+   - [LUT Color manipulation](#lut-color-manipulation)
+   - [Saturation HSV](#saturation-hsv)
+   - [Contrast Linear Global](#contrast-linear-global)
+8. [Gamma Correction](#gamma-correction)
+9. [Deblurring Goldstein-Fattal](#deblurring-goldstein-fattal)
+10. [JPEG Export Node](#jpeg-export-node)
+11. [Complete Pipeline Examples](#complete-pipeline-examples)
+12. [Python API Usage (Without ComfyUI)](#python-api-usage-without-comfyui)
+13. [Best Practices](#best-practices)
+14. [Appendix](#appendix)
 
 ---
 
@@ -42,6 +49,8 @@ Demosaicing (Bayer → RGB)
 White Balance
     ↓
 Exposure Compensation
+    ↓
+Color Manipulation
     ↓
 Gamma Correction
     ↓
@@ -69,7 +78,9 @@ The pipeline strictly enforces these data types at each stage. Using incompatibl
 - **Demosaicing:** Interpolating missing color values to create full RGB from Bayer pattern.
 - **White Balance:** Correcting color temperature by scaling RGB channels.
 - **Exposure:** Adjusting brightness using EV (Exposure Value) scale.
+- **Color Manipulation:** Customize the image colours
 - **Gamma Correction:** Applying perceptual brightness mapping (typically sRGB with γ=2.2).
+- **Deblurring:** reduce blur in an image
 
 ---
 
@@ -918,6 +929,368 @@ result = exposure_compensation(
 
 ---
 
+## Color Manipulation Nodes
+
+Color adjustments allow users to customize the colors in an image. They can use a lookup table (LUT) to apply a preset style to their image, or (and) manually adjust the image's temperature, saturation and contrast using specific nodes.
+
+### Overview: Color Manipulation features
+
+| Method | Input | Use Case |
+|--------|-------|----------|
+| **Temperature Simple** | Adjustement choosen by the user | Enhance blue or red |
+| **Temperature Tanner-Helland** | Adjustement choosen by the user | Give a warmer/cooler look |
+| **LUT Color Manipulation** | LUT : choosen in a list, or user-provided .cube file | Apply a preset style |
+| **Saturation HSV** | Adjustement choosen by the user | Adjust the saturation |
+
+### Temperature Simple
+
+**Description**
+
+Enhance blue or red by simply adding the adjustement value for the red channel and removing it for the blue channel : not very realistic, but simple and fast.
+
+**Status:** Automatic with one parameter
+**Category:** image/processing/color-manipulation
+**Outputs:** 1
+
+#### ComfyUI Interface
+
+**Node Name:** `Temperature Simple`  
+**Category:** image/processing/color-manipulation
+
+![alt text](assets/temperature_simple_node.png)
+
+#### Input Parameters
+
+| Input | Type | Range | Default |
+|-------|-------|-------|-------|
+| **rgb_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] | — |
+| **adjustement** | float | [-100, 100] (recommended [-20, 20]) | 0 |
+
+#### Output Schema
+
+| Output | Type | Range |
+|--------|-------|-------|
+| **rgb_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] |
+
+#### Algorithm Details
+
+1. Given a temperature adjustment on the range -100 to 100 (recommended -20, 20), apply the following adjustment to each pixel in the rgb_image :
+   red = red + adjustment_value/255
+   green = green
+   blue = blue - adjustment_value/255
+2. Clamp values to the range [0, 1]
+
+#### ComfyUI Usage
+
+**Step-by-step:**
+
+1. Connect input **rgb_image** from Exposure Compensation node (or another node)
+2. Adjust the parameter (recommended in [-20, 20])
+3. Connect output to Tone Curve Application node (or another node)
+
+**When to use:**
+- to apply fast and easy change on the image temperature
+
+**When NOT to use:**
+- Professional color correction needed
+- White balancing needs to be preserved
+
+### Temperature Tanner-Helland
+
+**Description**
+
+Give a warmer/cooler look to the image. Given a temperature in Kelvin (representing a type of light, warm or cool), estimates an RGB equivalent (algorithm based on empirical values), and apply it to the image.
+
+**Status:** Automatic with one parameter 
+**Category:** image/processing/color-manipulation
+**Outputs:** 1
+
+#### ComfyUI Interface
+
+**Node Name:** `Temperature Tanner-Helland`  
+**Category:** image/processing/color-manipulation
+
+![alt text](assets/temperature_tanner_helland_node.png)
+
+#### Input Parameters
+
+| Input | Type | Range | Default |
+|-------|-------|-------|-------|
+| **rgb_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] | — |
+| **temperature_Kelvin** | float | [1000, 40000] (recommended [1500, 15000]) | 6600 |
+
+#### Output Schema
+
+| Output | Type | Range |
+|--------|-------|-------|
+| **rgb_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] |
+
+#### Algorithm Details
+
+1. Convert the target temperature in Kelvin to RGB using the tanner Helland algorithm : a simple, straightforward algorithm, based on empirical values (https://tannerhelland.com/2012/09/18/convert-temperature-rgb-algorithm-code.html)
+2. Normalize the three coefficients (red, green, blue)
+3. Multiply each pixel by the coefficients on the corresponding colour channel
+
+#### ComfyUI Usage
+
+**Step-by-step:**
+
+1. Connect input **rgb_image** from Exposure Compensation node (or another node)
+2. Adjust the temperature parameter (recommended [1500, 15000])
+3. Connect output to Tone Curve Application node (or another node)
+
+**When to use:**
+- to give a warmer or cooler look to the image
+
+**When NOT to use:**
+- Professional color correction needed
+- White balancing needs to be preserved
+
+### LUT Color Manipulation
+
+#### LUT Color Manipulation (basic node)
+
+**Description**
+
+Use a Look-Up Table (LUT) to apply a preset style to the image. The LUT is choosen in a list, and is a .cube file, the LUT color space being AdobeRGB1998 or LinearRGB.
+
+**Status:** Automatic with two parameters
+**Category:** image/processing/color-manipulation
+**Outputs:** 1
+
+##### ComfyUI Interface
+
+**Node Name:** `LUT Color Manipulation`
+**Category:** image/processing/color-manipulation
+
+![alt text](assets/lut_color_manipulation_node.png)
+
+##### Input Parameters
+
+| Input | Type | Range | Description |
+|-------|------|-------|-------------|
+| **image** | Tensor - LinearRGB or AdobeRGB1998 - shape : (H, W, 3) - Dtype : float32 | [0, 1] | Image on which to apply the LUT |
+| **color_space_image** | String | Choosen in a list: "Linear RGB" or "Adobe RGB (1998)" | the color-space of the image | 
+| **lut_name** | String | Choosen in a list | Selection of the title of a LUT (representing a key in a dictionnary, corresponding value being the path for the LUT) |
+
+##### Output Schema
+
+| Input | Type | Range | Description |
+|-------|-------|-------|-------|
+| **image** | Tensor - shape : (H, W, 3) - Dtype : float32 | [0, 1] | Image with the LUT applied - the color-space is the one of the input image (LinearRGB or AdobeRGB1998)|
+
+##### Algorithm Details
+
+1. Read the .cube file corresponding to the one selected in the list by the user
+   - read and save the size of the LUT (written in the file next to the expression LUT_3D_SIZE)
+   - for each line with 3 values, save the line in a list
+   - create the LUT, a tensor with the data given by the list, dtype float32, with dimension (size, size, size, 3)
+
+2. Change the LUT from BGR to RGB
+
+3. If the color-space of the image is in LinearRGB, converts the image from LinearRGB to AdobeRGB1998.
+   - AdobeRGB1998 values apply gamma correction to LinearRGB values using a simple power function:
+      v = u^ɣ,          u ≥ 0
+      v = -(-u)^ɣ,      u < 0
+      with ɣ = 1/2.19921875
+
+4. Apply the LUT via torch.nn.functional.grid_sample(lut, grid, mode='bilinear', align_corners=True)
+   - "lut" is the LUT transformed as a (1,3,size,size,size) Tensor
+   - "grid" is the rgb_image transformed in range [-1, 1], with color channels order being BGR (and not RGB), and with dimension (B,1,H,W,3) 
+   - "bilinear" is to have a trilinear interpolation
+
+5. Change the output to correspond to the original format and color-space of the image
+
+##### ComfyUI Usage
+
+**Step-by-step:**
+
+1. Connect input **image** from Exposure Compensation node (or another node)
+2. Select the color-space of the image
+3. Choose a LUT in the list
+4. Connect output to Tone Curve Application node (or another node)
+
+**When to use:**
+- apply a style to the image
+
+**When NOT to use:**
+- want to stay close to the original photo / to reality
+
+#### Personal LUT Color Manipulation
+
+**Description**
+
+Use a Look-Up Table (LUT) to apply a preset style to the image. The LUT is provided by the user via a .cube file, the LUT color space being AdobeRGB1998 or LinearRGB.
+
+**Status:** Automatic with four parameters
+**Category:** image/processing/color-manipulation
+**Outputs:** 1
+
+##### ComfyUI Interface
+
+**Node Name:** `Personal LUT Color Manipulation`
+**Category:** image/processing/color-manipulation
+
+![alt text](assets/personal_lut_color_manipulation_node.png)
+
+##### Input Parameters
+
+| Input | Type | Range | Description |
+|-------|------|-------|-------------|
+| **image** | Tensor - LinearRGB or AdobeRGB1998 - shape : (H, W, 3) - Dtype : float32 | [0, 1] | Image on which to apply the LUT |
+| **color_space_image** | String | Choosen in a list: "Linear RGB" or "Adobe RGB (1998)" | the color-space of the image | 
+| **lut_path** (**Ouvrir un fichier .cube**) | String | - | A path to a LUT in a .cube file |
+| **color_space_lut** | String | Choosen in a list: "Linear RGB" or "Adobe RGB (1998)" | the color-space of the lut | 
+| **order_color_channels_lut** | String | Choosen in a list: "RGB" or "BGR" | the order of the color channels of the LUT | 
+
+##### Output Schema
+
+| Input | Type | Range | Description |
+|-------|-------|-------|-------|
+| **image** | Tensor - shape : (H, W, 3) - Dtype : float32 | [0, 1] | Image with the LUT applied - the color-space is the one of the input image (LinearRGB or AdobeRGB1998)|
+
+##### Algorithm Details
+
+1. Read the .cube file given by the user
+   - read and save the size of the LUT (written in the file next to the expression LUT_3D_SIZE)
+   - for each line with 3 values, save the line in a list
+   - create the LUT, a tensor with the data given by the list, dtype float32, with dimension (size, size, size, 3)
+
+2. If needed, change the LUT from BGR to RGB
+
+3. If needed, change the color-space of the image so that the image and the LUT have the same color-space (LinearRGB or AdobeRGB1998)
+   - From LinearRGB to AdobeRGB1998: AdobeRGB1998 values apply gamma correction to LinearRGB values using a simple power function:
+      v = u^ɣ,          u ≥ 0
+      v = -(-u)^ɣ,      u < 0
+      with ɣ = 1/2.19921875
+
+4. Apply the LUT via torch.nn.functional.grid_sample(lut, grid, mode='bilinear', align_corners=True)
+   - "lut" is the LUT transformed as a (1,3,size,size,size) Tensor
+   - "grid" is the rgb_image transformed in range [-1, 1], with color channels order being BGR (and not RGB), and with dimension (B,1,H,W,3) 
+   - "bilinear" is to have a trilinear interpolation
+
+5. Change the output to correspond to the original format and color-space of the image
+
+##### ComfyUI Usage
+
+**Step-by-step:**
+
+1. Connect input **image** from Exposure Compensation node (or another node)
+2. Select the color-space of the image
+3. Open a .cube file
+4. Select the color-space of the lut
+5. Select the order of the color channels of the LUT
+6. Connect output to Tone Curve Application node (or another node)
+
+**When to use:**
+- apply a style to the image
+
+**When NOT to use:**
+- want to stay close to the original photo / to reality
+
+### Saturation HSV
+
+**Description**
+
+Change the saturation by multiplying the saturation channel (in the hsv color-space) by the adjustement_value.
+
+**Status:** Automatic with one parameter 
+**Category:** image/processing/color-manipulation
+**Outputs:** 1
+
+#### ComfyUI Interface
+
+**Node Name:** `Saturation HSV`  
+**Category:** image/processing/color-manipulation
+
+![alt text](assets/saturation_hsv_node.png)
+
+#### Input Parameters
+
+| Input | Type | Range | Default |
+|-------|------|-------|---------|
+| **rgb_image** | Tensor - Linear RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] | — |
+| **adjustement** | float | [0, 5] | 1.0 |
+
+#### Output Schema
+
+| Output | Type | Range |
+|--------|-------|-------|
+| **rgb_image** | Tensor - Linear RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] |
+
+#### Algorithm Details
+
+1. Change the color-space of the image from LinearRGB to HSV
+2. Multiply the saturation channel by the adjustement_value
+3. Clamp values to the range [0, 1]
+4. Return to the LinearRGB color-space
+
+#### ComfyUI Usage
+
+**Step-by-step:**
+
+1. Connect input **rgb_image** from Exposure Compensation node (or another node)
+2. Adjust the saturation parameter
+3. Connect output to Tone Curve Application node (or another node)
+
+**When to use:**
+- Changing simply the saturation of an image
+
+**When NOT to use:**
+- Professional color correction needed
+- Adaptative saturation
+
+### Contrast Linear Global
+
+**Description**
+
+Change the contrast of an image, linearly and globally: multiplies deviations from the global mean of the rgb_image by contrast_factor and keeps mean fixed (before clamp).
+
+**Status:** Automatic with one parameter 
+**Category:** image/processing/color-manipulation
+**Outputs:** 1
+
+#### ComfyUI Interface
+
+**Node Name:** `Contrast Linear Global`  
+**Category:** image/processing/color-manipulation
+
+#### Input Parameters
+
+| Input | Type | Range | Default |
+|-------|------|-------|---------|
+| **rgb_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] | — |
+| **adjustement** | float | [0, 5] (recommended [0.5, 2]) | 1.0 |
+
+#### Output Schema
+
+| Output | Type | Range |
+|--------|-------|-------|
+| **rgb_image** | Tensor - Linear RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] |
+
+#### Algorithm Details
+
+1. Calculate the mean of the image
+2. Apply the following transformation: (rgb_image - mean) * contrast_factor + mean
+3. Clamp values to the range [0, 1]
+
+#### ComfyUI Usage
+
+**Step-by-step:**
+
+1. Connect input **rgb_image** from Exposure Compensation node (or another node)
+2. Adjust the contrast parameter
+3. Connect output to Tone Curve Application node (or another node)
+
+**When to use:**
+- Changing simply the contrast of an image
+
+**When NOT to use:**
+- Professional color correction needed
+- Adaptative contrast, non-global/non-linear
+
+---
+
 ## Gamma Correction
 
 ### Description
@@ -1017,6 +1390,54 @@ srgb_image = gamma_correction(
     alpha=1.0
 )
 ```
+
+---
+
+## Deblurring Goldstein-Fattal
+
+**Description**
+
+Reduce blur in an image, using the Goldstein Fattal Method: https://www.ipol.im/pub/art/2018/211/ (can take several minutes)
+
+**Status:** Default, always available  
+**Category:** image/processing/deblurring
+**Outputs:** 1
+
+#### ComfyUI Interface
+
+**Node Name:** `Deblurring Goldstein-Fattal`  
+**Category:** image/processing/deblurring
+
+![alt text](assets/deblurring_goldstein_fattal_node.png)
+
+#### Input Parameters
+
+| Input | Type | Range | Default |
+|-------|-------|-------|-------|
+| **RGB_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] | — |
+
+#### Output Schema
+
+| Output | Type | Range |
+|--------|-------|-------|
+| **RGB_image** | Tensor - RGB - shape : (H, W, 3) - Dtype : float32 | [0, 1] |
+
+#### Algorithm Details
+
+1. Change the color space of the image from RGB to YCrCb
+2. Apply the Goldstein-Fattal Algorithm: https://www.ipol.im/pub/art/2018/211/
+    - Estimating the modulus of the Fourier transform of the kernel from the image
+    - Finding an estimate of the kernel from the modulus of its Fourier transform, then iterating to retain only the best one
+    - Deconvolution using the estimated convolution kernel
+3. Return to the initial color-space: RGB
+
+#### ComfyUI Usage
+
+**When to use:**
+- Deblur an image without AI
+
+**When NOT to use:**
+- Fast deblurring
 
 ---
 
@@ -1316,6 +1737,7 @@ RAW Input
   → Demosaicing (Bayer → RGB)
   → White Balance (color temperature)
   → Exposure Compensation (brightness)
+  → Color Manipulation
   → Gamma Correction (perceptual brightness)
   → Export
 ```
@@ -1346,6 +1768,8 @@ RAW Input
 **ISP:** Image Signal Processing pipeline (RAW input → JPEG output)
 
 **EV (Exposure Value):** Standard scale for brightness; +1 EV = 2× brightness
+
+**LUT:** A Look-Up Table that replaces each color value in an image with a new, predefined value, in order to alter its appearance (hue, contrast, etc.).
 
 **Gamma:** Perceptual brightness exponent (sRGB standard = 2.2)
 

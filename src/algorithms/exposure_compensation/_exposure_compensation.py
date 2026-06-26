@@ -11,8 +11,7 @@ def exposure_compensation(rgb_image: Tensor, ev_compensation: float) -> Tensor:
 
     Args:
         rgb_image (Tensor): The input image tensor (typically linear RGB).
-        ev_compensation (float): The exposure compensation value in stops (EV).
-            Positive values brighten the image, and negative values darken it.
+        ev_compensation (float): The exposure compensation value in stops (EV). Positive values brighten the image, and negative values darken it.
 
     Returns:
         Tensor: The exposure-adjusted image tensor, scaled by 2.0^ev_compensation.

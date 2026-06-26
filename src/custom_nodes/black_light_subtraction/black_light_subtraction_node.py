@@ -13,7 +13,7 @@ class LinearizeRawNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/black-light-substraction"
     SEARCH_ALIASES = [
         "black level subtraction",
         "raw linearization",

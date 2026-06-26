@@ -4,7 +4,7 @@ from algorithms.white_balance import white_patch_ref
 
 class WhitePatchReferenceNode:
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         return {
             "required": {
                 "image": ("IMAGE",),
@@ -21,7 +21,7 @@ class WhitePatchReferenceNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/white-balance"
     SEARCH_ALIASES = [
         "white balance adjustment",
         "color temperature correction",

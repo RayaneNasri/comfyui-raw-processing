@@ -23,7 +23,7 @@ class CameraWhiteBalanceNode:
             }
         }
 
-    CATEGORY = "image"
+    CATEGORY = "image/processing/white-balance"
     SEARCH_ALIASES = [
         "camera white balance",
         "raw camera whitebalance",

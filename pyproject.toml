@@ -5,9 +5,18 @@ description = "Minimal modular ComfyUI compatible (not official) RAW-to-RGB ISP 
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "colour-science>=0.4.7",
+    "imageio>=2.37.3",
+    "rawpy>=0.26.1",
     "matplotlib>=3.10",
-    "opencv-python>=4.8.0",
+    "opencv-python-headless>=4.8.0",
     "rawpy>=0.26",
+    "scikit-image>=0.25.0",
+    "segment-anything",
+    "tifffile",
+    "aiohttp",
+    "scipy>=1.18.0",
+    "exifread",
 ]
 
 [dependency-groups]

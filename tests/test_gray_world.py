@@ -1,6 +1,6 @@
 import torch
-from torch.testing import assert_close
 
+from torch.testing import assert_close
 from algorithms.white_balance import gray_world
 
 

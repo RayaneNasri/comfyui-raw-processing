@@ -271,6 +271,7 @@
     - Meeting with Quentin Bammey (05/05/2026)
     - Discussion on the stakes report
   * Amayas :
+    - Worked on conituing to optimize memory usage some parts of the code with Rayane. 
   * Charlotte :
     - Searching some sources/references for the stakes report
   * Ghiles :
@@ -296,6 +297,7 @@
 ## Session 13/05/2026
 
   * Amayas :
+    - Worked on implementing Bezier curves for curve editing.
   * Charlotte :
     - changing code in color-manipulation algorithms and nodes to have the initial squeeze and final unsqueeze of the batch (of images coming from ComfyUI) in the nodes, and not in the algorithms.
     - research on contrast algorithms
